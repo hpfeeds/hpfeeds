@@ -1,0 +1,18 @@
+<pre>Edit Authkey
+
+Identifier: {{ ak.identifier }}
+Secret: {{ ak.secret }}
+
+The key has access to the following channels:
+{% for i in axs %} - {{ i.0 }} ({{ i.1 }})
+{% endfor %}
+
+Give publish access to channel:<form method="post">{% csrf_token %}<input type="text" name="cname" /><input type="submit" name="submit" value="Give" /><input type="hidden" name="axs" value="pub" /></form>
+Give subscribe access to channel:<form method="post">{% csrf_token %}<input type="text" name="cname" /><input type="submit" name="submit" value="Give" /><input type="hidden" name="axs" value="sub" /></form>
+Give pub and sub access to channel:<form method="post">{% csrf_token %}<input type="text" name="cname" /><input type="submit" name="submit" value="Give" /><input type="hidden" name="axs" value="both" /></form>
+
+Delete this Authkey:<form method="post">{% csrf_token %}<input type="submit" name="delete" value="Delete" /></form>
+
+<a href="{% url overview %}">Overview</a>
+<a href="{% url log-out %}">Logout</a>
+</pre>

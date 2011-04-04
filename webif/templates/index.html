@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link type="text/css" href="{{ MEDIA_URL}}base.css" rel="stylesheet" />
+        <title>Honeynet Project :: Datafeeds :: beta</title>
+</head>
+<body>
+
+<div id="header"><h1>Honeynet Project Datafeeds <i>beta</i></h1></div>
+
+<div id="content">
+	<div id="left">
+	<h1>HP Live Datafeeds</h1>
+	<ul>
+	<li>authenticated</li>
+	<li>publish/subscribe based</li>
+	<li>simple wire-format</li>
+	<li>multiple sources/sinks per user</li>
+	</ul>
+	</div>
+	<div id="right">
+	<h1>Statistics</h1>
+	<ul class="stats">
+	<li class="statitem"><h3>Glastopf dorks total:</h3><h2>&nbsp;{{ stats.glastopf_dorks.total }}</h2></li>
+	<li class="statitem"><h3>Malware captures total:</h3><h2>{{ stats.mwcapture.total }}</h2></li>
+	<li class="statitem"><h3>Malware captures last hour:</h3><h2>{{ stats.mwcapture.hour }}</h2></li>
+	<li class="statitem"><h3>Malware captures last 24 hours:</h3><h2>{{ stats.mwcapture.day }}</h2></li>
+	<li class="statitem"><h3>DCE/RPC requests total:</h3><h2>{{ stats.dcerpcrequests.total }}</h2></li>
+	<li class="statitem"><h3>Shellcode profiles total:</h3><h2>{{ stats.shellcodeprofiles.total }}</h2></li>
+	<li class="statitem"><h3>Malware binaries (sensor-unique) total:</h3><h2>{{ stats.mwbinary_sensorunique.total }}</h2></li>
+	</ul>
+	</div>
+	<div id="footer">
+	2011 - HP Datafeeds <i>beta</i>
+	</div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,24 @@
+<pre>Overview
+
+{% if user.tags %}
+You are tagged with: {{ user.tags|join:', ' }}
+{% endif %}
+
+You have access to the following channels:
+{% for c in channels %} - <a href="{% url editchan c.0 %}">{{ c.0 }}</a> ({{ c.1 }})
+{% endfor %}
+
+{% if authkeys %}
+You defined the following AuthKeys:
+{% for ak in authkeys %} - <a href="{% url editak ak.identifier %}">{{ ak.identifier }}</a>
+{% endfor %}
+{% endif %}
+
+Create a new Channel:
+<form method="post" action="{% url newchan %}">{% csrf_token %}<input type="text" name="cname" /><input type="submit" name="submit" value="Create" /></form>
+
+Generate a new Authkey:
+<a href="{% url newak %}">Generate Authkey</a>
+
+<a href="{% url log-out %}">Logout</a>
+</pre>
