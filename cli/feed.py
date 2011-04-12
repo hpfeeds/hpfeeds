@@ -24,7 +24,7 @@ def msgpublish(ident, chan, data):
 def msgsubscribe(ident, chan):
 	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)%0xff) + ident + chan)
 def msgauth(rand, ident, secret):
-	hash = hashlib.sha1(rand+secret).hexdigest()
+	hash = hashlib.sha1(rand+secret).digest()
 	return msghdr(OP_AUTH, struct.pack('!B', len(ident)%0xff) + ident + hash)
 
 class FeedUnpack(object):

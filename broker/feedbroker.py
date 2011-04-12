@@ -25,6 +25,16 @@ OP_AUTH		= 2
 OP_PUBLISH	= 3
 OP_SUBSCRIBE	= 4
 
+MAXBUF = 1024**2
+SIZES = {
+	OP_ERROR: 5+MAXBUF,
+	OP_INFO: 5+256+20,
+	OP_AUTH: 5+256+20,
+	OP_PUBLISH: 5+MAXBUF,
+	OP_SUBSCRIBE: 5+256*2,
+}
+	
+
 class BadClient(Exception):
 	pass
 
@@ -42,6 +52,9 @@ class FeedUnpack(object):
 			raise StopIteration('No message.')
 
 		ml, opcode = struct.unpack('!iB', buffer(self.buf,0,5))
+		if ml > SIZES.get(opcode, MAXBUF):
+			raise BadClient('Not respecting MAXBUF.')
+
 		if len(self.buf) < ml:
 			raise StopIteration('No message.')
 		
@@ -87,7 +100,7 @@ class FeedConn(EventGen):
 	def checkauth(self, r, hash):
 		if len(r) > 0:
 			akobj = r[0]
-			akhash = hashlib.sha1('{0}{1}'.format(self.rand, akobj['secret'])).hexdigest()
+			akhash = hashlib.sha1('{0}{1}'.format(self.rand, akobj['secret'])).digest()
 			if akhash == hash:
 				self.pubchans.update(akobj['publish'])
 				self.subchans.update(akobj['subscribe'])
