@@ -1,10 +1,10 @@
 /* LOGIN FORM */
 
-body.login {
+div.login {
     background: #eee;
 }
 
-.login #container {
+#container {
     background: white;
     border: 1px solid #ccc;
     width: 28em;

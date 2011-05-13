@@ -5,22 +5,20 @@
         <a href="{% url index %}">Home</a> 
       </div>
       <div class="section selected"> 
-        Login
+        Registration
       </div> 
 {% endblock %}
 
 {% block content %}
       <div style="float:left;"> 
-        <h1>Login</h1>
+        <h1>Registration</h1>
 <br />
 {% if user.is_anonymous %}
 <form method="post">{% csrf_token %}
-    <input type="hidden" name="this_is_the_login_form" value="1" />
-    <input type="hidden" name="next" value="{{ next }}" />
 <table class="form">
 {{ form.as_table }}
 <tr><td></td><td>&nbsp;</td></tr>
-<tr><td></td><td><input type="submit" value="Log in" /></td></tr>
+<tr><td></td><td><input type="submit" value="Submit" /></td></tr>
 </table>
 </form>
 {% else %}
@@ -28,4 +26,3 @@
 {% endif %}
       </div>
 {% endblock %}
-

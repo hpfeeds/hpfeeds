@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{% activetab "menu" "authkeys" %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">management</div> 
+          Authkeys
+        </h1>
+<blockquote class="button">
+          <a href="{% url newak %}">
+            Generate a new Authkey »
+          </a>
+</blockquote>
+	<br />
+{% if authkeys %}
+	<p>You currently have the following Authkeys:</p>
+<table class="list">
+<tr class="head"><th>Authkey</th><th>Comment</th><th></th></tr>
+{% for a in authkeys %}<tr class="{% cycle '' 'alt' %}"><td>{{ a.identifier }}</td><td>{{ a.comment }}</td><td><a href="{% url editak a.identifier %}">Edit</a>&nbsp;<a href="{% url deleteak a.identifier %}">Delete</a></td></tr>
+{% endfor %}
+</table>
+
+{% else %}
+	<p>You don't have any Authkeys, yet.</p>
+{% endif %}
+      </div>
+{% endblock %}
+

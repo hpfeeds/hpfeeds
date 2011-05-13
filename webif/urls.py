@@ -5,15 +5,16 @@ from django.contrib.auth.views import login, logout
 from views import *
 
 urlpatterns = patterns('',
-    url('^$', index, name='overview'),
-#    url('^overview$', overview, name='overview'),
-    url('^aj$', ajoverview, name='ajoverview'),
-    url('^aj/channels$', ajchannels, name='ajchannels'),
-    url('^aj/authkeys$', ajauthkeys, name='ajauthkeys'),
+    url('^$', index, name='index'),
+    url('^channels/$', channels, name='channels'),
+    url('^authkeys/$', authkeys, name='authkeys'),
     url('^newchan/$', newchan, name='newchan'),
-    url('^editchan/([\w@-]+)/$', editchan, name='editchan'),
+    url('^editchan/([\w@_\-.]+)/$', editchan, name='editchan'),
+    url('^deletechan/([\w@_\-.]+)/$', deletechan, name='deletechan'),
     url('^newak/$', newak, name='newak'),
     url('^editak/([\w@]+)/$', editak, name='editak'),
+    url('^deleteak/([\w@]+)/$', deleteak, name='deleteak'),
+    url('^register/$', register, name='register'),
     url('^login/$', login, {'template_name': 'login.html',}, name='log-in'),
     url('^logout/$', logout, {'next_page': '/'}, name='log-out'),
 )

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">edit</div> 
+          Channel {{ ch }}
+        </h1>
+<br />
+<p>Channel edit complete. Go back to the <a href="{% url editchan ch %}">channel</a> management.</p>
+<p>Or go back to the <a href="{% url channels %}">channel list</a>.</p>
+      </div>
+{% endblock %}
+

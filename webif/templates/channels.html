@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{% activetab "menu" "channels" %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">management</div> 
+          Channels
+        </h1>
+<blockquote class="button">
+          <a href="{% url newchan %}">
+            Create a new data channel »
+          </a>
+</blockquote>
+	<br />
+{% if channels %}
+	<p>You have access to the following channels:</p>
+<table class="list">
+<tr class="head"><th>Channel</th><th>Access</th><th></th></tr>
+{% for c in channels %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.0 }}</td><td>{{ c.1 }}</td><td><a href="{% url editchan c.0 %}">Edit</a>&nbsp;<a href="{% url deletechan c.0 %}">Delete</a></td></tr>
+{% endfor %}
+</table>
+
+{% else %}
+	<p>You don't have access to any channels.</p>
+{% endif %}
+      </div>
+{% endblock %}
+

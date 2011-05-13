@@ -1,41 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<link type="text/css" href="{{ MEDIA_URL}}base.css" rel="stylesheet" />
-        <title>Honeynet Project :: Datafeeds :: beta</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{% activetab "menu" "home" %}
+{{ block.super }}
+{% endblock %}
+{% block content %}
+      <div style="float:left;width:640px;margin-right:40px;text-align:justify"> 
+        <h1> 
+          <div class="subtitle">generic, live, authenticated</div> 
+          HP Datafeeds
+        </h1>
+	<p>The "hpfeeds" project implements a lightweight authenticated publish/subscribe protocol for exchanging live datafeeds.
+We tried to design a simple wire-format so that everyone is able to subscribe to the feeds with his favorite language in <i>almost no time.</i></p>
+	<p>Different feeds are separated by <i>channels</i> and support arbitrary binary payloads. This means that the channel users have to decide about the structure of data. This could for example be done by choosing a serialization format.</p>
+	<p>Access to channels is given to so-called <i>Authkeys</i> which essentially are pairs of an identifier and a secret. The secret is sent to the server by hashing it together with a per-connection nonce. This way no eavesdroppers can obtain valid credentials. Optionally the protocol can be run on top of SSL/TLS, of course.</p>
+	<p>To support multiple data sources and sinks per user we manage the Authkeys in this webinterface after a quick login with a user account. User accounts are only needed for the webinterface - to use the data feed channels, only Authkeys are necessary. Different Authkeys can be granted distinct access rights for channels.</p>
+      </div>
 
-<div id="header"><h1>Honeynet Project Datafeeds <i>beta</i></h1></div>
+      <div style="float:left;width:220px;">
+        <h3 style="text-align:right;">Statistics</h3>
+        <br clear="all">
+        <a style="font-size:13px;" href="ex/">Statistics sink »</a>
 
-<div id="content">
-	<div id="left">
-	<h1>HP Live Datafeeds</h1>
-	<ul>
-	<li>authenticated</li>
-	<li>publish/subscribe based</li>
-	<li>simple wire-format</li>
-	<li>multiple sources/sinks per user</li>
-	</ul>
-	</div>
-	<div id="right">
-	<h1>Statistics</h1>
-	<ul class="stats">
-	<li class="statitem"><h3>Glastopf dorks total:</h3><h2>&nbsp;{{ stats.glastopf_dorks.total }}</h2></li>
-	<li class="statitem"><h3>Malware captures total:</h3><h2>{{ stats.mwcapture.total }}</h2></li>
-	<li class="statitem"><h3>Malware captures last hour:</h3><h2>{{ stats.mwcapture.hour }}</h2></li>
-	<li class="statitem"><h3>Malware captures last 24 hours:</h3><h2>{{ stats.mwcapture.day }}</h2></li>
-	<li class="statitem"><h3>DCE/RPC requests total:</h3><h2>{{ stats.dcerpcrequests.total }}</h2></li>
-	<li class="statitem"><h3>Shellcode profiles total:</h3><h2>{{ stats.shellcodeprofiles.total }}</h2></li>
-	<li class="statitem"><h3>Malware binaries (sensor-unique) total:</h3><h2>{{ stats.mwbinary_sensorunique.total }}</h2></li>
-	</ul>
-	</div>
-	<div id="footer">
-	2011 - HP Datafeeds <i>beta</i>
-	</div>
-</div>
-</body>
-</html>
+        <h3>Account</h3>
+	{% if user.is_anonymous %}
+        <a style="font-size:13px;" href="{% url log-in %}">Login »</a><br />
+        <a style="font-size:13px;" href="{% url register %}">Register »</a><br />
+	{% else %}
+	Logged in as {{ user.username }}.<br />
+	<a href="{% url log-out %}">Logout</a>
+	{% endif %}
+      </div>
+{% endblock %}
 

@@ -1,0 +1,63 @@
+{% load tabs %}
+<html> 
+  <head> 
+    <title>Honeynet Project :: Datafeeds :: beta</title>
+    <link type="text/css" rel="stylesheet" href="/static/style.css"/> 
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+{% block extrahead %}
+{% endblock %}
+  </head> 
+  <body> 
+    <div class="title"> 
+      <div class="subtitle"> 
+        Honeynet Project generic datafeeds
+      </div> 
+      hpfeeds
+    </div> 
+ 
+    <div class="head">
+{% block menubar %}
+      <div class="section{% ifactivetab "menu" "home" %} selected{% else %}{% endifactivetab %}">
+        {% ifactivetab "menu" "home" %}Home{% else %}<a href="{% url index %}">Home</a>{% endifactivetab %}
+      </div>
+	{% if not user.is_anonymous %}
+      <div class="section{% ifactivetab "menu" "channels" %} selected{% else %}{% endifactivetab %}">
+	{% ifactivetab "menu" "channels" %}Channels{% else %}<a href="{% url channels %}">Channels</a>{% endifactivetab %}
+      </div>
+      <div class="section{% ifactivetab "menu" "authkeys" %} selected{% else %}{% endifactivetab %}">
+        {% ifactivetab "menu" "authkeys" %}Authkeys{% else %}<a href="{% url authkeys %}">Authkeys</a>{% endifactivetab %}
+      </div>
+	{% endif %}
+      <div class="section">
+	{% if user.is_anonymous %}
+        <a href="{% url log-in %}">Login</a>
+	{% else %}
+	Logged in as &laquo; {{ user.username }} &raquo; &nbsp;
+	<a href="{% url log-out %}">Logout</a>
+	{% endif %}
+      </div>
+{% endblock %}
+    </div> 
+ 
+    <div class="body">
+{% block content %}
+      <div style="float:left;width:640px;margin-right:40px;"> 
+        <h1> 
+          <div class="subtitle">Live Datafeeds</div> 
+          hpfeeds
+        </h1>
+        <p>Test</p>
+      </div>
+
+      <div style="float:left;width:220px;"> 
+        <h3 style="text-align:right;">Sidebar</h3> 
+      </div> 
+{% endblock %}
+      <br clear="all"> 
+    </div> 
+ 
+    <div class="footer"> 
+      Copyright 2011 <a href="http://honeynet.org">Honeynet Project</a> 
+    </div> 
+  </body> 
+</html> 

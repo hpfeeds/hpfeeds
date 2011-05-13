@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">management</div> 
+          Delete Authkey
+        </h1>
+<br />
+{% if deleted %}
+<p>Authkey deleted. Back to <a href="{% url authkeys %}">Authkeys</a>.</p>
+{% else %}
+<p>Are you sure you want to delete this Authkey?</p>
+<p><a href="{% url deleteak ak.identifier %}?confirm=yes">Yes, I am.</a></p>
+<p><a href="{% url authkeys %}">No, back to authkeys.</a></p>
+{% endif %}
+      </div>
+{% endblock %}
+

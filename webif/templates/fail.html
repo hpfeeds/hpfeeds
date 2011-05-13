@@ -1,6 +1,17 @@
-<pre>Fail
-{% if msg %}{{ msg }}{% endif %}
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{{ block.super }}
+{% endblock %}
 
-<a href="{% url overview %}">Overview</a>
-<a href="{% url log-out %}">Logout</a>
-</pre>
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">Internal Server Error</div> 
+          Error
+        </h1>
+<br />
+<p>{% if msg %}{{ msg }}{% else %}No error message given.{% endif %}</p>
+      </div>
+{% endblock %}
+

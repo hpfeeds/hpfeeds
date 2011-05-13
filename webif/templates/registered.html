@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block menubar %}
+      <div class="section">
+        <a href="{% url index %}">Home</a> 
+      </div>
+      <div class="section">
+        <a href="{% url log-in %}">Login</a>
+      </div>
+      <div class="section selected"> 
+        Registration
+      </div> 
+{% endblock %}
+
+{% block content %}
+      <div style="float:left;"> 
+        <h1>Registration</h1>
+<br />
+<p>Registration completed. You may now <a href="{% url log-in %}">login.</a></p>
+      </div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+	<div>
+        <h1> 
+          <div class="subtitle">edit</div> 
+          Channel {{ ch }}
+        </h1>
+<br />
+<p>Here you can see which other users and which of your Authkeys have access to the channel.</p>
+<p>You can give another user access to this channel, or assign access to one of your <a href="{% url authkeys %}">Authkeys</a>.</p>
+
+      <div style="float:left;width:440px;margin-right:20px;"> 
+        <h3>Users</h3>
+{% if users %}
+<table class="list">
+<tr class="head"><th>User</th><th>Access</th></tr>
+{% for i in users %}<tr class="{% cycle '' 'alt' %}"><td>{{ i.0 }}</td><td>{{ i.1 }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>Currently no user has access to this channel.</p>
+{% endif %}
+<p>Delegate access to another user:</p>
+<form method="post">{% csrf_token %}
+<table class="form">
+{{ form.as_table }}
+<tr><td></td><td>&nbsp;</td></tr>
+<tr><td></td><td><input type="submit" name="u" value="Give Access" /></td></tr>
+</table>
+</form>
+<br />
+      </div>
+
+      <div style="float:left;width:440px;">
+        <h3>Authkeys</h3>
+{% if aks %}
+<table class="list">
+<tr class="head"><th>Authkey Identifier</th><th>Access</th></tr>
+{% for i in aks %}<tr class="{% cycle '' 'alt' %}"><td>{{ i.0 }}</td><td>{{ i.1 }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>Currently no Authkey has access to this channel.</p>
+{% endif %}
+<p>Assign access to an Authkey:</p>
+<form method="post">{% csrf_token %}
+<table class="form">
+{{ form2.as_table }}
+<tr><td></td><td>&nbsp;</td></tr>
+<tr><td></td><td><input type="submit" name="ak" value="Assign Access" /></td></tr>
+</table>
+</form>
+      </div>
+      </div>
+{% endblock %}
+

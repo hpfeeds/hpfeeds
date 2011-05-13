@@ -16,7 +16,8 @@ class AuthKey(Document):
 	secret = StringField(max_length=40, required=True)
 	subscribe = ListField(StringField())
 	publish = ListField(StringField())
+	comment = StringField(max_length=100, required=False)
 
 	def __unicode__(self):
-		return self.identifier
+		return '<AK: {0}{1}>'.format(self.identifier, ' ('+self.comment+')' if self.comment else '')
 

@@ -6,7 +6,7 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 import mongoengine
 mongoengine.connect('hpfeeds')
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -56,6 +56,7 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     'django.contrib.sessions',
+    'webif.tabs'
 )
 
 LOGIN_URL = '/login/'

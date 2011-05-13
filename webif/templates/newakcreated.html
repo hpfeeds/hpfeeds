@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">management</div> 
+          Generate Authkey
+        </h1>
+<br />
+<p>A new Authkey was generated:</p>
+<br />
+<table class="form">
+<tr><td>Identifier:</td><td>{{ ak.identifier }}</td></tr>
+<tr><td>Secret:</td><td>{{ ak.secret }}</td></tr>
+<tr><td>Comment:</td><td>{{ ak.comment }}</td></tr>
+</table>
+<br />
+<p>You can go back to your <a href="{% url authkeys %}">Authkeys</a> or edit the <a href="{% url editak ak.identifier %}">new Authkey</a>.</p>
+<br />
+      </div>
+{% endblock %}
+
