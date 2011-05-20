@@ -21,3 +21,16 @@ class AuthKey(Document):
 	def __unicode__(self):
 		return '<AK: {0}{1}>'.format(self.identifier, ' ('+self.comment+')' if self.comment else '')
 
+class Chanstat(Document):
+	name = StringField(required=True, unique=True)
+	total = IntField(required=True, default=0)
+	sourcecount = IntField(required=True, default=0)
+	hour = IntField(required=True, default=0)
+	day = IntField(required=True, default=0)
+	week = IntField(required=True, default=0)
+
+class Publog(Document):
+	tstamp = DateTimeField(required=True)
+	chan = StringField(required=True)
+	identifier = StringField(max_length=20, required=True)
+
