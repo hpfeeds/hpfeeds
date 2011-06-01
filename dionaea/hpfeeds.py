@@ -40,6 +40,7 @@ logger.setLevel(logging.DEBUG)
 def DEBUGPERF(msg):
 	print(msg)
 logger.debug = DEBUGPERF
+logger.critical = DEBUGPERF
 
 BUFSIZ = 16384
 
@@ -49,10 +50,22 @@ OP_AUTH         = 2
 OP_PUBLISH      = 3
 OP_SUBSCRIBE    = 4
 
+MAXBUF = 1024**2
+SIZES = {
+	OP_ERROR: 5+MAXBUF,
+	OP_INFO: 5+256+20,
+	OP_AUTH: 5+256+20,
+	OP_PUBLISH: 5+MAXBUF,
+	OP_SUBSCRIBE: 5+256*2,
+}
+
 CAPTURECHAN = 'mwcapture'
 DCECHAN = 'dcerpcrequests'
 SCPROFCHAN = 'shellcodeprofiles'
 UNIQUECHAN = 'mwbinary-sensorunique'
+
+class BadClient(Exception):
+        pass
 
 # packs a string with 1 byte length field
 def strpack8(x):
@@ -72,7 +85,7 @@ def msgsubscribe(ident, chan):
 	if isinstance(chan, str): chan = chan.encode('latin1')
 	return msghdr(OP_SUBSCRIBE, strpack8(ident) + chan)
 def msgauth(rand, ident, secret):
-	hash = hashlib.sha1(bytes(rand)+secret).hexdigest().encode('latin1')
+	hash = hashlib.sha1(bytes(rand)+secret).digest()
 	return msghdr(OP_AUTH, strpack8(ident) + hash)
 
 class FeedUnpack(object):
@@ -89,6 +102,9 @@ class FeedUnpack(object):
 			raise StopIteration('No message.')
 
 		ml, opcode = struct.unpack('!iB', self.buf[:5])
+		if ml > SIZES.get(opcode, MAXBUF):
+			raise BadClient('Not respecting MAXBUF.')
+
 		if len(self.buf) < ml:
 			raise StopIteration('No message.')
 
@@ -118,25 +134,30 @@ class hpclient(connection):
 		if self.filehandle:
 			return len(indata)
 
-		for opcode, data in self.unpacker:
-			logger.debug('hpclient msg opcode {0} data {1}'.format(opcode, data))
-			if opcode == OP_INFO:
-				name, rand = strunpack8(data)
-				logger.debug('hpclient server name {0} rand {1}'.format(name, rand))
-				self.send(msgauth(rand, self.ident, self.secret))
+		try:
+			for opcode, data in self.unpacker:
+				logger.debug('hpclient msg opcode {0} data {1}'.format(opcode, data))
+				if opcode == OP_INFO:
+					name, rand = strunpack8(data)
+					logger.debug('hpclient server name {0} rand {1}'.format(name, rand))
+					self.send(msgauth(rand, self.ident, self.secret))
 
-			elif opcode == OP_PUBLISH:
-				ident, data = strunpack8(data)
-				chan, data = strunpack8(data)
-				logger.debug('publish to {0} by {1}: {2}'.format(chan, ident, data))
+				elif opcode == OP_PUBLISH:
+					ident, data = strunpack8(data)
+					chan, data = strunpack8(data)
+					logger.debug('publish to {0} by {1}: {2}'.format(chan, ident, data))
 
-			elif opcode == OP_ERROR:
-				logger.debug('errormessage from server: {0}'.format(data))
+				elif opcode == OP_ERROR:
+					logger.debug('errormessage from server: {0}'.format(data))
+				else:
+					logger.debug('unknown opcode message: {0}'.format(opcode))
+		except BadClient:
+			logger.critical('unpacker error, disconnecting.')
+			self.close()
 
 		return len(indata)
 
 	def handle_io_out(self):
-		logger.debug('hpclient out-buffer flushed')
 		if self.filehandle:
 			self.sendfiledata()
 
