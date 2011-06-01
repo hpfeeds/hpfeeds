@@ -13,7 +13,7 @@ from django import forms
 from django.db.models import Q
 
 from hpfeedauth import User
-from models import AuthKey, TagRights
+from models import AuthKey, TagRights, Chanstat
 
 def getchanaxs(user):
 	channelaxs = collections.defaultdict(set)
@@ -354,5 +354,9 @@ def editak(request, ak):
 	return render_to_response('editak.html', {'form': caf, 'ak': akobj, 'axs': straxs}, context_instance=RequestContext(request))
 
 def index(request):
-	return render_to_response('index.html', {}, context_instance=RequestContext(request))
+	cs = Chanstat.objects.all()
+	stats = dict([(i.name, i) for i in cs])
+	for i in cs: stats.update({i.name.replace('-', '_'): i})
+
+	return render_to_response('index.html', {'cs': cs, 'stats': stats}, context_instance=RequestContext(request))
 
