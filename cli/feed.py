@@ -20,12 +20,12 @@ def msghdr(op, data):
 def msgpublish(ident, chan, data):
 	if isinstance(data, str):
 		data = data.encode('latin1')
-	return msghdr(OP_PUBLISH, struct.pack('!B', len(ident)%0xff) + ident + struct.pack('!B', len(chan)%0xff) + chan + data)
+	return msghdr(OP_PUBLISH, struct.pack('!B', len(ident)) + ident + struct.pack('!B', len(chan)) + chan + data)
 def msgsubscribe(ident, chan):
-	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)%0xff) + ident + chan)
+	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)) + ident + chan)
 def msgauth(rand, ident, secret):
 	hash = hashlib.sha1(rand+secret).digest()
-	return msghdr(OP_AUTH, struct.pack('!B', len(ident)%0xff) + ident + hash)
+	return msghdr(OP_AUTH, struct.pack('!B', len(ident)) + ident + hash)
 
 class FeedUnpack(object):
 	def __init__(self):
