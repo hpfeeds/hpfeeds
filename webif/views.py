@@ -339,9 +339,8 @@ def editak(request, ak):
 				akobj.subscribe.append(chan)
 			akobj.save()
 			return render_to_response('editak.html', {'addedaccess': True, 'ak': akobj, 'chan': chan}, context_instance=RequestContext(request))
-		else:
-			return render_to_response('editak.html', {'form': caf, 'ak': akobj, 'axs': straxs}, context_instance=RequestContext(request))
-			
+	else:
+		caf = ChanAccessForm(request.user)
 
 	axs = collections.defaultdict(set)
 	for c in akobj.publish:
@@ -350,7 +349,6 @@ def editak(request, ak):
 		axs[c].add('sub')
 	straxs = [(chan, ','.join(v)) for chan, v in axs.items()]
 	
-	caf = ChanAccessForm(request.user)
 	return render_to_response('editak.html', {'form': caf, 'ak': akobj, 'axs': straxs}, context_instance=RequestContext(request))
 
 def index(request):
