@@ -70,7 +70,7 @@ class BadClient(Exception):
 # packs a string with 1 byte length field
 def strpack8(x):
 	if isinstance(x, str): x = x.encode('latin1')
-	return struct.pack('!B', len(x)%0xff) + x
+	return struct.pack('!B', len(x)) + x
 
 # unpacks a string with 1 byte length field
 def strunpack8(x):

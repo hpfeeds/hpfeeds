@@ -1,0 +1,43 @@
+diff -x hpfeeds.py -x .git -Naur dionaea2/conf/dionaea.conf.dist dionaea/conf/dionaea.conf.dist
+--- dionaea2/conf/dionaea.conf.dist	2011-11-10 17:06:09.000000000 +0100
++++ dionaea/conf/dionaea.conf.dist	2011-11-10 16:32:37.000000000 +0100
+@@ -344,6 +344,14 @@
+ 			user = "" 		// username (optional)
+ 			pass = ""		// password (optional)
+ 		}
++		hpfeeds = {
++			hp1 = {
++				server = ""
++				port = ""
++				ident = ""
++				secret = ""
++			}
++		}
+ 		logsql = {
+ 			mode = "sqlite" // so far there is only sqlite
+ 			sqlite = {
+@@ -457,6 +465,7 @@
+ //			"virustotal",
+ //			"mwserv",
+ //			"submit_http",
++//			"hpfeeds",
+ //			"logxmpp",
+ //			"nfq",
+ //			"p0f",
+diff -x hpfeeds.py -x .git -Naur dionaea2/modules/python/scripts/ihandlers.py dionaea/modules/python/scripts/ihandlers.py
+--- dionaea2/modules/python/scripts/ihandlers.py	2011-11-10 17:06:09.000000000 +0100
++++ dionaea/modules/python/scripts/ihandlers.py	2011-11-10 16:30:19.000000000 +0100
+@@ -129,6 +129,13 @@
+ 		import dionaea.submit_http
+ 		g_handlers.append(dionaea.submit_http.handler('*'))
+ 
++	if "hpfeeds" in g_dionaea.config()['modules']['python']['ihandlers']['handlers'] and 'hpfeeds' in g_dionaea.config()['modules']['python']:
++		import dionaea.hpfeeds
++		for client in g_dionaea.config()['modules']['python']['hpfeeds']:
++			conf = g_dionaea.config()['modules']['python']['hpfeeds'][client]
++			x = dionaea.hpfeeds.hpfeedihandler(conf)
++			g_handlers.append(x)
++
+ 	if "fail2ban" in g_dionaea.config()['modules']['python']['ihandlers']['handlers']:
+ 		import dionaea.fail2ban
+ 		g_handlers.append(dionaea.fail2ban.fail2banhandler())
