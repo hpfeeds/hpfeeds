@@ -5,5 +5,5 @@ bin_PROGRAMS = hpclient
 
 hpclient_LDFLAGS =  ${AM_LDFLAGS}
 hpclient_LDADD = ../src/libhpfeeds.la
-hpclient_SOURCES = hpclient.c util.c
+hpclient_SOURCES = hpclient.c
 
