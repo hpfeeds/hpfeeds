@@ -28,12 +28,13 @@
 
 
 typedef enum {
-	S_INIT,
-	S_GOT_INFO,
-	S_AUTH_SENT,
-	S_RECV_MSGS,
-	S_ERROR,
-	S_TERMINATE
+S_INIT,
+S_AUTH,
+S_SUBSCRIBE,
+S_PUBLISH,
+S_RECVMSGS,
+S_ERROR,
+S_TERMINATE
 } session_state_t;
 
 session_state_t session_state;	// global session state
@@ -94,6 +95,7 @@ int main(int argc, char *argv[]) {
 	u_int32_t payload_len;
 
 	channel = ident = secret = NULL;
+	msg = NULL;
 
 	memset(&host, 0, sizeof(struct sockaddr_in));
 	host.sin_family = AF_INET;
@@ -175,7 +177,10 @@ int main(int argc, char *argv[]) {
 
 			nonce = *(u_int32_t *) (data + sizeof(msg->hdr) + chunk->len + 1);
 
-			session_state = S_GOT_INFO;
+			session_state = S_AUTH;
+
+			free(data);
+
 			break;
 		case OP_ERROR:
 			session_state = S_ERROR;
@@ -185,10 +190,8 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_FAILURE);
 		}
 
-		free(data);
-
 		break;
-	case S_GOT_INFO:
+	case S_AUTH:
 		// send auth message
 		printf("sending authentication...\n");
 		msg = hpf_msg_auth(nonce, (u_char *) ident, strlen(ident), (u_char *) secret, strlen(secret));
@@ -199,9 +202,9 @@ int main(int argc, char *argv[]) {
 		}
 		hpf_msg_delete(msg);
 	
-		session_state = S_AUTH_SENT;
+		session_state = S_SUBSCRIBE;
 		break;
-	case S_AUTH_SENT:
+	case S_SUBSCRIBE:
 		// send subscribe message
 		printf("subscribing to channel...\n");
 		msg = hpf_msg_subscribe((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel));
@@ -212,9 +215,9 @@ int main(int argc, char *argv[]) {
 		}
 		hpf_msg_delete(msg);
 	
-		session_state = S_RECV_MSGS;
+		session_state = S_RECVMSGS;
 		break;
-	case S_RECV_MSGS:
+	case S_RECVMSGS:
 		// read server message
 		if ((data = read_msg(s)) == NULL) break;
 		msg = (hpf_msg_t *) data;
@@ -244,9 +247,22 @@ int main(int argc, char *argv[]) {
 			}
 			putchar('\n');
 			
+			free(data);
+
 			// we just remain in S_SUBSCRIBED
 			break;
 		case OP_ERROR:
+			session_state = S_ERROR;
+			break;
+		default:
+			fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
+			exit(EXIT_FAILURE);
+		}
+
+		break;
+	case S_ERROR:
+		if (msg) {
+			// msg is still valid
 			if ((errmsg = calloc(1, msg->hdr.msglen - sizeof(msg->hdr))) == NULL) {
 				perror("calloc()");
 				exit(EXIT_FAILURE);
@@ -256,15 +272,10 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "server error: '%s'\n", errmsg);
 			free(errmsg);
 
-			session_state = S_TERMINATE;
-			break;
-		default:
-			fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
-			exit(EXIT_FAILURE);
+			free(msg);
 		}
 
-		free(data);
-
+		session_state = S_TERMINATE;
 		break;
 	case S_TERMINATE:
 		printf("terminated.\n");
