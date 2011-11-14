@@ -59,9 +59,13 @@ def main(opts, action, pubdata=None):
 		log('could not connect to broker.')
 		return 1
 
-	s.settimeout(None)
 	unpacker = FeedUnpack()
-	d = s.recv(1024)
+	try: d = s.recv(1024)
+	except socket.timeout:
+		log('timeout on banner?')
+		return 1
+
+	s.settimeout(None)
 
 	published = False
 

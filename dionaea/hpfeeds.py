@@ -59,10 +59,10 @@ SIZES = {
 	OP_SUBSCRIBE: 5+256*2,
 }
 
-CAPTURECHAN = 'mwcapture'
-DCECHAN = 'dcerpcrequests'
-SCPROFCHAN = 'shellcodeprofiles'
-UNIQUECHAN = 'mwbinary-sensorunique'
+CAPTURECHAN = 'dionaea.capture'
+DCECHAN = 'dionaea.dcerpcrequests'
+SCPROFCHAN = 'dionaea.shellcodeprofiles'
+UNIQUECHAN = 'mwbinary.dionaea.sensorunique'
 
 class BadClient(Exception):
         pass
@@ -70,7 +70,7 @@ class BadClient(Exception):
 # packs a string with 1 byte length field
 def strpack8(x):
 	if isinstance(x, str): x = x.encode('latin1')
-	return struct.pack('!B', len(x)) + x
+	return struct.pack('!B', len(x)%0xff) + x
 
 # unpacks a string with 1 byte length field
 def strunpack8(x):
