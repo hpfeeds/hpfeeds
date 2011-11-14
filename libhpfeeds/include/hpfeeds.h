@@ -36,7 +36,7 @@ typedef struct {
 } hpf_msg_t;
 
 typedef struct {
-	u_int32_t len;
+	u_char len;
 	u_char data[];
 } hpf_chunk_t;
 
