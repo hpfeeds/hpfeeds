@@ -1,0 +1,20 @@
+
+Kippo hpfeeds module
+====================
+
+ - put hpfeeds.py into kippo/dblog/
+
+ - in the kippo config uncomment the database_hpfeeds:
+
+> > [database_hpfeeds]
+> > server = hpfeeds.honeycloud.net
+> > port = 10000
+> > identifier = df6uh@hp1
+> > secret = <secret>
+> > debug=true
+
+ - the module will then be magically loaded by kippo on startup
+
+Cheers,
+ -Mark
+
