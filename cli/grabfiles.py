@@ -138,7 +138,7 @@ def main(opts, action, pubdata=None):
 	return 0
 
 def opts():
-	usage = "usage: %prog -i ident -s secret --host host -p port -c channel1 [-c channel2, ...] <action> [<data>]"
+	usage = "usage: %prog [options] publish|subscribe <publish_data>"
 	parser = optparse.OptionParser(usage=usage)
 	parser.add_option("-c", "--chan",
 		action="append", dest='channels', nargs=1, type='string',
@@ -164,9 +164,8 @@ def opts():
 
 	options, args = parser.parse_args()
 
-	if len(args) < 1:
-		parser.error('You need to give "subscribe" or "publish" as <action>.')
-	if args[0] not in ['subscribe', 'publish']:
+	if len(args) < 1 or args[0] not in ['subscribe', 'publish'] or None in options.__dict__.values():
+		parser.print_help()
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
 
 	action = args[0]
