@@ -218,6 +218,7 @@ class hpfeedihandler(ihandler):
 		self.client.sendfile(i.file)
 
 	def handle_incident_dionaea_download_complete_hash(self, i):
+		if not hasattr(i, 'con'): return
 		logger.debug('hash complete, publishing md5 {0}, path {1}'.format(i.md5hash, i.file))
 		sha512 = sha512file(i.file)
 		self.client.publish(CAPTURECHAN, saddr=i.con.remote.host, 
@@ -227,6 +228,7 @@ class hpfeedihandler(ihandler):
 		)
 
 	def handle_incident_dionaea_modules_python_smb_dcerpc_request(self, i):
+		if not hasattr(i, 'con'): return
 		logger.debug('dcerpc request, publishing uuid {0}, opnum {1}'.format(i.uuid, i.opnum))
 		self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
 			saddr=i.con.remote.host, sport=str(i.con.remote.port),
