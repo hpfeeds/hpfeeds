@@ -37,10 +37,10 @@ import json
 logger = logging.getLogger('hpfeeds')
 logger.setLevel(logging.DEBUG)
 
-def DEBUGPERF(msg):
-	print(msg)
-logger.debug = DEBUGPERF
-logger.critical = DEBUGPERF
+#def DEBUGPERF(msg):
+#	print(msg)
+#logger.debug = DEBUGPERF
+#logger.critical = DEBUGPERF
 
 BUFSIZ = 16384
 
@@ -218,6 +218,7 @@ class hpfeedihandler(ihandler):
 		self.client.sendfile(i.file)
 
 	def handle_incident_dionaea_download_complete_hash(self, i):
+		logger.debug('hash complete, publishing md5 {0}, path {1}'.format(i.md5hash, i.file))
 		sha512 = sha512file(i.file)
 		self.client.publish(CAPTURECHAN, saddr=i.con.remote.host, 
 			sport=str(i.con.remote.port), daddr=i.con.local.host,
@@ -226,11 +227,13 @@ class hpfeedihandler(ihandler):
 		)
 
 	def handle_incident_dionaea_modules_python_smb_dcerpc_request(self, i):
+		logger.debug('dcerpc request, publishing uuid {0}, opnum {1}'.format(i.uuid, i.opnum))
 		self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
 			saddr=i.con.remote.host, sport=str(i.con.remote.port),
 			daddr=i.con.local.host, dport=str(i.con.local.port),
 		)
 
 	def handle_incident_dionaea_module_emu_profile(self, icd):
+		logger.debug('emu profile, publishing length {0}'.format(len(icd.profile)))
 		self.client.publish(SCPROFCHAN, profile=icd.profile)
 
