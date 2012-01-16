@@ -1,118 +1,60 @@
 
 import sys
-import struct
-import socket
 import optparse
-import hashlib
+import datetime
+import logging
 import string
+logging.basicConfig(level=logging.CRITICAL)
 
-OP_ERROR	= 0
-OP_INFO		= 1
-OP_AUTH		= 2
-OP_PUBLISH	= 3
-OP_SUBSCRIBE	= 4
+import hpfeeds
 
 def log(msg):
 	print '[feedcli] {0}'.format(msg)
 
-def msghdr(op, data):
-	return struct.pack('!iB', 5+len(data), op) + data
-def msgpublish(ident, chan, data):
-	if isinstance(data, str):
-		data = data.encode('latin1')
-	return msghdr(OP_PUBLISH, struct.pack('!B', len(ident)) + ident + struct.pack('!B', len(chan)) + chan + data)
-def msgsubscribe(ident, chan):
-	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)) + ident + chan)
-def msgauth(rand, ident, secret):
-	hash = hashlib.sha1(rand+secret).digest()
-	return msghdr(OP_AUTH, struct.pack('!B', len(ident)) + ident + hash)
-
-class FeedUnpack(object):
-	def __init__(self):
-		self.buf = bytearray()
-	def __iter__(self):
-		return self
-	def next(self):
-		return self.unpack()
-	def feed(self, data):
-		self.buf.extend(data)
-	def unpack(self):
-		if len(self.buf) < 5:
-			raise StopIteration('No message.')
-
-		ml, opcode = struct.unpack('!iB', buffer(self.buf,0,5))
-		if len(self.buf) < ml:
-			raise StopIteration('No message.')
-		
-		data = bytearray(buffer(self.buf, 5, ml-5))
-		del self.buf[:ml]
-		return opcode, data
-
 def main(opts, action, pubdata=None):
-	log('Connecting to feed broker...')
+	outfd = None
+	if opts.output:
+		try: outfd = open(opts.output, 'a')
+		except:
+			log('could not open output file for message log.')
+			return 1
+	else:
+		outfd = sys.stdout
 
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.settimeout(3)
-	try:
-		s.connect((opts.host, opts.port))
-	except:
-		log('could not connect to broker.')
+	try: hpc = hpfeeds.new(opts.host, opts.port, opts.ident, opts.secret)
+	except hpfeeds.FeedException, e:
+		log('Error: {0}'.format(e))
 		return 1
+	
+	log('connected to {0}'.format(hpc.brokername))
 
-	unpacker = FeedUnpack()
-	try: d = s.recv(1024)
-	except socket.timeout:
-		log('timeout on banner?')
-		return 1
+	if action == 'subscribe':
+		def on_message(ident, chan, payload):
+			if [i for i in payload[:20] if i not in string.printable]:
+				log('publish to {0} by {1}: {2}'.format(chan, ident, payload[:20].encode('hex') + '...'))
+			else:
+				log('publish to {0} by {1}: {2}'.format(chan, ident, payload))
 
-	s.settimeout(None)
+		def on_error(payload):
+			log('Error message from broker: {0}'.format(payload))
+			hpc.stop()
 
-	published = False
+		hpc.subscribe(opts.channels)
+		try: hpc.run(on_message, on_error)
+		except hpfeeds.FeedException, e:
+			log('Error: {0}'.format(e))
+			return 1
 
-	while d and not published:
-		unpacker.feed(d)
-		for opcode, data in unpacker:
-			if opcode == OP_INFO:
-				rest = buffer(data, 0)
-				name, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-				rand = str(rest)
+	elif action == 'publish':
+		hpc.publish(opts.channels, pubdata)
 
-				s.send(msgauth(rand, opts.ident, opts.secret))
-				for c in opts.channels:
-					if action == 'publish':
-						s.send(msgpublish(opts.ident, c, pubdata))
-						published = True
-						s.settimeout(0.1)
-					else:
-						s.send(msgsubscribe(opts.ident, c))
-			elif opcode == OP_PUBLISH:
-				rest = buffer(data, 0)
-				ident, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-				chan, content = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
+	log('closing connection.')
+	hpc.close()
 
-				# this is the dummy code printing the message contents
-				# poor man's check for binary data :)
-				# feel free to process the contents in any way you want at this position
-				if [i for i in content[:20] if i not in string.printable]:
-					log('publish to {0} by {1}: {2}'.format(chan, ident, content[:20].encode('hex') + '...'))
-				else:
-					log('publish to {0} by {1}: {2}'.format(chan, ident, content))
-
-			elif opcode == OP_ERROR:
-				log('errormessage from server: {0}'.format(data))
-
-		try:
-			d = s.recv(1024)
-		except KeyboardInterrupt:
-			break
-		except socket.timeout:
-			break
-
-	s.close()
 	return 0
 
 def opts():
-	usage = "usage: %prog [options] publish|subscribe <publish_data>"
+	usage = "usage: %prog -i ident -s secret --host host -p port -c channel1 [-c channel2, ...] <action> [<data>]"
 	parser = optparse.OptionParser(usage=usage)
 	parser.add_option("-c", "--chan",
 		action="append", dest='channels', nargs=1, type='string',
@@ -129,11 +71,15 @@ def opts():
 	parser.add_option("-p", "--port",
 		action="store", dest='port', nargs=1, type='int',
 		help="broker port")
+	parser.add_option("-o", "--output",
+		action="store", dest='output', nargs=1, type='string',
+		help="publish log filename")
 
 	options, args = parser.parse_args()
 
-	if len(args) < 1 or args[0] not in ['subscribe', 'publish'] or None in options.__dict__.values():
-		parser.print_help()
+	if len(args) < 1:
+		parser.error('You need to give "subscribe" or "publish" as <action>.')
+	if args[0] not in ['subscribe', 'publish']:
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
 
 	action = args[0]
