@@ -122,9 +122,12 @@ class hpclient(connection):
 		self.connect(server, port)
 		self.timeouts.reconnect = 10.0
 		self.sendfiles = []
+		self.msgqueue = []
 		self.filehandle = None
+		self.connected = False
 
 	def handle_established(self):
+		self.connected = True
 		logger.debug('hpclient established')
 
 	def handle_io_in(self, indata):
@@ -158,11 +161,15 @@ class hpclient(connection):
 		return len(indata)
 
 	def handle_io_out(self):
-		if self.filehandle:
-			self.sendfiledata()
+		if self.filehandle: self.sendfiledata()
+		else:
+			if self.msgqueue:
+				m = self.msgqueue.pop(0)
+				self.send(m)
 
 	def publish(self, channel, **kwargs):
-		self.send(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
+		if self.filehandle: self.msgqueue.append(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
+		else: self.send(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
 
 	def sendfile(self, filepath):
 		# does not read complete binary into memory, read and send chunks
@@ -194,11 +201,14 @@ class hpclient(connection):
 		pass
 
 	def handle_disconnect(self):
+		logger.info('hpclient disconnect')
+		self.connected = False
 		return 1
 
 	def handle_error(self, err):
-		logger.debug('handle_err {0}'.format(err))
-		return False
+		logger.warn('hpclient error {0}'.format(err))
+		self.connected = False
+		return 1
 
 class hpfeedihandler(ihandler):
 	def __init__(self, config):
@@ -214,28 +224,43 @@ class hpfeedihandler(ihandler):
 		pass
 		
 	def handle_incident_dionaea_download_complete_unique(self, i):
+		self.handle_incident_dionaea_download_complete_again(i)
+		if not hasattr(i, 'con') or not self.client.connected: return
 		logger.debug('unique complete, publishing md5 {0}, path {1}'.format(i.md5hash, i.file))
-		self.client.sendfile(i.file)
+		try:
+			self.client.sendfile(i.file)
+		except Exception as e:
+			logger.warn('exception when publishing: {0}'.format(e))
 
-	def handle_incident_dionaea_download_complete_hash(self, i):
-		if not hasattr(i, 'con'): return
+	def handle_incident_dionaea_download_complete_again(self, i):
+		if not hasattr(i, 'con') or not self.client.connected: return
 		logger.debug('hash complete, publishing md5 {0}, path {1}'.format(i.md5hash, i.file))
-		sha512 = sha512file(i.file)
-		self.client.publish(CAPTURECHAN, saddr=i.con.remote.host, 
-			sport=str(i.con.remote.port), daddr=i.con.local.host,
-			dport=str(i.con.local.port), md5=i.md5hash, sha512=sha512,
-			url=i.url
-		)
+		try:
+			sha512 = sha512file(i.file)
+			self.client.publish(CAPTURECHAN, saddr=i.con.remote.host, 
+				sport=str(i.con.remote.port), daddr=i.con.local.host,
+				dport=str(i.con.local.port), md5=i.md5hash, sha512=sha512,
+				url=i.url
+			)
+		except Exception as e:
+			logger.warn('exception when publishing: {0}'.format(e))
 
 	def handle_incident_dionaea_modules_python_smb_dcerpc_request(self, i):
-		if not hasattr(i, 'con'): return
+		if not hasattr(i, 'con') or not self.client.connected: return
 		logger.debug('dcerpc request, publishing uuid {0}, opnum {1}'.format(i.uuid, i.opnum))
-		self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
-			saddr=i.con.remote.host, sport=str(i.con.remote.port),
-			daddr=i.con.local.host, dport=str(i.con.local.port),
-		)
+		try:
+			self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
+				saddr=i.con.remote.host, sport=str(i.con.remote.port),
+				daddr=i.con.local.host, dport=str(i.con.local.port),
+			)
+		except Exception as e:
+			logger.warn('exception when publishing: {0}'.format(e))
 
 	def handle_incident_dionaea_module_emu_profile(self, icd):
+		if not hasattr(icd, 'con') or not self.client.connected: return
 		logger.debug('emu profile, publishing length {0}'.format(len(icd.profile)))
-		self.client.publish(SCPROFCHAN, profile=icd.profile)
+		try:
+			self.client.publish(SCPROFCHAN, profile=icd.profile)
+		except Exception as e:
+			logger.warn('exception when publishing: {0}'.format(e))
 
