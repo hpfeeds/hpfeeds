@@ -1,7 +1,8 @@
-diff -x hpfeeds.py -x .git -Naur dionaea2/conf/dionaea.conf.dist dionaea/conf/dionaea.conf.dist
---- dionaea2/conf/dionaea.conf.dist	2011-11-10 17:06:09.000000000 +0100
-+++ dionaea/conf/dionaea.conf.dist	2011-11-10 16:32:37.000000000 +0100
-@@ -344,6 +344,14 @@
+diff --git a/conf/dionaea.conf.dist b/conf/dionaea.conf.dist
+index 43e17b4..7b16529 100644
+--- a/conf/dionaea.conf.dist
++++ b/conf/dionaea.conf.dist
+@@ -344,6 +344,16 @@ modules = {
  			user = "" 		// username (optional)
  			pass = ""		// password (optional)
  		}
@@ -18,18 +19,19 @@ diff -x hpfeeds.py -x .git -Naur dionaea2/conf/dionaea.conf.dist dionaea/conf/di
  		logsql = {
  			mode = "sqlite" // so far there is only sqlite
  			sqlite = {
-@@ -457,6 +465,7 @@
+@@ -457,6 +467,7 @@ modules = {
  //			"virustotal",
  //			"mwserv",
  //			"submit_http",
-+//			"hpfeeds",
++			"hpfeeds",
  //			"logxmpp",
  //			"nfq",
  //			"p0f",
-diff -x hpfeeds.py -x .git -Naur dionaea2/modules/python/scripts/ihandlers.py dionaea/modules/python/scripts/ihandlers.py
---- dionaea2/modules/python/scripts/ihandlers.py	2011-11-10 17:06:09.000000000 +0100
-+++ dionaea/modules/python/scripts/ihandlers.py	2011-11-10 16:30:19.000000000 +0100
-@@ -129,6 +129,13 @@
+diff --git a/modules/python/scripts/ihandlers.py b/modules/python/scripts/ihandlers.py
+index 5b40dd7..8bddc63 100644
+--- a/modules/python/scripts/ihandlers.py
++++ b/modules/python/scripts/ihandlers.py
+@@ -129,6 +129,13 @@ def new():
  		import dionaea.submit_http
  		g_handlers.append(dionaea.submit_http.handler('*'))
  
