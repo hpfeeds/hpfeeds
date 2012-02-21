@@ -33,6 +33,8 @@ import logging
 import struct
 import hashlib
 import json
+try: import pyev
+except: pyev = None
 
 logger = logging.getLogger('hpfeeds')
 logger.setLevel(logging.DEBUG)
@@ -216,6 +218,30 @@ class hpfeedihandler(ihandler):
 		self.client = hpclient(config['server'], int(config['port']), config['ident'], config['secret'])
 		ihandler.__init__(self, '*')
 
+		self.dynip_resolve = config.get('dynip_resolve', '')
+		self.dynip_timer = None
+		self.ownip = None
+		if self.dynip_resolve and 'http' in self.dynip_resolve:
+			if pyev == None:
+				logger.debug('You are missing the python pyev binding in your dionaea installation.')
+			else:
+				logger.debug('hpfeedihandler will use dynamic IP resolving!')
+				self.loop = pyev.default_loop()
+				self.dynip_timer = pyev.Timer(2., 300, self.loop, self._dynip_resolve)
+				self.dynip_timer.start()
+
+	def stop(self):
+		if self.dynip_timer:
+			self.dynip_timer.stop()
+			self.dynip_timer = None
+			self.loop = None
+
+	def _ownip(self, icd):
+		if self.dynip_resolve and 'http' in self.dynip_resolve and pyev != None:
+			if self.ownip: return self.ownip
+			else: raise Exception('Own IP not yet resolved!')
+		return icd.con.local.host
+
 	def __del__(self):
 		#self.client.close()
 		pass
@@ -238,7 +264,7 @@ class hpfeedihandler(ihandler):
 		try:
 			sha512 = sha512file(i.file)
 			self.client.publish(CAPTURECHAN, saddr=i.con.remote.host, 
-				sport=str(i.con.remote.port), daddr=i.con.local.host,
+				sport=str(i.con.remote.port), daddr=self._ownip(i),
 				dport=str(i.con.local.port), md5=i.md5hash, sha512=sha512,
 				url=i.url
 			)
@@ -251,7 +277,7 @@ class hpfeedihandler(ihandler):
 		try:
 			self.client.publish(DCECHAN, uuid=i.uuid, opnum=i.opnum,
 				saddr=i.con.remote.host, sport=str(i.con.remote.port),
-				daddr=i.con.local.host, dport=str(i.con.local.port),
+				daddr=self._ownip(i), dport=str(i.con.local.port),
 			)
 		except Exception as e:
 			logger.warn('exception when publishing: {0}'.format(e))
@@ -263,4 +289,16 @@ class hpfeedihandler(ihandler):
 			self.client.publish(SCPROFCHAN, profile=icd.profile)
 		except Exception as e:
 			logger.warn('exception when publishing: {0}'.format(e))
+
+	def _dynip_resolve(self, events, data):
+		i = incident("dionaea.upload.request")
+		i._url = self.dynip_resolve
+		i._callback = "dionaea.modules.python.hpfeeds.dynipresult"
+		i.report()
+
+	def handle_incident_dionaea_modules_python_hpfeeds_dynipresult(self, icd):
+		fh = open(icd.path, mode="rb")
+		self.ownip = fh.read().strip()
+		logger.debug('resolved own IP to: {0}'.format(self.ownip))
+		fh.close()
 
