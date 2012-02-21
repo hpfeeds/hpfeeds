@@ -11,6 +11,8 @@ diff -x hpfeeds.py -x .git -Naur dionaea2/conf/dionaea.conf.dist dionaea/conf/di
 +				port = ""
 +				ident = ""
 +				secret = ""
++				// dynip_resolve: enable to lookup the sensor ip through a webservice
++				dynip_resolve = "http://hpfeeds.honeycloud.net/ip"
 +			}
 +		}
  		logsql = {
