@@ -18,8 +18,8 @@ __all__ = ["new", "FeedException"]
 def msghdr(op, data):
 	return struct.pack('!iB', 5+len(data), op) + data
 def msgpublish(ident, chan, data):
-	if isinstance(data, str):
-		data = data.encode('latin1')
+#	if isinstance(data, str):
+#		data = data.encode('latin1')
 	return msghdr(OP_PUBLISH, struct.pack('!B', len(ident)) + ident + struct.pack('!B', len(chan)) + chan + data)
 def msgsubscribe(ident, chan):
 	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)) + ident + chan)

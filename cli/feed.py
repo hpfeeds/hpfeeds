@@ -48,6 +48,10 @@ def main(opts, action, pubdata=None):
 	elif action == 'publish':
 		hpc.publish(opts.channels, pubdata)
 
+	elif action == 'sendfile':
+		pubfile = open(pubdata, 'rb').read()
+		hpc.publish(opts.channels, pubfile)
+
 	log('closing connection.')
 	hpc.close()
 
@@ -79,12 +83,14 @@ def opts():
 
 	if len(args) < 1:
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
-	if args[0] not in ['subscribe', 'publish']:
+	if args[0] not in ['subscribe', 'publish', 'sendfile']:
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
 
 	action = args[0]
 	data = None
 	if action == 'publish':
+		data = ' '.join(args[1:])
+	elif action == 'sendfile':
 		data = ' '.join(args[1:])
 
 	return options, action, data
