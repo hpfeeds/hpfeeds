@@ -21,11 +21,17 @@
         {% ifactivetab "menu" "home" %}Home{% else %}<a href="{% url index %}">Home</a>{% endifactivetab %}
       </div>
 	{% if not user.is_anonymous %}
+      <div class="section{% ifactivetab "menu" "users" %} selected{% else %}{% endifactivetab %}">
+	{% ifactivetab "menu" "users" %}Users{% else %}<a href="{% url users %}">Users</a>{% endifactivetab %}
+      </div>
       <div class="section{% ifactivetab "menu" "channels" %} selected{% else %}{% endifactivetab %}">
 	{% ifactivetab "menu" "channels" %}Channels{% else %}<a href="{% url channels %}">Channels</a>{% endifactivetab %}
       </div>
       <div class="section{% ifactivetab "menu" "authkeys" %} selected{% else %}{% endifactivetab %}">
         {% ifactivetab "menu" "authkeys" %}Authkeys{% else %}<a href="{% url authkeys %}">Authkeys</a>{% endifactivetab %}
+      </div>
+      <div class="section{% ifactivetab "menu" "settings" %} selected{% else %}{% endifactivetab %}">
+        {% ifactivetab "menu" "settings" %}Settings{% else %}<a href="{% url settings %}">Settings</a>{% endifactivetab %}
       </div>
 	{% endif %}
       <div class="section">

@@ -14,3 +14,5 @@ for i in cs:
 	i.week = Publog.objects.filter(chan=i.name, tstamp__gte=datetime.datetime.now()-datetime.timedelta(7)).count()
 	i.save()
 
+	Publog.objects.filter(tstamp__lt=datetime.datetime.now()-datetime.timedelta(7)).delete()
+

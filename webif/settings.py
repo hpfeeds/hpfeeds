@@ -6,7 +6,7 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 import mongoengine
 mongoengine.connect('hpfeeds')
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -56,9 +56,15 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     'django.contrib.sessions',
-    'webif.tabs'
+    'webif.tabs',
+    'webif'
 )
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
+EMAIL_HOST = ''
+EMAIL_PORT = 25
+SERVER_EMAIL = 'admin@hpfeeds.honeycloud.net'
+EMAIL_SUBJECT_PREFIX = '[hpfeeds] '
 

@@ -12,6 +12,7 @@ class SimpleExceptionResponse:
 			response += "%s\n" % tb
 
 		print response
+		sys.stdout.flush()
 
 		if settings.DEBUG:
 			return HttpResponseServerError(response)

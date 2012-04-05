@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load tabs %}
+{% load hpfeed %}
 {% block menubar %}
 {% activetab "menu" "channels" %}
 {{ block.super }}
@@ -21,12 +22,22 @@
 	<p>You have access to the following channels:</p>
 <table class="list">
 <tr class="head"><th>Channel</th><th>Access</th><th></th></tr>
-{% for c in channels %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.0 }}</td><td>{{ c.1 }}</td><td><a href="{% url editchan c.0 %}">Edit</a>&nbsp;<a href="{% url deletechan c.0 %}">Delete</a></td></tr>
+{% for c in channels %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.name }}</td><td>{{ c|access_chan_user:user }}</td><td><a href="{% url editchan c.name %}">Edit</a>&nbsp;<a href="{% url deletechan c.name %}">Delete</a></td></tr>
 {% endfor %}
 </table>
 
 {% else %}
 	<p>You don't have access to any channels.</p>
+{% endif %}
+{% if restchans %}
+	<p>Other channels on this hpfeeds instance:</p>
+<table class="list">
+<tr class="head"><th>Channel</th><th>Access</th><th></th></tr>
+{% for c in restchans %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.name }}</td><td>{{ c|access_chan_user:user }}</td><td><a href="{% url editchan c.name %}">Edit</a>&nbsp;<a href="{% url deletechan c.name %}">Delete</a></td></tr>
+{% endfor %}
+</table>
+
+{% else %}
 {% endif %}
       </div>
 {% endblock %}
