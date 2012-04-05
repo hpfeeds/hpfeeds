@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{% activetab "menu" "settings" %}
+{{ block.super }}
+{% endblock %}
+{% block content %}
+      <div style="float:left;width:640px;margin-right:40px;text-align:justify"> 
+        <h1> 
+          <div class="subtitle">account</div> 
+          Settings
+        </h1>
+	<p>You can change your password <a href="{% url password_change %}">here</a>.</p>
+      </div>
+
+{% endblock %}
+

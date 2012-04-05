@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load tabs %}
+{% block menubar %}
+{% activetab "menu" "users" %}
+{{ block.super }}
+{% endblock %}
+{% block content %}
+      <div> 
+        <h1> 
+          <div class="subtitle">management</div> 
+          Users
+        </h1>
+	
+{% if inactive %}
+	<p>The following users have registered but are inactive:</p>
+<table class="list">
+<tr class="head"><th>User</th><th>E-Mail</th><th>Chapter</th><th></th></tr>
+{% for c in inactive %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.username }}</td><td>{{ c.email }}</td><td>{{ c.chapter }}</td><td><a href="{% url activate c.username %}">Activate</a></td></tr>
+{% endfor %}
+</table>
+{% else %}
+	<p>Currently there are no inactive registered users.</p>
+{% endif %}
+{% if active %}
+	<p>All active system users:</p>
+<table class="list">
+<tr class="head"><th>User</th><th>E-Mail</th><th>Chapter</th><th>Last login</th><th>Activated by</th><th>Comment</th></tr>
+{% for c in active %}<tr class="{% cycle '' 'alt' %}"><td>{{ c.username }}</td><td>{{ c.email }}</td><td>{{ c.chapter }}</td><td>{{ c.last_login.ctime }}</td><td>{{ c.activated_by }}</td><td>{{ c.comment }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+{% endif %}
+      </div>
+{% endblock %}
+
