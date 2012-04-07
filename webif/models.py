@@ -74,7 +74,7 @@ class Channel(Document):
 			if self.name in ak.subscribe: ak.subscribe.remove(self.name)
 			ak.save()
 
-		super(Document, self).delete(*args, **kwargs)
+		self.__class__.objects(pk=self.pk).delete()
 		# deleted
 
 	def anypub(self):
