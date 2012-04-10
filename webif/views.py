@@ -250,6 +250,7 @@ def deletechan(request, ch):
 	confirmed = request.GET.get('confirm', 'no') == 'yes'
 	if confirmed:
 		cobj.delete()
+		return render_to_response('deletechan.html', {'deleted': True, 'ch': ch}, context_instance=RequestContext(request))
 	
 	return render_to_response('deletechan.html', {'deleted': False, 'ch': ch}, context_instance=RequestContext(request))
 
