@@ -209,10 +209,6 @@ class FeedBroker(object):
 		self.listener._on('close', self._lclose)
 		self.listener._on('connection', self._newconn)
 
-		self.listener2 = listenplain(host=FBIP, port=FBPORT+1)
-		self.listener2._on('close', self._lclose)
-		self.listener2._on('connection', self._newconnplain)
-
 		self.connections = set()
 		self.subscribermap = collections.defaultdict(list)
 		self.conn2chans = collections.defaultdict(list)
@@ -232,15 +228,6 @@ class FeedBroker(object):
 	def _newconn(self, c, addr):
 		logging.debug('Connection from {0}.'.format(addr))
 		fc = FeedConn(c, addr, self.db)
-		self.connections.add(fc)
-		fc._on('close', self._connclose)
-		fc._on('subscribe', self._subscribe)
-		fc._on('unsubscribe', self._unsubscribe)
-		fc._on('publish', self._publish)
-
-	def _newconnplain(self, c, addr):
-		logging.debug('Connection from {0}.'.format(addr))
-		fc = FeedConnPlain(c, addr, self.db)
 		self.connections.add(fc)
 		fc._on('close', self._connclose)
 		fc._on('subscribe', self._subscribe)
