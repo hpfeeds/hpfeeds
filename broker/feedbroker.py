@@ -8,14 +8,14 @@ import collections
 import random
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 from evnet import loop, unloop, listenplain, EventGen
 from evnet.mongodb import MongoConn
 
 FBIP = '0.0.0.0'
-FBPORT = 10001
-FBNAME = '@hp1'
+FBPORT = 10000
+FBNAME = '@hp2'
 MONGOIP = '127.0.0.1'
 MONGOPORT = 27017
 
@@ -26,7 +26,7 @@ OP_PUBLISH	= 3
 OP_SUBSCRIBE	= 4
 OP_UNSUBSCRIBE	= 5
 
-MAXBUF = 1024**2
+MAXBUF = 10* (1024**2)
 SIZES = {
 	OP_ERROR: 5+MAXBUF,
 	OP_INFO: 5+256+20,
@@ -103,8 +103,8 @@ class FeedConn(EventGen):
 			akobj = r[0]
 			akhash = hashlib.sha1('{0}{1}'.format(self.rand, akobj['secret'])).digest()
 			if akhash == hash:
-				self.pubchans.update(akobj['publish'])
-				self.subchans.update(akobj['subscribe'])
+				self.pubchans.update(akobj.get('publish', []))
+				self.subchans.update(akobj.get('subscribe', []))
 				self.idents.add(akobj['identifier'])
 				logging.info('Auth success by {0}.'.format(akobj['identifier']))
 			else:
