@@ -148,7 +148,10 @@ class FeedConn(EventGen):
 						self.error('identfail.')
 						continue
 
-					if not chan in self.subchans:
+					checkchan = chan
+					if chan.endswith('..broker'): checkchan = chan.rsplit('..broker', 1)[0]
+
+					if not checkchan in self.subchans:
 						self.error('accessfail.')
 						continue
 
