@@ -4,7 +4,7 @@ import datetime
 import json
 import logging
 logging.basicConfig(level=logging.CRITICAL)
-
+from time import sleep
 import hpfeeds
 
 HOST = 'hpfeeds.honeycloud.net'
@@ -19,9 +19,6 @@ def main():
 	except:
 		print >>sys.stderr, 'could not open output file for message log.'
 		return 1
-
-	hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)
-	print >>sys.stderr, 'connected to', hpc.brokername
 
 	def on_message(identifier, channel, payload):
 		try: decoded = json.loads(str(payload))
@@ -39,9 +36,20 @@ def main():
 		print >>sys.stderr, ' -> errormessage from server: {0}'.format(payload)
 		hpc.stop()
 
-	hpc.subscribe(CHANNELS)
-	hpc.run(on_message, on_error)
-	hpc.close()
+	while True:
+		try:
+			hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)
+			print >>sys.stderr, 'connected to', hpc.brokername
+			hpc.subscribe(CHANNELS)
+		except hpfeeds.FeedException:
+			# failed to connect
+			sleep(20)
+			break
+		hpc.run(on_message, on_error)
+		hpc.close()
+		# if we get here, connection has error'd out
+		# just wait and try again
+		sleep(20)
 	return 0
 
 if __name__ == '__main__':
