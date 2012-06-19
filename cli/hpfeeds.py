@@ -1,4 +1,5 @@
 
+import sys
 import struct
 import socket
 import hashlib
@@ -93,6 +94,10 @@ class HPC(object):
 				raise FeedException('Expected info message at this point.')
 
 		self.s.settimeout(None)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
+        if sys.platform in ('linux2', ):
+            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
 
 	def _run(self, message_callback, error_callback):
 		while not self.stopped:

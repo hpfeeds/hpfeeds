@@ -59,9 +59,11 @@ class ThugFiles:
             except hpfeeds.FeedException:
                 break
 
-            self.hpc.run(on_message, on_error)
-            self.hpc.close()
-            time.sleep(20)
+            try:
+                self.hpc.run(on_message, on_error)
+            except:
+                self.hpc.close()
+                time.sleep(20)
 
 if __name__ == '__main__':
     try: 
