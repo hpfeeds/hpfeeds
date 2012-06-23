@@ -44,19 +44,20 @@ u_char *read_msg(int s) {
 	u_char *buffer;
 	u_int32_t msglen;
 
-	if (read(s, &msglen, 4) == -1) {
+	if (read(s, &msglen, 4) != 4) {
 		perror("read()");
 		exit(EXIT_FAILURE);
 	}
 
-	if ((buffer = malloc(msglen)) == NULL) {
+	if ((buffer = malloc(ntohl(msglen))) == NULL) {
 		perror("malloc()");
 		exit(EXIT_FAILURE);
 	}
 
 	*(u_int32_t *) buffer = msglen;
+	msglen = ntohl(msglen);
 
-	if (read(s, buffer + 4, msglen - 4) == -1) {
+	if (read(s, buffer + 4, msglen - 4) != (msglen - 4)) {
 		perror("read()");
 		exit(EXIT_FAILURE);
 	}
