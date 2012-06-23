@@ -1,5 +1,5 @@
 /*
-  hpclient.h
+  hpclient.c
   Copyright (C) 2011 The Honeynet Project
   Copyright (C) 2011 Tillmann Werner, tillmann.werner@gmx.de
 
@@ -26,6 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#define MAXLEN 32768
 
 typedef enum {
 S_INIT,
@@ -39,6 +40,10 @@ S_TERMINATE
 
 session_state_t session_state;	// global session state
 
+typedef enum {
+C_SUBSCRIBE,
+C_PUBLISH,
+C_UNKNOWN } cmd_t;
 
 u_char *read_msg(int s) {
 	u_char *buffer;
@@ -84,7 +89,14 @@ void sigh(int sig) {
 	return;
 }
 
+void usage(char *argv0) {
+        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret\n", argv0);
+        fprintf(stderr, "       -S subscribe to channel, print msg to stdout\n");
+        fprintf(stderr, "       -P publish   to channel, read msg from stdin\n");
+}
+
 int main(int argc, char *argv[]) {
+	cmd_t hpfdcmd;
 	hpf_msg_t *msg;
 	hpf_chunk_t *chunk;
 	u_char *data;
@@ -94,15 +106,23 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in host;
 	u_int32_t nonce = 0;
 	u_int32_t payload_len;
+	char buf[MAXLEN];
 
+	hpfdcmd=C_UNKNOWN;
 	channel = ident = secret = NULL;
 	msg = NULL;
 
 	memset(&host, 0, sizeof(struct sockaddr_in));
 	host.sin_family = AF_INET;
 
-	while ((opt = getopt(argc, argv, "c:h:i:p:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:")) != -1) {
 		switch (opt) {
+		case 'S':
+			hpfdcmd = C_SUBSCRIBE;
+			break;
+		case 'P':
+			hpfdcmd = C_PUBLISH;
+			break;
 		case 'c':
 			channel = optarg;
 			break;
@@ -131,13 +151,13 @@ int main(int argc, char *argv[]) {
 			secret = optarg;
 			break;
 		default:
-			printf("Usage: %s -h host -p port -c channel -i ident -s secret\n", argv[0]);
+			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		}
 	}
 
-	if (!channel || !ident || !secret || host.sin_addr.s_addr == INADDR_ANY || host.sin_port == 0) {
-		printf("Usage: %s -h host -p port -c channel -i ident -s secret\n", argv[0]);
+	if (hpfdcmd == C_UNKNOWN || !channel || !ident || !secret || host.sin_addr.s_addr == INADDR_ANY || host.sin_port == 0) {
+		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -152,7 +172,7 @@ int main(int argc, char *argv[]) {
 		perror("socket()");
 		exit(EXIT_FAILURE);
 	}
-	printf("connecting to %s:%u\n", inet_ntoa(host.sin_addr), ntohs(host.sin_port));
+	fprintf(stderr, "connecting to %s:%u\n", inet_ntoa(host.sin_addr), ntohs(host.sin_port));
 	if (connect(s, (struct sockaddr *) &host, sizeof(host)) == -1) {
 		perror("connect()");
 		exit(EXIT_FAILURE);
@@ -194,7 +214,7 @@ int main(int argc, char *argv[]) {
 		break;
 	case S_AUTH:
 		// send auth message
-		printf("sending authentication...\n");
+		fprintf(stderr, "sending authentication...\n");
 		msg = hpf_msg_auth(nonce, (u_char *) ident, strlen(ident), (u_char *) secret, strlen(secret));
 
 		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
@@ -203,11 +223,14 @@ int main(int argc, char *argv[]) {
 		}
 		hpf_msg_delete(msg);
 	
-		session_state = S_SUBSCRIBE;
+		if (hpfdcmd == C_SUBSCRIBE)
+			session_state = S_SUBSCRIBE;
+		else 
+			session_state = S_PUBLISH;
 		break;
 	case S_SUBSCRIBE:
 		// send subscribe message
-		printf("subscribing to channel...\n");
+		fprintf(stderr, "subscribing to channel...\n");
 		msg = hpf_msg_subscribe((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel));
 
 		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
@@ -261,6 +284,29 @@ int main(int argc, char *argv[]) {
 		}
 
 		break;
+	case S_PUBLISH:
+		// send publish message
+		fprintf(stderr, "publish to channel...\n");
+		while (1) {
+			int len;
+			len = read(STDIN_FILENO,buf,MAXLEN);
+			if (len <= 0) {  // end of file
+				close(s);
+				return EXIT_SUCCESS;
+			}
+			if(buf[len - 1] == '\n') {
+				buf[len - 1] = 0;
+				len --;
+			}
+			msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+			if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+				perror("write()");
+				exit(EXIT_FAILURE);
+			}
+			hpf_msg_delete(msg);
+		}
+		exit(EXIT_FAILURE); // oops!
+		break;
 	case S_ERROR:
 		if (msg) {
 			// msg is still valid
@@ -279,7 +325,7 @@ int main(int argc, char *argv[]) {
 		session_state = S_TERMINATE;
 		break;
 	case S_TERMINATE:
-		printf("terminated.\n");
+		fprintf(stderr, "terminated.\n");
 		close(s);
 		return EXIT_SUCCESS;
 	default:
