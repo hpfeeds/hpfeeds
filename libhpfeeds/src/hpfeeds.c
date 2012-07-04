@@ -68,7 +68,7 @@ hpf_msg_t *hpf_msg_add_chunk(hpf_msg_t **m, const u_char *data, size_t len) {
 	((u_char *) msg)[ntohl(msg->hdr.msglen)] = l;
 	memcpy(((u_char *) msg) + ntohl(msg->hdr.msglen) + 1, data, l);
 
-	msg->hdr.msglen += htonl(1 + l);
+	msg->hdr.msglen = htonl(ntohl(msg->hdr.msglen) + 1 + l);
 
 	return msg;
 }
@@ -99,7 +99,7 @@ hpf_msg_t *hpf_msg_add_payload(hpf_msg_t **m, const u_char *data, size_t len) {
 
 	memcpy(((u_char *) msg) + ntohl(msg->hdr.msglen), data, len);
 
-	msg->hdr.msglen += htonl(len);
+	msg->hdr.msglen = htonl(ntohl(msg->hdr.msglen) + len);
 
 	return msg;
 }
