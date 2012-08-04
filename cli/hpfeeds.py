@@ -156,6 +156,6 @@ class HPC(object):
 		try: self.s.close()
 		except: logger.warn('Socket exception when closing.')
 
-def new(host=None, port=10000, ident=None, secret=None, reconnect=True, sleepwait=20):
-	return HPC(host, port, ident, secret, reconnect)
+def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20):
+	return HPC(host, port, ident, secret, timeout, reconnect)
 
