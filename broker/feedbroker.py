@@ -173,6 +173,8 @@ class FeedConn(EventGen):
 					rest = buffer(data, 0)
 					ident, hash = rest[1:1+ord(rest[0])], rest[1+ord(rest[0]):]
 					self.auth(ident, hash)
+					if self.delay:
+						return
 
 		except BadClient:
 			self.conn.close()
