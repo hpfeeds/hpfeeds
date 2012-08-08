@@ -1,6 +1,7 @@
 import sys
 import feedbroker
 from feedbroker import *
+logging.basicConfig(level=logging.DEBUG)
 
 
 FeedConnOrig = FeedConn
@@ -17,13 +18,10 @@ class FeedConn(FeedConnOrig):
 		self.checkauth([{'identifier': str(ident), 'secret': 'secretsecret'},], hash)
 
 	def checkauth(self, r, hash):
-		if len(r) > 0:
-			akobj = r[0]
-			akhash = hashlib.sha1('{0}{1}'.format(self.rand, akobj['secret'])).digest()
-			self.idents.add(akobj['identifier'])
-			logging.info('Auth success by {0}.'.format(akobj['identifier']))
-		else:
-			self.error('authfail.')
+		akobj = r[0]
+		akhash = hashlib.sha1('{0}{1}'.format(self.rand, akobj['secret'])).digest()
+		self.idents.add(akobj['identifier'])
+		logging.info('Auth success by {0}, {1}.'.format(akobj['identifier'], self.conn.addr))
 
 		self.io_in(b'')
 
