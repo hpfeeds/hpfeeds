@@ -120,6 +120,12 @@ class FeedConn(EventGen):
 		logging.debug('Connection closed, {0}'.format(reason))
 		self._event('close', self)
 
+	def may_publish(self, chan):
+		return chan in self.pubchans
+
+	def may_subscribe(self, chan):
+		return chan in self.subchans
+
 	def io_in(self, data):
 		self.fu.feed(data)
 		if self.delay:
@@ -135,7 +141,7 @@ class FeedConn(EventGen):
 						self.error('identfail.')
 						continue
 
-					if not chan in self.pubchans:
+					if not self.may_publish(chan):
 						self.error('accessfail.')
 						continue
 					
@@ -151,7 +157,7 @@ class FeedConn(EventGen):
 					checkchan = chan
 					if chan.endswith('..broker'): checkchan = chan.rsplit('..broker', 1)[0]
 
-					if not checkchan in self.subchans:
+					if not self.may_subscribe(checkchan):
 						self.error('accessfail.')
 						continue
 
@@ -164,7 +170,7 @@ class FeedConn(EventGen):
 						self.error('identfail.')
 						continue
 
-					if not chan in self.subchans:
+					if not self.may_subscribe(chan):
 						self.error('accessfail.')
 						continue
 
@@ -206,9 +212,7 @@ class FeedBroker(object):
 		self.ready = False
 
 		self.db = None
-		self.db = MongoConn(MONGOIP, MONGOPORT)
-		self.db._on('ready', self._dbready)
-		self.db._on('close', self._dbclose)
+		self.initdb()
 
 		self.listener = listenplain(host=FBIP, port=FBPORT)
 		self.listener._on('close', self._lclose)
@@ -217,6 +221,11 @@ class FeedBroker(object):
 		self.connections = set()
 		self.subscribermap = collections.defaultdict(list)
 		self.conn2chans = collections.defaultdict(list)
+
+	def initdb(self):
+		self.db = MongoConn(MONGOIP, MONGOPORT)
+		self.db._on('ready', self._dbready)
+		self.db._on('close', self._dbclose)
 
 	def _dbready(self):
 		self.ready = True
