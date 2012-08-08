@@ -4,7 +4,6 @@ import struct
 import socket
 import hashlib
 import logging
-from time import sleep
 
 logger = logging.getLogger('pyhpfeeds')
 
@@ -54,12 +53,10 @@ class FeedException(Exception):
 	pass
 
 class HPC(object):
-	def __init__(self, host, port, ident, secret, timeout=3, reconnect=False, sleepwait=20):
+	def __init__(self, host, port, ident, secret, timeout=3):
 		self.host, self.port = host, port
 		self.ident, self.secret = ident, secret
 		self.timeout = timeout
-		self.reconnect = reconnect
-		self.sleepwait = sleepwait
 		self.brokername = 'unknown'
 		self.connected = False
 		self.stopped = False
@@ -93,13 +90,13 @@ class HPC(object):
 			else:
 				raise FeedException('Expected info message at this point.')
 
-        	self.s.settimeout(None)
-        	self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+			self.s.settimeout(None)
+			self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-        	if sys.platform in ('linux2', ):
-                    self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
+			if sys.platform in ('linux2', ):
+				self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
 
-	def _run(self, message_callback, error_callback):
+	def run(self, message_callback, error_callback):
 		while not self.stopped:
 			while self.connected:
 				d = self.s.recv(BUFSIZ)
@@ -123,21 +120,6 @@ class HPC(object):
 			if self.stopped: break
 			self.connect()
 
-	def run(self, message_callback, error_callback):
-		if not self.reconnect:
-			self._run(message_callback, error_callback)
-		else:
-			while True:
-				self._run(message_callback, error_callback)
-				# reconnect now we've failed
-				sleep(self.sleepwait)
-				while True:
-					try:
-						self.connect()
-						break
-					except FeedException:
-						sleep(self.sleepwait)
-
 	def subscribe(self, chaninfo):
 		if type(chaninfo) == str:
 			chaninfo = [chaninfo,]
@@ -156,6 +138,6 @@ class HPC(object):
 		try: self.s.close()
 		except: logger.warn('Socket exception when closing.')
 
+
 def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20):
 	return HPC(host, port, ident, secret, timeout, reconnect)
-
