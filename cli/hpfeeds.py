@@ -4,6 +4,7 @@ import struct
 import socket
 import hashlib
 import logging
+import time
 
 logger = logging.getLogger('pyhpfeeds')
 
@@ -53,16 +54,27 @@ class FeedException(Exception):
 	pass
 
 class HPC(object):
-	def __init__(self, host, port, ident, secret, timeout=3):
+	def __init__(self, host, port, ident, secret, timeout=3, reconnect=True, sleepwait=20):
 		self.host, self.port = host, port
 		self.ident, self.secret = ident, secret
 		self.timeout = timeout
+		self.reconnect = reconnect
+		self.sleepwait = sleepwait
 		self.brokername = 'unknown'
 		self.connected = False
 		self.stopped = False
 		self.unpacker = FeedUnpack()
 
-		self.connect()
+		self.tryconnect()
+
+	def tryconnect(self):
+		while True:
+			try:
+				self.connect()
+				break
+			except FeedException, e:
+				logger.warn('FeedException while connecting: {0}'.format(e))
+				time.sleep(self.sleepwait)
 
 	def connect(self):
 		logger.info('connecting to {0}:{1}'.format(self.host, self.port))
@@ -90,11 +102,11 @@ class HPC(object):
 			else:
 				raise FeedException('Expected info message at this point.')
 
-			self.s.settimeout(None)
-			self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+		self.s.settimeout(None)
+		self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-			if sys.platform in ('linux2', ):
-				self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
+		if sys.platform in ('linux2', ):
+			self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
 
 	def run(self, message_callback, error_callback):
 		while not self.stopped:
@@ -118,7 +130,7 @@ class HPC(object):
 				if self.stopped: break
 
 			if self.stopped: break
-			self.connect()
+			self.tryconnect()
 
 	def subscribe(self, chaninfo):
 		if type(chaninfo) == str:
