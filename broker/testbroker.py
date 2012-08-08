@@ -1,4 +1,5 @@
 import sys
+import feedbroker
 from feedbroker import *
 
 
@@ -31,6 +32,10 @@ class FeedConn(FeedConnOrig):
 
 	def may_subscribe(self, chan):
 		return True
+
+
+feedbroker.FeedConn = FeedConn
+feedbroker.FeedBroker = FeedBroker
 
 
 def main():
