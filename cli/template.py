@@ -1,12 +1,6 @@
 #!/usr/bin/python
-#
-# this will grab just the binary payload and write it to $filedir/md5sum
 
-import os
 import sys
-import datetime
-import json
-import hashlib
 import logging
 logging.basicConfig(level=logging.WARNING)
 
