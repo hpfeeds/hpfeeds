@@ -61,6 +61,7 @@ SIZES = {
 	OP_SUBSCRIBE: 5+256*2,
 }
 
+CONNCHAN = 'dionaea.connections'
 CAPTURECHAN = 'dionaea.capture'
 DCECHAN = 'dionaea.dcerpcrequests'
 SCPROFCHAN = 'dionaea.shellcodeprofiles'
@@ -248,7 +249,16 @@ class hpfeedihandler(ihandler):
 
 	def handle_incident(self, i):
 		pass
-		
+	
+	def handle_incident_dionaea_connection_tcp_accept(self, icd):
+		try:
+			con = icd.con
+			self.client.publish(CONNCHAN, rhost=con.remote.host, rport=str(con.remote.port), rhostname=con.remote.hostname, lhost=con.local.host, lport=str(con.local.port))
+			logger.info("accepted connection from  %s:%i to %s:%i" %
+	                        (con.remote.host, con.remote.port, con.local.host, con.local.port))
+		except Exception as e:
+			logger.warn('exception when publishing: {0}'.format(e))
+	
 	def handle_incident_dionaea_download_complete_unique(self, i):
 		self.handle_incident_dionaea_download_complete_again(i)
 		if not hasattr(i, 'con') or not self.client.connected: return
