@@ -3,6 +3,7 @@ import json
 import traceback
 import datetime
 import urlparse
+import socket
 
 class ezdict(object):
 	def __init__(self, d):
@@ -20,6 +21,10 @@ def geoloc_none(t):
 	if t['city'] != None: t['city'] = t['city'].decode('latin1')
 	return t
 
+def get_addr_family(addr):
+        ainfo = socket.getaddrinfo(addr, 1, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        return ainfo[0][0]
+
 def glastopf_event(identifier, payload, gi):
 	try:
 		dec = ezdict(json.loads(str(payload)))
@@ -33,7 +38,11 @@ def glastopf_event(identifier, payload, gi):
 
 	if dec.pattern == 'unknown': return None
 
-	geoloc = geoloc_none( gi.record_by_addr(sip) )
+	a_family = get_addr_family(sip)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(sip) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(sip) )
 
 	return {'type': 'glastopf.events', 'sensor': identifier, 'time': str(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': sip, 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
 
@@ -47,8 +56,14 @@ def dionaea_capture(identifier, payload, gi):
 		traceback.print_exc()
 		return
 
-	geoloc = geoloc_none( gi.record_by_addr(dec.saddr) )
-	geoloc2 = geoloc_none( gi.record_by_addr(dec.daddr) )
+	a_family = get_addr_family(dec.saddr)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.saddr) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.daddr) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.saddr) )
+                geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.daddr) )
+
 	
 	return {'type': 'dionaea.capture', 'sensor': identifier, 'time': timestr(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.saddr, 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.daddr, 'md5': dec.md5,
 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
@@ -64,8 +79,14 @@ def dionaea_connections(identifier, payload, gi):
 		traceback.print_exc()
 		return
 
-	geoloc = geoloc_none( gi.record_by_addr(dec.rhost) )
-	geoloc2 = geoloc_none( gi.record_by_addr(dec.lhost) )
+	a_family = get_addr_family(dec.rhost)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.rhost) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.lhost) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.rhost) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.lhost) )
+
 	
 	return {'type': 'dionaea.connections', 'sensor': identifier, 'time': timestr(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.saddr, 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.daddr, 'md5': dec.md5,
 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],

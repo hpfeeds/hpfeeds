@@ -27,7 +27,10 @@ PROCESSORS = {
 }
 
 def main():
-	gi = GeoIP.open("/opt/GeoLiteCity.dat",GeoIP.GEOIP_STANDARD)
+	import socket
+	gi = {}
+	gi[socket.AF_INET] = GeoIP.open("/opt/GeoLiteCity.dat",GeoIP.GEOIP_STANDARD)
+	gi[socket.AF_INET6] = GeoIP.open("/opt/GeoLiteCityv6.dat",GeoIP.GEOIP_STANDARD)
 
 	try:
 		hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)
