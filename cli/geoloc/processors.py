@@ -55,3 +55,18 @@ def dionaea_capture(identifier, payload, gi):
 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
 
 
+def dionaea_connections(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		tstamp = datetime.datetime.now()
+	except:
+		print 'exception processing dionaea event'
+		traceback.print_exc()
+		return
+
+	geoloc = geoloc_none( gi.record_by_addr(dec.rhost) )
+	geoloc2 = geoloc_none( gi.record_by_addr(dec.lhost) )
+	
+	return {'type': 'dionaea.connections', 'sensor': identifier, 'time': timestr(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.saddr, 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.daddr, 'md5': dec.md5,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
+'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
