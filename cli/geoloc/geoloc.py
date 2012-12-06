@@ -12,6 +12,7 @@ import GeoIP
 HOST = 'hpfeeds.honeycloud.net'
 PORT = 10000
 CHANNELS = [
+	'dionaea.connections',
 	'dionaea.capture',
 	'glastopf.events',
 ]
@@ -22,10 +23,14 @@ SECRET = ''
 PROCESSORS = {
 	'glastopf.events': [glastopf_event,],
 	'dionaea.capture': [dionaea_capture,],
+	'dionaea.connections': [dionaea_connections,],
 }
 
 def main():
-	gi = GeoIP.open("/opt/GeoLiteCity.dat",GeoIP.GEOIP_STANDARD)
+	import socket
+	gi = {}
+	gi[socket.AF_INET] = GeoIP.open("/opt/GeoLiteCity.dat",GeoIP.GEOIP_STANDARD)
+	gi[socket.AF_INET6] = GeoIP.open("/opt/GeoLiteCityv6.dat",GeoIP.GEOIP_STANDARD)
 
 	try:
 		hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)
