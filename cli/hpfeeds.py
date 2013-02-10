@@ -1,3 +1,6 @@
+# Copyright (C) 2010-2013 Mark Schloesser <ms@mwcollect.org
+# This file is part of hpfeeds - https://github.com/rep/hpfeeds
+# See the file 'LICENSE' for copying permission.
 
 import sys
 import struct
