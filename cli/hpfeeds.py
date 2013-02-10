@@ -106,13 +106,14 @@ class HPC(object):
 		self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
 		if sys.platform in ('linux2', ):
-			self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)    
+			self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)    
 
 	def run(self, message_callback, error_callback):
 		while not self.stopped:
 			while self.connected:
 				d = self.s.recv(BUFSIZ)
 				if not d:
+					logger.info('Disconnected from broker.')
 					self.connected = False
 					break
 
@@ -129,8 +130,20 @@ class HPC(object):
 
 				if self.stopped: break
 
-			if self.stopped: break
+			if self.stopped:
+				logger.info('Stopped, exiting run loop.')
+				break
 			self.tryconnect()
+
+	def wait(self, timeout=1):
+		self.s.settimeout(timeout)
+		try: d = self.s.recv(BUFSIZ)
+		except socket.timeout: return None
+		self.unpacker.feed(d)
+		for opcode, data in self.unpacker:
+			if opcode == OP_ERROR:
+				return data
+		return None
 
 	def subscribe(self, chaninfo):
 		if type(chaninfo) == str:
