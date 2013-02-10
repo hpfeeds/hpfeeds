@@ -47,6 +47,8 @@ def main(opts, action, pubdata=None):
 
 	elif action == 'publish':
 		hpc.publish(opts.channels, pubdata)
+		emsg = hpc.wait()
+		if emsg: print 'got error from server:', emsg
 
 	elif action == 'sendfile':
 		pubfile = open(pubdata, 'rb').read()
