@@ -16,7 +16,8 @@ To support multiple data sources and sinks per user we manage the Authkeys in th
 
 Each message carries a message header. The message types can make use of "parameters" that are being sent as (length,data) pairs.
 
-```struct MsgHeader {
+```
+struct MsgHeader {
     uint32_t messageLength; // total message size, including this
     uint8_t opCode;        // request type - see table below
 };
