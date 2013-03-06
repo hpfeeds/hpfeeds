@@ -261,7 +261,7 @@ class FeedBroker(object):
 			c2.forward(data)
 		
 	def _subscribe(self, c, chan, ident):
-		logging.debug('broker subscribe to {0} by {1}'.format(chan, c.addr))
+		logging.debug('broker subscribe to {0} by {2} @ {1}'.format(chan, c.addr, ident))
 		self.subscribermap[chan].append(c)
 		self.conn2chans[c].append(chan)
 		self._brokerchan(c, chan, ident, 1)
