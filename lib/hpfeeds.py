@@ -81,11 +81,24 @@ class HPC(object):
 
 	def connect(self):
 		logger.info('connecting to {0}:{1}'.format(self.host, self.port))
-		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.s.settimeout(self.timeout)
-		try: self.s.connect((self.host, self.port))
-		except: raise FeedException('Could not connect to broker.')
-		self.connected = True
+		# Try other resolved addresses (IPv4 or IPv6) if failed.
+		ainfos = socket.getaddrinfo(self.host, 1, socket.AF_UNSPEC, socket.SOCK_STREAM)
+		for ainfo in ainfos:
+			addr_family = ainfo[0]
+			addr = ainfo[4][0]
+			try:
+				self.s = socket.socket(addr_family, socket.SOCK_STREAM)
+				self.s.settimeout(self.timeout)
+				self.s.connect((addr, self.port))
+			except:
+				#print 'Could not connect to broker. %s[%s]' % (self.host, addr)
+				continue
+			else:
+				self.connected = True
+				break
+
+		if self.connected == False:
+			raise FeedException('Could not connect to broker [%s].' % (self.host))
 		
 		try: d = self.s.recv(BUFSIZ)
 		except socket.timeout: raise FeedException('Connection receive timeout.')
