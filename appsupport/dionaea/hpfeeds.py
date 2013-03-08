@@ -250,7 +250,7 @@ class hpfeedihandler(ihandler):
 	def connection_publish(self, icd, con_type):
 		try:
 			con=icd.con
-			self.client.publish(CONNCHAN, connection_type=con_type, connection_transport=con.transport, connection_protocol=con.protocol, remote_host=con.remote.host, remote_port=con.remote.port, remote_hostname=con.remote.hostname, local_host=con.local.host, local_port=con.local.port)
+			self.client.publish(CONNCHAN, connection_type=con_type, connection_transport=con.transport, connection_protocol=con.protocol, remote_host=con.remote.host, remote_port=con.remote.port, remote_hostname=con.remote.hostname, local_host=self._ownip(icd), local_port=con.local.port)
 		except Exception as e:
 			logger.warn('exception when publishing: {0}'.format(e))
 
@@ -273,44 +273,44 @@ class hpfeedihandler(ihandler):
 		self.connection_publish(icd, 'connect')
 		con=icd.con
 		logger.info("connect connection to %s/%s:%i from %s:%i" % 
-			(con.remote.host, con.remote.hostname, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.hostname, con.remote.port, self._ownip(icd), con.local.port))
 
 	def handle_incident_dionaea_connection_tls_connect(self, icd):
 		self.connection_publish(icd, 'connect')
 		con=icd.con
 		logger.info("connect connection to %s/%s:%i from %s:%i" % 
-			(con.remote.host, con.remote.hostname, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.hostname, con.remote.port, self._ownip(icd), con.local.port))
 
 	def handle_incident_dionaea_connection_udp_connect(self, icd):
 		self.connection_publish(icd, 'connect')
 		con=icd.con
 		logger.info("connect connection to %s/%s:%i from %s:%i" % 
-			(con.remote.host, con.remote.hostname, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.hostname, con.remote.port, self._ownip(icd), con.local.port))
 
 	def handle_incident_dionaea_connection_tcp_accept(self, icd):
 		self.connection_publish(icd, 'accept')
 		con=icd.con
 		logger.info("accepted connection from  %s:%i to %s:%i" %
-			(con.remote.host, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.port, self._ownip(icd), con.local.port))
 
 	def handle_incident_dionaea_connection_tls_accept(self, icd):
 		self.connection_publish(icd, 'accept')
 		con=icd.con
 		logger.info("accepted connection from %s:%i to %s:%i" % 
-			(con.remote.host, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.port, self._ownip(icd), con.local.port))
 
 
 	def handle_incident_dionaea_connection_tcp_reject(self, icd):
 		self.connection_publish(icd, 'reject')
 		con=icd.con
 		logger.info("reject connection from %s:%i to %s:%i" % 
-			(con.remote.host, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.port, self._ownip(icd), con.local.port))
 
 	def handle_incident_dionaea_connection_tcp_pending(self, icd):
 		self.connection_publish(icd, 'pending')
 		con=icd.con
 		logger.info("pending connection from %s:%i to %s:%i" % 
-			(con.remote.host, con.remote.port, con.local.host, con.local.port))
+			(con.remote.host, con.remote.port, self._ownip(icd), con.local.port))
 	
 	def handle_incident_dionaea_download_complete_unique(self, i):
 		self.handle_incident_dionaea_download_complete_again(i)
