@@ -361,7 +361,7 @@ class hpfeedihandler(ihandler):
 
 	def handle_incident_dionaea_modules_python_hpfeeds_dynipresult(self, icd):
 		fh = open(icd.path, mode="rb")
-		self.ownip = fh.read().strip()
+		self.ownip = fh.read().strip().decode('latin1')
 		logger.debug('resolved own IP to: {0}'.format(self.ownip))
 		fh.close()
 
