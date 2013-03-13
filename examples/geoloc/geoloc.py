@@ -1,4 +1,3 @@
-
 import sys
 import datetime
 import logging
@@ -44,7 +43,11 @@ def main():
 		procs = PROCESSORS.get(channel, [])
 		p = None
 		for p in procs:
-			m = p(identifier, payload, gi)
+			try:
+				m = p(identifier, payload, gi)
+			except:
+				print "invalid message %s" % payload
+				continue
 			try: tmp = json.dumps(m)
 			except: print 'DBG', m
 			if m != None: hpc.publish(GEOLOC_CHAN, json.dumps(m))
