@@ -4,7 +4,7 @@
   Copyright (C) 2011 Tillmann Werner, tillmann.werner@gmx.de
 
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License version 2 as 
+  it under the terms of the GNU General Public License version 2 as
   published by the Free Software Foundation.
 
   This program is distributed in the hope that it will be useful,
@@ -26,7 +26,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define MAXLEN 32768
+#define MAXLEN 1000000
+#define READ_BLOCK_SIZE 32767
 
 typedef enum {
 S_INIT,
@@ -48,6 +49,9 @@ C_UNKNOWN } cmd_t;
 u_char *read_msg(int s) {
 	u_char *buffer;
 	u_int32_t msglen;
+	int len;
+	int templen;
+	char tempbuf[READ_BLOCK_SIZE];
 
 	if (read(s, &msglen, 4) != 4) {
 		perror("read()");
@@ -62,7 +66,15 @@ u_char *read_msg(int s) {
 	*(u_int32_t *) buffer = msglen;
 	msglen = ntohl(msglen);
 
-	if (read(s, buffer + 4, msglen - 4) != (msglen - 4)) {
+    len = 4;
+    templen = len;
+    while ((templen > 0) && (len < msglen)) {
+        templen = read(s, tempbuf, READ_BLOCK_SIZE);
+        memcpy(buffer + len, tempbuf, templen);
+        len += templen;
+    }
+
+	if (len != msglen) {
 		perror("read()");
 		exit(EXIT_FAILURE);
 	}
@@ -106,10 +118,17 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in host;
 	u_int32_t nonce = 0;
 	u_int32_t payload_len;
-	char buf[MAXLEN];
+	u_char* buf;
+	int len;
+	int templen;
+	char tempbuf[READ_BLOCK_SIZE];
 
-	hpfdcmd=C_UNKNOWN;
-	channel = ident = secret = NULL;
+	buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
+
+	hpfdcmd = C_UNKNOWN;
+	channel = NULL;
+	ident = NULL;
+	secret = NULL;
 	msg = NULL;
 
 	memset(&host, 0, sizeof(struct sockaddr_in));
@@ -138,7 +157,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			host.sin_addr = *(struct in_addr *) he->h_addr;
-			
+
 			break;
 		case 'i':
 			ident = optarg;
@@ -186,7 +205,7 @@ int main(int argc, char *argv[]) {
 		// read info message
 		if ((data = read_msg(s)) == NULL) break;
 		msg = (hpf_msg_t *) data;
-			
+
 		switch (msg->hdr.opcode) {
 		case OP_INFO:
 
@@ -222,10 +241,10 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_FAILURE);
 		}
 		hpf_msg_delete(msg);
-	
+
 		if (hpfdcmd == C_SUBSCRIBE)
 			session_state = S_SUBSCRIBE;
-		else 
+		else
 			session_state = S_PUBLISH;
 		break;
 	case S_SUBSCRIBE:
@@ -238,7 +257,7 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_FAILURE);
 		}
 		hpf_msg_delete(msg);
-	
+
 		session_state = S_RECVMSGS;
 		break;
 	case S_RECVMSGS:
@@ -270,7 +289,7 @@ int main(int argc, char *argv[]) {
 				exit(EXIT_FAILURE);
 			}
 			putchar('\n');
-			
+
 			free(data);
 
 			// we just remain in S_SUBSCRIBED
@@ -286,26 +305,27 @@ int main(int argc, char *argv[]) {
 		break;
 	case S_PUBLISH:
 		// send publish message
-		fprintf(stderr, "publish to channel...\n");
-		while (1) {
-			int len;
-			len = read(STDIN_FILENO,buf,MAXLEN);
-			if (len <= 0) {  // end of file
-				close(s);
-				return EXIT_SUCCESS;
-			}
+		len = 0;
+		templen = 0;
+		memset(tempbuf, 0x0, READ_BLOCK_SIZE);
+		while ((templen = read(STDIN_FILENO, tempbuf, READ_BLOCK_SIZE)) > 0 && len < MAXLEN) {
+		    memcpy(buf + len, tempbuf, templen);
+		    len += templen;
 			if(buf[len - 1] == '\n') {
 				buf[len - 1] = 0;
 				len --;
 			}
-			msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-			if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-				perror("write()");
-				exit(EXIT_FAILURE);
-			}
-			hpf_msg_delete(msg);
 		}
-		exit(EXIT_FAILURE); // oops!
+		fprintf(stderr, "publish %d bytes to channel...\n", len);
+		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+			perror("write()");
+			exit(EXIT_FAILURE);
+		}
+		close(s);
+		hpf_msg_delete(msg);
+		exit(EXIT_SUCCESS);
+		break;
 		break;
 	case S_ERROR:
 		if (msg) {
@@ -314,7 +334,7 @@ int main(int argc, char *argv[]) {
 				perror("calloc()");
 				exit(EXIT_FAILURE);
 			}
-			memcpy(errmsg, msg->data, msg->hdr.msglen - sizeof(msg->hdr));
+            memcpy(errmsg, msg->data, ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
 
 			fprintf(stderr, "server error: '%s'\n", errmsg);
 			free(errmsg);
@@ -335,6 +355,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	close(s);
-	
+
 	return EXIT_SUCCESS;
 }
