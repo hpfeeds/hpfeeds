@@ -55,6 +55,8 @@ class FeedUnpack(object):
 
 class FeedException(Exception):
 	pass
+class Disconnect(Exception):
+	pass
 
 class HPC(object):
 	def __init__(self, host, port, ident, secret, timeout=3, reconnect=True, sleepwait=20):
@@ -66,21 +68,55 @@ class HPC(object):
 		self.brokername = 'unknown'
 		self.connected = False
 		self.stopped = False
+		self.s = None
 		self.unpacker = FeedUnpack()
 
 		self.tryconnect()
+
+	def recv(self):
+		try:
+			d = self.s.recv(BUFSIZ)
+		except socket.timeout:
+			return ""
+		except socket.error as e:
+			logger.warn("Socket error: %s", e)
+			raise Disconnect()
+
+		if not d: raise Disconnect()
+		return d
+
+	def send(self, data):
+		try:
+			self.s.sendall(data)
+		except socket.timeout:
+			logger.warn("Timeout while sending - disconnect.")
+			raise Disconnect()
+		except socket.error as e:
+			logger.warn("Socket error: %s", e)
+			raise Disconnect()
+
+		return True
 
 	def tryconnect(self):
 		while True:
 			try:
 				self.connect()
 				break
+			except socket.error, e:
+				logger.warn('Socket error while connecting: {0}'.format(e))
+				time.sleep(self.sleepwait)
 			except FeedException, e:
 				logger.warn('FeedException while connecting: {0}'.format(e))
 				time.sleep(self.sleepwait)
+			except Disconnect as e:
+				logger.warn('Disconnect while connecting.')
+				time.sleep(self.sleepwait)
 
 	def connect(self):
+		self.close_old()
+
 		logger.info('connecting to {0}:{1}'.format(self.host, self.port))
+
 		# Try other resolved addresses (IPv4 or IPv6) if failed.
 		ainfos = socket.getaddrinfo(self.host, 1, socket.AF_UNSPEC, socket.SOCK_STREAM)
 		for ainfo in ainfos:
@@ -113,7 +149,7 @@ class HPC(object):
 				logger.debug('info message name: {0}, rand: {1}'.format(name, repr(rand)))
 				self.brokername = name
 				
-				self.s.send(msgauth(rand, self.ident, self.secret))
+				self.send(msgauth(rand, self.ident, self.secret))
 				break
 			else:
 				raise FeedException('Expected info message at this point.')
@@ -127,50 +163,62 @@ class HPC(object):
 	def run(self, message_callback, error_callback):
 		while not self.stopped:
 			while self.connected:
-				d = self.s.recv(BUFSIZ)
-				if not d:
-					logger.info('Disconnected from broker.')
+				try:
+					d = self.recv()
+					self.unpacker.feed(d)
+
+					for opcode, data in self.unpacker:
+						if opcode == OP_PUBLISH:
+							rest = buffer(data, 0)
+							ident, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
+							chan, content = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
+
+							message_callback(str(ident), str(chan), content)
+						elif opcode == OP_ERROR:
+							error_callback(data)
+
+				except Disconnect:
 					self.connected = False
+					logger.info('Disconnected from broker.')
 					break
 
-				self.unpacker.feed(d)
-				for opcode, data in self.unpacker:
-					if opcode == OP_PUBLISH:
-						rest = buffer(data, 0)
-						ident, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-						chan, content = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-
-						message_callback(str(ident), str(chan), content)
-					elif opcode == OP_ERROR:
-						error_callback(data)
-
+				# end run loops if stopped
 				if self.stopped: break
-
 			if self.stopped:
 				logger.info('Stopped, exiting run loop.')
 				break
+
+			# connect again if disconnected
 			self.tryconnect()
 
 	def wait(self, timeout=1):
 		self.s.settimeout(timeout)
-		try: d = self.s.recv(BUFSIZ)
-		except socket.timeout: return None
+
+		d = self.recv()
+		if not d: return None
+
 		self.unpacker.feed(d)
 		for opcode, data in self.unpacker:
 			if opcode == OP_ERROR:
 				return data
+
 		return None
+
+	def close_old(self):
+		if self.s:
+			try: self.s.close()
+			except: pass
 
 	def subscribe(self, chaninfo):
 		if type(chaninfo) == str:
 			chaninfo = [chaninfo,]
 		for c in chaninfo:
-			self.s.send(msgsubscribe(self.ident, c))
+			self.send(msgsubscribe(self.ident, c))
 	def publish(self, chaninfo, data):
 		if type(chaninfo) == str:
 			chaninfo = [chaninfo,]
 		for c in chaninfo:
-			self.s.send(msgpublish(self.ident, c, data))
+			self.send(msgpublish(self.ident, c, data))
 
 	def stop(self):
 		self.stopped = True
