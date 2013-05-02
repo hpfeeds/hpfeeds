@@ -69,6 +69,7 @@ class HPC(object):
 		self.connected = False
 		self.stopped = False
 		self.s = None
+		self.subscriptions = set()
 		self.unpacker = FeedUnpack()
 
 		self.tryconnect()
@@ -184,12 +185,12 @@ class HPC(object):
 
 				# end run loops if stopped
 				if self.stopped: break
-			if self.stopped:
-				logger.info('Stopped, exiting run loop.')
-				break
 
-			# connect again if disconnected
-			self.tryconnect()
+			if not self.stopped and self.reconnect:
+				# connect again if disconnected
+				self.tryconnect()
+
+		logger.info('Stopped, exiting run loop.')
 
 	def wait(self, timeout=1):
 		self.s.settimeout(timeout)
@@ -213,19 +214,33 @@ class HPC(object):
 		if type(chaninfo) == str:
 			chaninfo = [chaninfo,]
 		for c in chaninfo:
-			self.send(msgsubscribe(self.ident, c))
+			self.subscriptions.add(c)
+			try:
+				self.send(msgsubscribe(self.ident, c))
+			except Disconnect:
+				self.connected = False
+				logger.info('Disconnected from broker (in subscribe).')
+				if not self.reconnect: raise
+				break
+
 	def publish(self, chaninfo, data):
 		if type(chaninfo) == str:
 			chaninfo = [chaninfo,]
 		for c in chaninfo:
-			self.send(msgpublish(self.ident, c, data))
+			try:
+				self.send(msgpublish(self.ident, c, data))
+			except Disconnect:
+				self.connected = False
+				logger.info('Disconnected from broker (in publish).')
+				if not self.reconnect: raise
+				break
 
 	def stop(self):
 		self.stopped = True
 
 	def close(self):
 		try: self.s.close()
-		except: logger.warn('Socket exception when closing.')
+		except: logger.debug('Socket exception when closing (ignored though).')
 
 
 def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20):
