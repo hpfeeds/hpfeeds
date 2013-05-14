@@ -163,6 +163,7 @@ class HPC(object):
 
 	def run(self, message_callback, error_callback):
 		while not self.stopped:
+			self._subscribe()
 			while self.connected:
 				try:
 					d = self.recv()
@@ -215,7 +216,11 @@ class HPC(object):
 			chaninfo = [chaninfo,]
 		for c in chaninfo:
 			self.subscriptions.add(c)
+
+	def _subscribe(self):
+		for c in self.subscriptions:
 			try:
+				logger.debug('Sending subscription for {0}.'.format(c))
 				self.send(msgsubscribe(self.ident, c))
 			except Disconnect:
 				self.connected = False
