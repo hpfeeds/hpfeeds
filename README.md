@@ -1,6 +1,10 @@
 hpfeeds
 =======
 
+Check out our hpfeeds setup with a social sharing model: http://hpfriends.honeycloud.net/
+
+There is a nice introduction by heipei to be read here: http://heipei.github.io/2013/05/11/Using-hpfriends-the-social-data-sharing-platform/
+
 This is the reference implementation repository. By now hpfeeds exists in other languages than Python and C as well! Check out the following implementations:
  - Go: https://github.com/fw42/go-hpfeeds
  - Ruby: https://github.com/fw42/hpfeedsrb
