@@ -14,6 +14,7 @@ CHANNELS = [
 	'dionaea.connections',
 	'dionaea.capture',
 	'glastopf.events',
+    'beeswarm.hive'
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -23,6 +24,7 @@ PROCESSORS = {
 	'glastopf.events': [glastopf_event,],
 	'dionaea.capture': [dionaea_capture,],
 	'dionaea.connections': [dionaea_connections,],
+    'beeswarm.hive': [beeswarm_hive,],
 }
 
 def main():
