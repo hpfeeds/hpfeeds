@@ -62,7 +62,7 @@ def dionaea_capture(identifier, payload, gi):
 		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.daddr) )
 	elif a_family == socket.AF_INET6:
 		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.saddr) )
-                geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.daddr) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.daddr) )
 
 	
 	return {'type': 'dionaea.capture', 'sensor': identifier, 'time': timestr(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.saddr, 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.daddr, 'md5': dec.md5,
@@ -91,3 +91,26 @@ def dionaea_connections(identifier, payload, gi):
 	return {'type': 'dionaea.connections', 'sensor': identifier, 'time': timestr(tstamp), 'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.remote_host, 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.local_host, 'md5': dec.md5,
 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
+
+def beeswarm_hive(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		sip = dec.attacker_ip
+		dip = dec.honey_ip
+		tstamp = datetime.datetime.strptime(dec.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+	except:
+		print 'exception processing beeswarm.hive event', repr(payload)
+		traceback.print_exc()
+		return
+
+	a_family = get_addr_family(sip)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(sip) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dip) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(sip) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dip) )
+
+	return {'type': 'beeswarm.hive', 'sensor': identifier, 'time': str(tstamp),
+            'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
+            'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
