@@ -8,6 +8,7 @@ import socket
 import hashlib
 import logging
 import time
+import threading
 
 logger = logging.getLogger('pyhpfeeds')
 
@@ -48,7 +49,7 @@ class FeedUnpack(object):
 		ml, opcode = struct.unpack('!iB', buffer(self.buf,0,5))
 		if len(self.buf) < ml:
 			raise StopIteration('No message.')
-		
+
 		data = bytearray(buffer(self.buf, 5, ml-5))
 		del self.buf[:ml]
 		return opcode, data
@@ -69,6 +70,7 @@ class HPC(object):
 		self.connected = False
 		self.stopped = False
 		self.s = None
+		self.connecting_lock = threading.Lock()
 		self.subscriptions = set()
 		self.unpacker = FeedUnpack()
 
@@ -99,19 +101,21 @@ class HPC(object):
 		return True
 
 	def tryconnect(self):
-		while True:
-			try:
-				self.connect()
-				break
-			except socket.error, e:
-				logger.warn('Socket error while connecting: {0}'.format(e))
-				time.sleep(self.sleepwait)
-			except FeedException, e:
-				logger.warn('FeedException while connecting: {0}'.format(e))
-				time.sleep(self.sleepwait)
-			except Disconnect as e:
-				logger.warn('Disconnect while connecting.')
-				time.sleep(self.sleepwait)
+		with self.connecting_lock:
+			if not self.connected:
+				while True:
+					try:
+						self.connect()
+						break
+					except socket.error, e:
+						logger.warn('Socket error while connecting: {0}'.format(e))
+						time.sleep(self.sleepwait)
+					except FeedException, e:
+						logger.warn('FeedException while connecting: {0}'.format(e))
+						time.sleep(self.sleepwait)
+					except Disconnect as e:
+						logger.warn('Disconnect while connecting.')
+						time.sleep(self.sleepwait)
 
 	def connect(self):
 		self.close_old()
@@ -136,10 +140,10 @@ class HPC(object):
 
 		if self.connected == False:
 			raise FeedException('Could not connect to broker [%s].' % (self.host))
-		
+
 		try: d = self.s.recv(BUFSIZ)
 		except socket.timeout: raise FeedException('Connection receive timeout.')
-		
+
 		self.unpacker.feed(d)
 		for opcode, data in self.unpacker:
 			if opcode == OP_INFO:
@@ -149,7 +153,7 @@ class HPC(object):
 
 				logger.debug('info message name: {0}, rand: {1}'.format(name, repr(rand)))
 				self.brokername = name
-				
+
 				self.send(msgauth(rand, self.ident, self.secret))
 				break
 			else:
@@ -237,8 +241,10 @@ class HPC(object):
 			except Disconnect:
 				self.connected = False
 				logger.info('Disconnected from broker (in publish).')
-				if not self.reconnect: raise
-				break
+				if self.reconnect:
+					self.tryconnect()
+				else:
+					raise
 
 	def stop(self):
 		self.stopped = True
