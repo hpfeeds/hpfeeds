@@ -152,7 +152,13 @@ class hpclient(object):
 			self.close()
 
 	def publish(self, channel, **kwargs):
-		self.send(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
+		try:
+			self.send(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
+		except Exception, e:
+			log.err('connection to hpfriends lost: {0}'.format(e))
+			log.err('connecting')
+			self.connect()
+			self.send(msgpublish(self.ident, channel, json.dumps(kwargs).encode('latin1')))
 
 	def sendfile(self, filepath):
 		# does not read complete binary into memory, read and send chunks
