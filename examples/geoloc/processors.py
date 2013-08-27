@@ -114,3 +114,27 @@ def beeswarm_hive(identifier, payload, gi):
 	return {'type': 'beeswarm.hive', 'sensor': identifier, 'time': str(tstamp),
             'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
             'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
+
+def kippo_sessions(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		tstamp = datetime.datetime.now()
+	except:
+		print 'exception processing dionaea event'
+		traceback.print_exc()
+		return
+
+	a_family = get_addr_family(dec.peerIP)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.peerIP) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.hostIP) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.peerIP) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.hostIP) )
+
+
+	return {'type': 'kippo.sessions', 'sensor': identifier, 'time': timestr(tstamp),
+'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.peerIP,
+'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.hostIP,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
+'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
