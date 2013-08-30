@@ -138,3 +138,31 @@ def kippo_sessions(identifier, payload, gi):
 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.hostIP,
 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
+
+def conpot_events(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		remote = dec.remote[0]
+
+		# http asks locally for snmp with remote ip = "127.0.0.1"
+		if remote == "127.0.0.1":
+			return
+
+		tstamp = datetime.datetime.strptime(dec.timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+	except:
+		print 'exception processing conpot event'
+		traceback.print_exc()
+		return
+
+
+	a_family = get_addr_family(remote)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(remote) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(remote) )
+
+	type = 'conpot.events-'+dec.data_type
+
+	return {'type': type, 'sensor': identifier, 'time': timestr(tstamp),
+'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
