@@ -138,3 +138,27 @@ def kippo_sessions(identifier, payload, gi):
 'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.hostIP,
 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
+
+def artillery(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		tstamp = datetime.datetime.now()
+	except:
+		print 'exception processing dionaea event'
+		traceback.print_exc()
+		return
+
+	a_family = get_addr_family(dec.remote_host)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.remote_host) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.local_host) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.remote_host) )
+		geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.local_host) )
+
+
+	return {'type': 'artillery', 'sensor': identifier, 'time': timestr(tstamp),
+'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.remote_host,
+'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.local_host,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
+'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
