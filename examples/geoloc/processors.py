@@ -154,15 +154,27 @@ def conpot_events(identifier, payload, gi):
 		traceback.print_exc()
 		return
 
-
 	a_family = get_addr_family(remote)
 	if a_family == socket.AF_INET:
 		geoloc = geoloc_none( gi[a_family].record_by_addr(remote) )
+		if dec.public_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.public_ip) )
 	elif a_family == socket.AF_INET6:
 		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(remote) )
+		if dec.public_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.public_ip) )
 
 	type = 'conpot.events-'+dec.data_type
 
-	return {'type': type, 'sensor': identifier, 'time': timestr(tstamp),
-'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
-'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
+	message = {'type': type, 'sensor': identifier, 'time': timestr(tstamp),
+itude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
+y': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
+
+	if dec.public_ip:
+		message['latitude2'] = geoloc2['latitude']
+		message['longitude2'] = geoloc2['longitude']
+		message['city2'] = geoloc2['city']
+		message['country2'] = geoloc2['country_name']
+		message['countrycode2'] = geoloc2['country_code']
+
+	return message
