@@ -102,9 +102,11 @@ void sigh(int sig) {
 }
 
 void usage(char *argv0) {
-        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times]\n", argv0);
+        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times | -f]\n", argv0);
         fprintf(stderr, "       -S subscribe to channel, print msg to stdout\n");
         fprintf(stderr, "       -P publish   to channel, read msg from stdin\n");
+        fprintf(stderr, "       -t times     repeats the message\n");
+        fprintf(stderr, "       -f           repeats the message forever\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -136,7 +138,7 @@ int main(int argc, char *argv[]) {
 	memset(&host, 0, sizeof(struct sockaddr_in));
 	host.sin_family = AF_INET;
 
-	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:f")) != -1) {
 		switch (opt) {
 		case 'S':
 			hpfdcmd = C_SUBSCRIBE;
@@ -174,6 +176,9 @@ int main(int argc, char *argv[]) {
 		case 't':
 		    times = strtol(optarg, NULL, 10);
 		    break;
+	    case 'f':
+	        times = -1;
+	        break;
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
