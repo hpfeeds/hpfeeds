@@ -69,7 +69,7 @@ u_char *read_msg(int s) {
     len = 4;
     templen = len;
     while ((templen > 0) && (len < msglen)) {
-        templen = read(s, tempbuf, READ_BLOCK_SIZE);
+        templen = read(s, tempbuf, msglen - 4);
         memcpy(buffer + len, tempbuf, templen);
         len += templen;
     }
@@ -102,7 +102,7 @@ void sigh(int sig) {
 }
 
 void usage(char *argv0) {
-        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret\n", argv0);
+        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times]\n", argv0);
         fprintf(stderr, "       -S subscribe to channel, print msg to stdout\n");
         fprintf(stderr, "       -P publish   to channel, read msg from stdin\n");
 }
@@ -122,6 +122,8 @@ int main(int argc, char *argv[]) {
 	int len;
 	int templen;
 	char tempbuf[READ_BLOCK_SIZE];
+	u_int32_t times = 1;
+	int i;
 
 	buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
 
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]) {
 	memset(&host, 0, sizeof(struct sockaddr_in));
 	host.sin_family = AF_INET;
 
-	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:")) != -1) {
 		switch (opt) {
 		case 'S':
 			hpfdcmd = C_SUBSCRIBE;
@@ -169,6 +171,9 @@ int main(int argc, char *argv[]) {
 		case 's':
 			secret = optarg;
 			break;
+		case 't':
+		    times = strtol(optarg, NULL, 10);
+		    break;
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
@@ -316,16 +321,17 @@ int main(int argc, char *argv[]) {
 				len --;
 			}
 		}
-		fprintf(stderr, "publish %d bytes to channel...\n", len);
-		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-			perror("write()");
-			exit(EXIT_FAILURE);
-		}
+		fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
+		for (i = 0; i < times; i++) {
+    		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+	    	if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+	    		perror("write()");
+	    		exit(EXIT_FAILURE);
+	    	}
+			hpf_msg_delete(msg);
+	    }
 		close(s);
-		hpf_msg_delete(msg);
 		exit(EXIT_SUCCESS);
-		break;
 		break;
 	case S_ERROR:
 		if (msg) {
