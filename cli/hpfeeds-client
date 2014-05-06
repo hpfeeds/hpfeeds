@@ -5,7 +5,6 @@ import optparse
 import datetime
 import logging
 import string
-logging.basicConfig(level=logging.CRITICAL)
 
 import hpfeeds
 
@@ -22,7 +21,7 @@ def main(opts, action, pubdata=None):
 	else:
 		outfd = sys.stdout
 
-	try: hpc = hpfeeds.new(opts.host, opts.port, opts.ident, opts.secret)
+	try: hpc = hpfeeds.new(opts.host, opts.port, opts.ident, opts.secret, certfile=opts.certfile)
 	except hpfeeds.FeedException, e:
 		log('Error: {0}'.format(e))
 		return 1
@@ -81,6 +80,12 @@ def opts():
 	parser.add_option("-o", "--output",
 		action="store", dest='output', nargs=1, type='string',
 		help="publish log filename")
+	parser.add_option("--certfile",
+		action="store", dest='certfile', nargs=1, type='string',
+		help="certfile for ssl verification (CA)", default=None)
+	parser.add_option("--debug",
+		action="store_const", dest='debug',
+		help="enable debug log output", default=False, const=True)
 
 	options, args = parser.parse_args()
 
@@ -88,6 +93,11 @@ def opts():
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
 	if args[0] not in ['subscribe', 'publish', 'sendfile']:
 		parser.error('You need to give "subscribe" or "publish" as <action>.')
+
+	if options.debug:
+		logging.basicConfig(level=logging.DEBUG)
+	else:
+		logging.basicConfig(level=logging.CRITICAL)
 
 	action = args[0]
 	data = None
