@@ -9,6 +9,7 @@ import hashlib
 import logging
 import time
 import threading
+import ssl
 
 logger = logging.getLogger('pyhpfeeds')
 
@@ -76,6 +77,9 @@ class HPC(object):
 
 		self.tryconnect()
 
+	def makesocket(self, addr_family):
+		return socket.socket(addr_family, socket.SOCK_STREAM)
+
 	def recv(self):
 		try:
 			d = self.s.recv(BUFSIZ)
@@ -128,10 +132,12 @@ class HPC(object):
 			addr_family = ainfo[0]
 			addr = ainfo[4][0]
 			try:
-				self.s = socket.socket(addr_family, socket.SOCK_STREAM)
+				self.s = self.makesocket(addr_family)
 				self.s.settimeout(self.timeout)
 				self.s.connect((addr, self.port))
 			except:
+				import traceback
+				traceback.print_exc()
 				#print 'Could not connect to broker. %s[%s]' % (self.host, addr)
 				continue
 			else:
@@ -254,5 +260,17 @@ class HPC(object):
 		except: logger.debug('Socket exception when closing (ignored though).')
 
 
-def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20):
+class HPC_SSL(HPC):
+	def __init__(self, *args, **kwargs):
+		self.certfile = kwargs.pop("certfile", None)
+		HPC.__init__(self, *args, **kwargs)
+
+	def makesocket(self, addr_family):
+		s = socket.socket(addr_family, socket.SOCK_STREAM)
+		return ssl.wrap_socket(s, ca_certs=self.certfile, ssl_version=3, cert_reqs=2)
+
+
+def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20, certfile=None):
+	if certfile:
+		return HPC_SSL(host, port, ident, secret, timeout, reconnect, certfile=certfile)
 	return HPC(host, port, ident, secret, timeout, reconnect)
