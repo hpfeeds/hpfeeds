@@ -167,8 +167,8 @@ def conpot_events(identifier, payload, gi):
 	type = 'conpot.events-'+dec.data_type
 
 	message = {'type': type, 'sensor': identifier, 'time': timestr(tstamp),
-itude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
-y': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
+'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
 
 	if dec.public_ip:
 		message['latitude2'] = geoloc2['latitude']
@@ -176,5 +176,61 @@ y': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['co
 		message['city2'] = geoloc2['city']
 		message['country2'] = geoloc2['country_name']
 		message['countrycode2'] = geoloc2['country_code']
+
+	return message
+
+def snort_alerts(identifier, payload, gi):
+	# 	{
+	#     "classification": "Potentially Bad Traffic",
+	#     "date": "2014-05-04T11:49:27.431226",
+	#     "destination_ip": "192.241.157.117",
+	#     "destination_port": "50649",
+	#     "header": "1:2003195:5",
+	#     "priority": "2",
+	#     "proto": "UDP",
+	#     "sensor": "12345",
+	#     "signature": "ET POLICY Unusual number of DNS No Such Name Responses",
+	#     "source_ip": "8.8.4.4",
+	#     "source_port": "53"
+	# }
+
+	try:
+		dec = ezdict(json.loads(str(payload)))
+		tstamp = datetime.datetime.strptime(dec.date, '%Y-%m-%dT%H:%M:%S.%f')
+	except:
+		print 'exception processing snort alert'
+		traceback.print_exc()
+		return
+
+	a_family = get_addr_family(dec.source_ip)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.source_ip) )
+		if dec.destination_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.destination_ip) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.source_ip) )
+		if dec.destination_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.destination_ip) )
+
+	message = {
+		'type': 'snort.alerts', 
+		'sensor': identifier, 
+		'time': timestr(tstamp),
+		'latitude': geoloc['latitude'], 
+		'longitude': geoloc['longitude'], 
+		'source': dec.source_ip,
+		'city': geoloc['city'], 
+		'country': geoloc['country_name'], 
+		'countrycode': geoloc['country_code']
+	}
+
+	if geoloc2:
+		message.update({
+			'latitude2': geoloc2['latitude'],
+			'longitude2': geoloc2['longitude'],
+			'city2': geoloc2['city'],
+			'country2': geoloc2['country_name'],
+			'countrycode2': geoloc2['country_code']
+		})
 
 	return message
