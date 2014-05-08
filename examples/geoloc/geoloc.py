@@ -20,8 +20,8 @@ CHANNELS = [
         'snort.alerts'
 ]
 GEOLOC_CHAN = 'geoloc.events'
-IDENT = 'geoloc'
-SECRET = '5r6ty8as8a8as9as0asas'
+IDENT = ''
+SECRET = ''
 
 PROCESSORS = {
         'glastopf.events': [glastopf_event,],
