@@ -11,24 +11,26 @@ import GeoIP
 HOST = 'hpfeeds.honeycloud.net'
 PORT = 10000
 CHANNELS = [
-	'dionaea.connections',
-	'dionaea.capture',
-	'glastopf.events',
-    'beeswarm.hive',
-	'kippo.sessions',
-	'conpot.events',
+        'dionaea.connections',
+        'dionaea.capture',
+        'glastopf.events',
+        'beeswarm.hive',
+        'kippo.sessions',
+        'conpot.events',
+        'snort.alerts'
 ]
 GEOLOC_CHAN = 'geoloc.events'
-IDENT = ''
-SECRET = ''
+IDENT = 'geoloc'
+SECRET = '5r6ty8as8a8as9as0asas'
 
 PROCESSORS = {
-	'glastopf.events': [glastopf_event,],
-	'dionaea.capture': [dionaea_capture,],
-	'dionaea.connections': [dionaea_connections,],
-    'beeswarm.hive': [beeswarm_hive,],
-	'kippo.sessions': [kippo_sessions,],
-	'conpot.events': [conpot_events,],
+        'glastopf.events': [glastopf_event,],
+        'dionaea.capture': [dionaea_capture,],
+        'dionaea.connections': [dionaea_connections,],
+        'beeswarm.hive': [beeswarm_hive,],
+        'kippo.sessions': [kippo_sessions,],
+        'conpot.events': [conpot_events,],
+        'snort.alerts': [snort_alerts,],
 }
 
 def main():
