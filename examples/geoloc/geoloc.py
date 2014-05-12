@@ -8,7 +8,7 @@ from processors import *
 
 import GeoIP
 
-HOST = 'hpfeeds.honeycloud.net'
+HOST = 'localhost'
 PORT = 10000
 CHANNELS = [
         'dionaea.connections',
@@ -22,6 +22,19 @@ CHANNELS = [
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
 SECRET = ''
+
+if len(sys.argv) > 1:
+    print >>sys.stderr, "Parsing config file: %s"%sys.argv[1]
+    import json
+    config = json.load(file(sys.argv[1]))
+    HOST        = config["HOST"]
+    PORT        = config["PORT"]
+    CHANNELS    = config["CHANNELS"]
+    GEOLOC_CHAN = config["GEOLOC_CHAN"]
+    IDENT       = config["IDENT"]
+    SECRET      = config["SECRET"]
+else:
+    print >>sys.stderr, "Warning: no config found, using default values for hpfeeds server"
 
 PROCESSORS = {
         'glastopf.events': [glastopf_event,],
