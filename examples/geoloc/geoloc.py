@@ -29,10 +29,11 @@ if len(sys.argv) > 1:
     config = json.load(file(sys.argv[1]))
     HOST        = config["HOST"]
     PORT        = config["PORT"]
-    CHANNELS    = config["CHANNELS"]
-    GEOLOC_CHAN = config["GEOLOC_CHAN"]
-    IDENT       = config["IDENT"]
-    SECRET      = config["SECRET"]
+    # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
+    CHANNELS    = [c.encode("utf-8") for c in config["CHANNELS"]]
+    GEOLOC_CHAN = config["GEOLOC_CHAN"].encode("utf-8")
+    IDENT       = config["IDENT"].encode("utf-8")
+    SECRET      = config["SECRET"].encode("utf-8")
 else:
     print >>sys.stderr, "Warning: no config found, using default values for hpfeeds server"
 
