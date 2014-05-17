@@ -206,7 +206,14 @@ class HPC(object):
 	def wait(self, timeout=1):
 		self.s.settimeout(timeout)
 
-		d = self.recv()
+		try:
+			d = self.recv()
+		except Disconnect:
+			logger.info('Disconnected from broker (in wait).')
+			if self.reconnect:
+				self.tryconnect()
+			return None
+
 		if not d: return None
 
 		self.unpacker.feed(d)
