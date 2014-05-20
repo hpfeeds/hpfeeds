@@ -8,6 +8,7 @@ import collections
 import random
 
 import logging
+logging.basicConfig(level=logging.INFO)
 
 from evnet import loop, unloop, listenplain, EventGen
 from evnet.mongodb import MongoConn
@@ -286,6 +287,5 @@ def main():
 	return 0
  
 if __name__ == '__main__':
-	logging.basicConfig(level=logging.INFO)
 	sys.exit(main())
 
