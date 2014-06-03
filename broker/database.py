@@ -6,6 +6,10 @@ import sqlite3
 
 import config
 
+# inserting a user:
+# sqlite3 db.sqlite3
+# > insert into authkeys (owner, ident, secret, pubchans, subchans) values ('owner', 'ident', 'secret', '["chan1"]', '["chan1"]');
+
 class Database(object):
     def __init__(self):
         self.sql = sqlite3.connect(config.DBPATH)
