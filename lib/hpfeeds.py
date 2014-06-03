@@ -206,13 +206,16 @@ class HPC(object):
 	def wait(self, timeout=1):
 		self.s.settimeout(timeout)
 
-		d = self.recv()
-		if not d: return None
+		try:
+			d = self.recv()
+			if not d: return None
 
-		self.unpacker.feed(d)
-		for opcode, data in self.unpacker:
-			if opcode == OP_ERROR:
-				return data
+			self.unpacker.feed(d)
+			for opcode, data in self.unpacker:
+				if opcode == OP_ERROR:
+					return data
+		except Disconnect:
+			pass
 
 		return None
 
