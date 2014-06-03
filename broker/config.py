@@ -11,11 +11,11 @@ FBIP = "0.0.0.0"
 FBPORT = 20000
 
 # name (OP_INFO)
-FBNAME = "hpfriends"
+FBNAME = "hpfeeds"
 
 # SSL options ({} makes plain socket)
 SSLOPTS = {}
-SSLOPTS = dict(keyfile="./server.key", certfile="./server.crt")
+#SSLOPTS = dict(keyfile="./server.key", certfile="./server.crt")
 
 # database addr
 DBPATH = "db.sqlite3"
