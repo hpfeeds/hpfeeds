@@ -23,7 +23,8 @@ class TestServer(Server):
         return None
 
 class TestConnection(Connection):
-    def authkey_check(self, ident):
+    def authkey_check(self, ident, rhash):
+        # no check
         self.ak = ident
         self.uid = "testuid"
 

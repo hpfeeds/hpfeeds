@@ -21,4 +21,4 @@ SSLOPTS = {}
 DBPATH = "db.sqlite3"
 
 # how often to save connection stats
-STAT_TIME = 60.0
+STAT_TIME = 60

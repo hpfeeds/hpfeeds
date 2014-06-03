@@ -31,6 +31,10 @@ class Connection(object):
 
         self.stats = collections.defaultdict(lambda: 0)
 
+    def __del__(self):
+        # if this message is not showing up we're leaking references
+        log.debug("Connection cleanup {0}".format(self.addr))
+
     def write(self, data):
         try:
             self.sock.sendall(data)
@@ -46,7 +50,7 @@ class Connection(object):
         self.write(proto.msginfo(config.FBNAME, authrand))
 
         self.mandatory_authentication()
-        self.statgreenlet = gevent.spawn_later(config.STAT_TIME, self.periodic_stats)
+        self.statgreenlet = gevent.spawn(self.periodic_stats)
 
         while True:
             opcode, ident, data = self.read_message()
@@ -97,9 +101,9 @@ class Connection(object):
             self.error("First message was not AUTH.")
             raise BadClient()
 
-        self.authkey_check(ident)
+        self.authkey_check(ident, rhash)
 
-    def authkey_check(self, ident):
+    def authkey_check(self, ident, rhash):
         akrow = self.srv.get_authkey(ident)
         if not akrow:
             self.error("Authentication failed.", ident=ident)
@@ -124,14 +128,18 @@ class Connection(object):
         self.stats['received'] += 1
 
     def save_stats(self):
+        log.debug("saving connection stats for {0}".format(self.addr))
         if self.ak and self.uid and self.stats:
             self.srv.connstats(self.ak, self.uid, self.stats)
             self.stats = collections.defaultdict(lambda: 0)
 
     def periodic_stats(self):
         while self.active:
+            for i in range(config.STAT_TIME):
+                if not self.active: break
+                gevent.sleep(1)
             self.save_stats()
-            gevent.sleep(config.STAT_TIME)
+        log.debug("Statistics greenlet exiting for {0}".format(self.addr))
 
     def log(self, msg, *args):
         log.info(msg.format(*args))
@@ -178,6 +186,8 @@ class Server(object):
             self.subscribermap[chan].remove(fc)
             if fc.ak:
                 self._brokerchan(fc, chan, fc.ak, 'leave')
+
+        del self.conn2chans[fc]
 
         self.connections.remove(fc)
         try: sock.close()
