@@ -298,7 +298,8 @@ int main(int argc, char *argv[]) {
 				perror("write()");
 				exit(EXIT_FAILURE);
 			}
-			putchar('\n');
+			
+                        dprintf(STDOUT_FILENO, "\n");
 
 			free(data);
 
@@ -328,13 +329,13 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
 		for (i = 0; i < times; i++) {
-    		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-	    	if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-	    		perror("write()");
-	    		exit(EXIT_FAILURE);
-	    	}
-			hpf_msg_delete(msg);
-	    }
+            		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+        	    	if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+        	    		perror("write()");
+        	    		exit(EXIT_FAILURE);
+        	    	}
+        		hpf_msg_delete(msg);
+	        }
 		close(s);
 		exit(EXIT_SUCCESS);
 		break;
