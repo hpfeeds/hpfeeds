@@ -1,0 +1,1 @@
+[feedcli] publish to amun.events by 7e584120-051e-11e4-8538-00224da3e346: {"attackerPort": 40013, "victimPort": 5000, "victimIP": "92.12.12.50", "attackerIP": "188.24.58.132"}
