@@ -11,6 +11,7 @@ import GeoIP
 HOST = 'localhost'
 PORT = 10000
 CHANNELS = [
+	'amun.events',
         'dionaea.connections',
         'dionaea.capture',
         'glastopf.events',
@@ -38,6 +39,7 @@ else:
     print >>sys.stderr, "Warning: no config found, using default values for hpfeeds server"
 
 PROCESSORS = {
+	'amun.events': [amun_events],
         'glastopf.events': [glastopf_event,],
         'dionaea.capture': [dionaea_capture,],
         'dionaea.connections': [dionaea_connections,],
