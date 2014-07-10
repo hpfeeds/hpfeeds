@@ -1,0 +1,6 @@
+
+  - place log-hpfeeds.py into /log_modules/log-hpfeeds/
+  - add the config file 'log-hpfeeds.conf' to the /conf directory
+  - edit /conf/amun.conf and add 'log-hpfeeds' under log_modules:
+  - done!
+  
