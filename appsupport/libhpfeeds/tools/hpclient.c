@@ -40,7 +40,7 @@ S_ERROR,
 S_TERMINATE
 } session_state_t;
 
-session_state_t session_state;	// global session state
+session_state_t session_state;    // global session state
 
 typedef enum {
 C_SUBSCRIBE,
@@ -50,24 +50,24 @@ C_UNKNOWN } cmd_t;
 unsigned totmsgs = 0;
 
 u_char *read_msg(int s) {
-	u_char *buffer;
-	u_int32_t msglen;
-	int len;
-	int templen;
-	char tempbuf[READ_BLOCK_SIZE];
+    u_char *buffer;
+    u_int32_t msglen;
+    int len;
+    int templen;
+    char tempbuf[READ_BLOCK_SIZE];
 
-	if (read(s, &msglen, 4) != 4) {
-		perror("read()");
-		exit(EXIT_FAILURE);
-	}
+    if (read(s, &msglen, 4) != 4) {
+        perror("read()");
+        exit(EXIT_FAILURE);
+    }
 
-	if ((buffer = malloc(ntohl(msglen))) == NULL) {
-		perror("malloc()");
-		exit(EXIT_FAILURE);
-	}
+    if ((buffer = malloc(ntohl(msglen))) == NULL) {
+        perror("malloc()");
+        exit(EXIT_FAILURE);
+    }
 
-	*(u_int32_t *) buffer = msglen;
-	msglen = ntohl(msglen);
+    *(u_int32_t *) buffer = msglen;
+    msglen = ntohl(msglen);
 
     len = 4;
     templen = len;
@@ -77,31 +77,31 @@ u_char *read_msg(int s) {
         len += templen;
     }
 
-	if (len != msglen) {
-		perror("read()");
-		exit(EXIT_FAILURE);
-	}
+    if (len != msglen) {
+        perror("read()");
+        exit(EXIT_FAILURE);
+    }
 
-	return buffer;
+    return buffer;
 }
 
 void sigh(int sig) {
-	switch (sig) {
-	case SIGINT:
-		if (session_state != S_TERMINATE) {
-			if (write(STDOUT_FILENO, "\rSIGINT, signal again to terminate now.\n", 40) == -1) {
-				perror("write()");
-				exit(EXIT_FAILURE);
-			}
-			session_state = S_TERMINATE;
-		} else {
-			exit(EXIT_SUCCESS);
-		}
-		break;
-	default:
-		break;
-	}
-	return;
+    switch (sig) {
+    case SIGINT:
+        if (session_state != S_TERMINATE) {
+            if (write(STDOUT_FILENO, "\rSIGINT, signal again to terminate now.\n", 40) == -1) {
+                perror("write()");
+                exit(EXIT_FAILURE);
+            }
+            session_state = S_TERMINATE;
+        } else {
+            exit(EXIT_SUCCESS);
+        }
+        break;
+    default:
+        break;
+    }
+    return;
 }
 
 void usage(char *argv0) {
@@ -121,275 +121,275 @@ void print_benchmark(int signo)
 }
 
 int main(int argc, char *argv[]) {
-	cmd_t hpfdcmd;
-	hpf_msg_t *msg;
-	hpf_chunk_t *chunk;
-	u_char *data;
-	char *errmsg, *channel, *ident, *secret;
-	int s, opt;
-	struct hostent *he;
-	struct sockaddr_in host;
-	u_int32_t nonce = 0;
-	u_int32_t payload_len;
-	u_char* buf;
-	int len;
-	int templen;
-	char tempbuf[READ_BLOCK_SIZE];
-	u_int32_t times = 1;
-	int i;
+    cmd_t hpfdcmd;
+    hpf_msg_t *msg;
+    hpf_chunk_t *chunk;
+    u_char *data;
+    char *errmsg, *channel, *ident, *secret;
+    int s, opt;
+    struct hostent *he;
+    struct sockaddr_in host;
+    u_int32_t nonce = 0;
+    u_int32_t payload_len;
+    u_char* buf;
+    int len;
+    int templen;
+    char tempbuf[READ_BLOCK_SIZE];
+    u_int32_t times = 1;
+    int i;
     bool benchmark = false;
 
-	buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
+    buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
 
-	hpfdcmd = C_UNKNOWN;
-	channel = NULL;
-	ident = NULL;
-	secret = NULL;
-	msg = NULL;
+    hpfdcmd = C_UNKNOWN;
+    channel = NULL;
+    ident = NULL;
+    secret = NULL;
+    msg = NULL;
 
-	memset(&host, 0, sizeof(struct sockaddr_in));
-	host.sin_family = AF_INET;
+    memset(&host, 0, sizeof(struct sockaddr_in));
+    host.sin_family = AF_INET;
 
-	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:fb")) != -1) {
-		switch (opt) {
-		case 'S':
-			hpfdcmd = C_SUBSCRIBE;
-			break;
-		case 'P':
-			hpfdcmd = C_PUBLISH;
-			break;
-		case 'c':
-			channel = optarg;
-			break;
-		case 'h':
-			if ((he = gethostbyname(optarg)) == NULL) {
-				perror("gethostbyname()");
-				exit(EXIT_FAILURE);
-			}
+    while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:fb")) != -1) {
+        switch (opt) {
+        case 'S':
+            hpfdcmd = C_SUBSCRIBE;
+            break;
+        case 'P':
+            hpfdcmd = C_PUBLISH;
+            break;
+        case 'c':
+            channel = optarg;
+            break;
+        case 'h':
+            if ((he = gethostbyname(optarg)) == NULL) {
+                perror("gethostbyname()");
+                exit(EXIT_FAILURE);
+            }
 
-			if (he->h_addrtype != AF_INET) {
-				fprintf(stderr, "Unsupported address type\n");
-				exit(EXIT_FAILURE);
-			}
+            if (he->h_addrtype != AF_INET) {
+                fprintf(stderr, "Unsupported address type\n");
+                exit(EXIT_FAILURE);
+            }
 
-			host.sin_addr = *(struct in_addr *) he->h_addr;
+            host.sin_addr = *(struct in_addr *) he->h_addr;
 
-			break;
-		case 'i':
-			ident = optarg;
-			break;
-		case 'p':
-			host.sin_port = htons(strtoul(optarg, 0, 0));
+            break;
+        case 'i':
+            ident = optarg;
+            break;
+        case 'p':
+            host.sin_port = htons(strtoul(optarg, 0, 0));
 
-			break;
-		case 's':
-			secret = optarg;
-			break;
-		case 't':
-		    times = strtol(optarg, NULL, 10);
-		    break;
-	    case 'f':
-	        times = -1;
-	        break;
+            break;
+        case 's':
+            secret = optarg;
+            break;
+        case 't':
+            times = strtol(optarg, NULL, 10);
+            break;
+        case 'f':
+            times = -1;
+            break;
         case 'b':
             printf("Running in benchmark mode\n");
             benchmark = true;
             break;
-		default:
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-		}
-	}
+        default:
+            usage(argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
 
     if (benchmark) {
         signal(SIGALRM, print_benchmark);
         alarm(1);
     }
 
-	if (hpfdcmd == C_UNKNOWN || !channel || !ident || !secret || host.sin_addr.s_addr == INADDR_ANY || host.sin_port == 0) {
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
+    if (hpfdcmd == C_UNKNOWN || !channel || !ident || !secret || host.sin_addr.s_addr == INADDR_ANY || host.sin_port == 0) {
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
-	// install sigint handler
-	if (signal(SIGINT, sigh) == SIG_ERR) {
-		perror("signal()");
-		exit(EXIT_FAILURE);
-	}
+    // install sigint handler
+    if (signal(SIGINT, sigh) == SIG_ERR) {
+        perror("signal()");
+        exit(EXIT_FAILURE);
+    }
 
-	// connect to broker
-	if ((s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-		perror("socket()");
-		exit(EXIT_FAILURE);
-	}
-	fprintf(stderr, "connecting to %s:%u\n", inet_ntoa(host.sin_addr), ntohs(host.sin_port));
-	if (connect(s, (struct sockaddr *) &host, sizeof(host)) == -1) {
-		perror("connect()");
-		exit(EXIT_FAILURE);
-	}
+    // connect to broker
+    if ((s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
+        perror("socket()");
+        exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, "connecting to %s:%u\n", inet_ntoa(host.sin_addr), ntohs(host.sin_port));
+    if (connect(s, (struct sockaddr *) &host, sizeof(host)) == -1) {
+        perror("connect()");
+        exit(EXIT_FAILURE);
+    }
 
-	session_state = S_INIT; // initial session state
+    session_state = S_INIT; // initial session state
 
-	// this is our little session state machine
-	for (;;) switch (session_state) {
-	case S_INIT:
-		// read info message
-		if ((data = read_msg(s)) == NULL) break;
-		msg = (hpf_msg_t *) data;
+    // this is our little session state machine
+    for (;;) switch (session_state) {
+    case S_INIT:
+        // read info message
+        if ((data = read_msg(s)) == NULL) break;
+        msg = (hpf_msg_t *) data;
 
-		switch (msg->hdr.opcode) {
-		case OP_INFO:
+        switch (msg->hdr.opcode) {
+        case OP_INFO:
 
-			chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr), ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
-			if (chunk == NULL) {
-				fprintf(stderr, "invalid message format\n");
-				exit(EXIT_FAILURE);
-			}
+            chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr), ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
+            if (chunk == NULL) {
+                fprintf(stderr, "invalid message format\n");
+                exit(EXIT_FAILURE);
+            }
 
-			nonce = *(u_int32_t *) (data + sizeof(msg->hdr) + chunk->len + 1);
+            nonce = *(u_int32_t *) (data + sizeof(msg->hdr) + chunk->len + 1);
 
-			session_state = S_AUTH;
+            session_state = S_AUTH;
 
-			free(data);
+            free(data);
 
-			break;
-		case OP_ERROR:
-			session_state = S_ERROR;
-			break;
-		default:
-			fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
-			exit(EXIT_FAILURE);
-		}
+            break;
+        case OP_ERROR:
+            session_state = S_ERROR;
+            break;
+        default:
+            fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
+            exit(EXIT_FAILURE);
+        }
 
-		break;
-	case S_AUTH:
-		// send auth message
-		fprintf(stderr, "sending authentication...\n");
-		msg = hpf_msg_auth(nonce, (u_char *) ident, strlen(ident), (u_char *) secret, strlen(secret));
+        break;
+    case S_AUTH:
+        // send auth message
+        fprintf(stderr, "sending authentication...\n");
+        msg = hpf_msg_auth(nonce, (u_char *) ident, strlen(ident), (u_char *) secret, strlen(secret));
 
-		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-			perror("write()");
-			exit(EXIT_FAILURE);
-		}
-		hpf_msg_delete(msg);
+        if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+            perror("write()");
+            exit(EXIT_FAILURE);
+        }
+        hpf_msg_delete(msg);
 
-		if (hpfdcmd == C_SUBSCRIBE)
-			session_state = S_SUBSCRIBE;
-		else
-			session_state = S_PUBLISH;
-		break;
-	case S_SUBSCRIBE:
-		// send subscribe message
-		fprintf(stderr, "subscribing to channel...\n");
-		msg = hpf_msg_subscribe((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel));
+        if (hpfdcmd == C_SUBSCRIBE)
+            session_state = S_SUBSCRIBE;
+        else
+            session_state = S_PUBLISH;
+        break;
+    case S_SUBSCRIBE:
+        // send subscribe message
+        fprintf(stderr, "subscribing to channel...\n");
+        msg = hpf_msg_subscribe((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel));
 
-		if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-			perror("write()");
-			exit(EXIT_FAILURE);
-		}
-		hpf_msg_delete(msg);
+        if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+            perror("write()");
+            exit(EXIT_FAILURE);
+        }
+        hpf_msg_delete(msg);
 
-		session_state = S_RECVMSGS;
-		break;
-	case S_RECVMSGS:
-		// read server message
-		if ((data = read_msg(s)) == NULL) break;
-		msg = (hpf_msg_t *) data;
+        session_state = S_RECVMSGS;
+        break;
+    case S_RECVMSGS:
+        // read server message
+        if ((data = read_msg(s)) == NULL) break;
+        msg = (hpf_msg_t *) data;
 
-		switch (msg->hdr.opcode) {
-		case OP_PUBLISH:
-			// skip chunks
-			payload_len = hpf_msg_getsize(msg) - sizeof(msg->hdr);
+        switch (msg->hdr.opcode) {
+        case OP_PUBLISH:
+            // skip chunks
+            payload_len = hpf_msg_getsize(msg) - sizeof(msg->hdr);
 
-			chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr), ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
-			if (chunk == NULL) {
-				fprintf(stderr, "invalid message format\n");
-				exit(EXIT_FAILURE);
-			}
-			payload_len -= chunk->len + 1;
+            chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr), ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
+            if (chunk == NULL) {
+                fprintf(stderr, "invalid message format\n");
+                exit(EXIT_FAILURE);
+            }
+            payload_len -= chunk->len + 1;
 
-			chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr) + chunk->len + 1, ntohl(msg->hdr.msglen) - sizeof(msg->hdr) - chunk->len - 1);
-			if (chunk == NULL) {
-				fprintf(stderr, "invalid message format\n");
-				exit(EXIT_FAILURE);
-			}
-			payload_len -= chunk->len + 1;
+            chunk = hpf_msg_get_chunk(data + sizeof(msg->hdr) + chunk->len + 1, ntohl(msg->hdr.msglen) - sizeof(msg->hdr) - chunk->len - 1);
+            if (chunk == NULL) {
+                fprintf(stderr, "invalid message format\n");
+                exit(EXIT_FAILURE);
+            }
+            payload_len -= chunk->len + 1;
 
             if (!benchmark) {
-			    if (write(STDOUT_FILENO, data + hpf_msg_getsize(msg) - payload_len, payload_len) == -1) {
-				    perror("write()");
-				    exit(EXIT_FAILURE);
-			    }
+                if (write(STDOUT_FILENO, data + hpf_msg_getsize(msg) - payload_len, payload_len) == -1) {
+                    perror("write()");
+                    exit(EXIT_FAILURE);
+                }
                 dprintf(STDOUT_FILENO, "\n");
             } else {
                 totmsgs++;
             }
-			free(data);
+            free(data);
 
-			// we just remain in S_SUBSCRIBED
-			break;
-		case OP_ERROR:
-			session_state = S_ERROR;
-			break;
-		default:
-			fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
-			exit(EXIT_FAILURE);
-		}
+            // we just remain in S_SUBSCRIBED
+            break;
+        case OP_ERROR:
+            session_state = S_ERROR;
+            break;
+        default:
+            fprintf(stderr, "unknown server message (type %u)\n", msg->hdr.opcode);
+            exit(EXIT_FAILURE);
+        }
 
-		break;
-	case S_PUBLISH:
-		// send publish message
-		len = 0;
-		templen = 0;
-		memset(tempbuf, 0x0, READ_BLOCK_SIZE);
-		while ((templen = read(STDIN_FILENO, tempbuf, READ_BLOCK_SIZE)) > 0 && len < MAXLEN) {
-		    memcpy(buf + len, tempbuf, templen);
-		    len += templen;
-			if(buf[len - 1] == '\n') {
-				buf[len - 1] = 0;
-				len --;
-			}
-		}
-		fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
-		for (i = 0; i < times; i++) {
-            		msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-        	    	if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-        	    		perror("write()");
-        	    		exit(EXIT_FAILURE);
-        	    	}
-        		hpf_msg_delete(msg);
-	        }
-		close(s);
-		exit(EXIT_SUCCESS);
-		break;
-	case S_ERROR:
-		if (msg) {
-			// msg is still valid
-			if ((errmsg = calloc(1, msg->hdr.msglen - sizeof(msg->hdr))) == NULL) {
-				perror("calloc()");
-				exit(EXIT_FAILURE);
-			}
+        break;
+    case S_PUBLISH:
+        // send publish message
+        len = 0;
+        templen = 0;
+        memset(tempbuf, 0x0, READ_BLOCK_SIZE);
+        while ((templen = read(STDIN_FILENO, tempbuf, READ_BLOCK_SIZE)) > 0 && len < MAXLEN) {
+            memcpy(buf + len, tempbuf, templen);
+            len += templen;
+            if(buf[len - 1] == '\n') {
+                buf[len - 1] = 0;
+                len --;
+            }
+        }
+        fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
+        for (i = 0; i < times; i++) {
+                    msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+                    if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+                        perror("write()");
+                        exit(EXIT_FAILURE);
+                    }
+                hpf_msg_delete(msg);
+            }
+        close(s);
+        exit(EXIT_SUCCESS);
+        break;
+    case S_ERROR:
+        if (msg) {
+            // msg is still valid
+            if ((errmsg = calloc(1, msg->hdr.msglen - sizeof(msg->hdr))) == NULL) {
+                perror("calloc()");
+                exit(EXIT_FAILURE);
+            }
             memcpy(errmsg, msg->data, ntohl(msg->hdr.msglen) - sizeof(msg->hdr));
 
-			fprintf(stderr, "server error: '%s'\n", errmsg);
-			free(errmsg);
+            fprintf(stderr, "server error: '%s'\n", errmsg);
+            free(errmsg);
 
-			free(msg);
-		}
+            free(msg);
+        }
 
-		session_state = S_TERMINATE;
-		break;
-	case S_TERMINATE:
-		fprintf(stderr, "terminated.\n");
-		close(s);
-		return EXIT_SUCCESS;
-	default:
-		fprintf(stderr, "unknown session state\n");
-		close(s);
-		exit(EXIT_FAILURE);
-	}
+        session_state = S_TERMINATE;
+        break;
+    case S_TERMINATE:
+        fprintf(stderr, "terminated.\n");
+        close(s);
+        return EXIT_SUCCESS;
+    default:
+        fprintf(stderr, "unknown session state\n");
+        close(s);
+        exit(EXIT_FAILURE);
+    }
 
-	close(s);
+    close(s);
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
