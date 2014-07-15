@@ -26,6 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define MAXLEN 1000000
 #define READ_BLOCK_SIZE 32767
@@ -105,12 +106,13 @@ void sigh(int sig) {
 }
 
 void usage(char *argv0) {
-        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times | -f] [-b]\n", argv0);
+        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times | -f] [-b] [-d delay]\n", argv0);
         fprintf(stderr, "       -S subscribe to channel, print msg to stdout\n");
         fprintf(stderr, "       -P publish   to channel, read msg from stdin\n");
         fprintf(stderr, "       -t times     repeats the message\n");
         fprintf(stderr, "       -f           repeats the message forever\n");
         fprintf(stderr, "       -b           run the benchmark instead of printing\n");
+        fprintf(stderr, "       -d delay     wait time between messages (msec)\n");
 }
 
 void print_benchmark(int signo)
@@ -139,6 +141,8 @@ int main(int argc, char *argv[]) {
     u_int32_t times = 1;
     int i;
     bool benchmark = false;
+    struct timespec delay = { .tv_sec = 0, .tv_nsec = 0 };
+    bool have_delay = false;
 
     buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
 
@@ -151,7 +155,7 @@ int main(int argc, char *argv[]) {
     memset(&host, 0, sizeof(struct sockaddr_in));
     host.sin_family = AF_INET;
 
-    while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:fb")) != -1) {
+    while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:fbd:")) != -1) {
         switch (opt) {
         case 'S':
             hpfdcmd = C_SUBSCRIBE;
@@ -195,6 +199,13 @@ int main(int argc, char *argv[]) {
         case 'b':
             printf("Running in benchmark mode\n");
             benchmark = true;
+            break;
+        case 'd':
+            have_delay = true;
+            i = strtol(optarg, NULL, 10);
+            delay.tv_sec = i / 1000;
+            delay.tv_nsec = (i % 1000) * 1000;
+            printf("Setting delay: %lus %lums\n", delay.tv_sec, delay.tv_nsec / 1000);
             break;
         default:
             usage(argv[0]);
@@ -353,12 +364,15 @@ int main(int argc, char *argv[]) {
         }
         fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
         for (i = 0; i < times; i++) {
-                    msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-                    if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
-                        perror("write()");
-                        exit(EXIT_FAILURE);
-                    }
+                msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+                if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+                    perror("write()");
+                    exit(EXIT_FAILURE);
+                }
                 hpf_msg_delete(msg);
+                if (have_delay) {
+                    nanosleep(&delay, NULL);
+                }
             }
         close(s);
         exit(EXIT_SUCCESS);
