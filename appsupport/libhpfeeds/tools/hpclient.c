@@ -105,11 +105,12 @@ void sigh(int sig) {
 }
 
 void usage(char *argv0) {
-        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times | -f]\n", argv0);
+        fprintf(stderr, "Usage: %s -h host -p port [ -S | -P ] -c channel -i ident -s secret [-t times | -f] [-b]\n", argv0);
         fprintf(stderr, "       -S subscribe to channel, print msg to stdout\n");
         fprintf(stderr, "       -P publish   to channel, read msg from stdin\n");
         fprintf(stderr, "       -t times     repeats the message\n");
         fprintf(stderr, "       -f           repeats the message forever\n");
+        fprintf(stderr, "       -b           run the benchmark instead of printing\n");
 }
 
 void print_benchmark(int signo)
