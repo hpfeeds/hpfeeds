@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define MAXLEN 1000000
 #define READ_BLOCK_SIZE 32767
@@ -45,6 +46,8 @@ typedef enum {
 C_SUBSCRIBE,
 C_PUBLISH,
 C_UNKNOWN } cmd_t;
+
+unsigned totmsgs = 0;
 
 u_char *read_msg(int s) {
 	u_char *buffer;
@@ -109,6 +112,14 @@ void usage(char *argv0) {
         fprintf(stderr, "       -f           repeats the message forever\n");
 }
 
+void print_benchmark(int signo)
+{
+    printf("\rProcessing %u msgs/s", totmsgs);
+    fflush(stdout);
+    totmsgs = 0;
+    alarm(1);
+}
+
 int main(int argc, char *argv[]) {
 	cmd_t hpfdcmd;
 	hpf_msg_t *msg;
@@ -126,6 +137,7 @@ int main(int argc, char *argv[]) {
 	char tempbuf[READ_BLOCK_SIZE];
 	u_int32_t times = 1;
 	int i;
+    bool benchmark = false;
 
 	buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
 
@@ -138,7 +150,7 @@ int main(int argc, char *argv[]) {
 	memset(&host, 0, sizeof(struct sockaddr_in));
 	host.sin_family = AF_INET;
 
-	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:f")) != -1) {
+	while ((opt = getopt(argc, argv, "SPc:h:i:p:s:t:fb")) != -1) {
 		switch (opt) {
 		case 'S':
 			hpfdcmd = C_SUBSCRIBE;
@@ -179,11 +191,20 @@ int main(int argc, char *argv[]) {
 	    case 'f':
 	        times = -1;
 	        break;
+        case 'b':
+            printf("Running in benchmark mode\n");
+            benchmark = true;
+            break;
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		}
 	}
+
+    if (benchmark) {
+        signal(SIGALRM, print_benchmark);
+        alarm(1);
+    }
 
 	if (hpfdcmd == C_UNKNOWN || !channel || !ident || !secret || host.sin_addr.s_addr == INADDR_ANY || host.sin_port == 0) {
 		usage(argv[0]);
@@ -294,13 +315,15 @@ int main(int argc, char *argv[]) {
 			}
 			payload_len -= chunk->len + 1;
 
-			if (write(STDOUT_FILENO, data + hpf_msg_getsize(msg) - payload_len, payload_len) == -1) {
-				perror("write()");
-				exit(EXIT_FAILURE);
-			}
-			
-                        dprintf(STDOUT_FILENO, "\n");
-
+            if (!benchmark) {
+			    if (write(STDOUT_FILENO, data + hpf_msg_getsize(msg) - payload_len, payload_len) == -1) {
+				    perror("write()");
+				    exit(EXIT_FAILURE);
+			    }
+                dprintf(STDOUT_FILENO, "\n");
+            } else {
+                totmsgs++;
+            }
 			free(data);
 
 			// we just remain in S_SUBSCRIBED
