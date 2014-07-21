@@ -55,6 +55,7 @@ u_char *read_msg(int s) {
     u_int32_t msglen;
     int len;
     int templen;
+    int readlen;
     char tempbuf[READ_BLOCK_SIZE];
 
     if (read(s, &msglen, 4) != 4) {
@@ -73,7 +74,11 @@ u_char *read_msg(int s) {
     len = 4;
     templen = len;
     while ((templen > 0) && (len < msglen)) {
-        templen = read(s, tempbuf, msglen - 4);
+        if (msglen - 4 < READ_BLOCK_SIZE)
+            readlen = msglen - 4;
+        else
+            readlen = READ_BLOCK_SIZE;
+        templen = read(s, tempbuf, readlen);
         memcpy(buffer + len, tempbuf, templen);
         len += templen;
     }
@@ -197,7 +202,6 @@ int main(int argc, char *argv[]) {
             times = -1;
             break;
         case 'b':
-            printf("Running in benchmark mode\n");
             benchmark = true;
             break;
         case 'd':
@@ -214,6 +218,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (benchmark) {
+        if (hpfdcmd == C_PUBLISH) {
+            printf("You can't run benchmark in publish mode\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("Running in benchmark mode\n");
         signal(SIGALRM, print_benchmark);
         alarm(1);
     }
