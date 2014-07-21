@@ -122,7 +122,7 @@ void usage(char *argv0) {
 
 void print_benchmark(int signo)
 {
-    printf("\rProcessing %u msgs/s", totmsgs);
+    printf("\rProcessing %u msgs/s    %c%c%c%c", totmsgs, 8, 8, 8, 8);
     fflush(stdout);
     totmsgs = 0;
     alarm(1);
@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
     bool benchmark = false;
     struct timespec delay = { .tv_sec = 0, .tv_nsec = 0 };
     bool have_delay = false;
+    unsigned ret = 0;
 
     buf = (u_char*)malloc(sizeof(u_char) * MAXLEN);
 
@@ -218,10 +219,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (benchmark) {
-        if (hpfdcmd == C_PUBLISH) {
-            printf("You can't run benchmark in publish mode\n");
-            exit(EXIT_FAILURE);
-        }
         printf("Running in benchmark mode\n");
         signal(SIGALRM, print_benchmark);
         alarm(1);
@@ -373,8 +370,14 @@ int main(int argc, char *argv[]) {
         }
         fprintf(stderr, "publish %d bytes to channel for %u times...\n", len, times);
         for (i = 0; i < times; i++) {
-                msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
-                if (write(s, (u_char *) msg, ntohl(msg->hdr.msglen)) == -1) {
+            msg = hpf_msg_publish((u_char *) ident, strlen(ident), (u_char *) channel, strlen(channel),buf,len);
+            ret = write(s, (u_char *) msg, ntohl(msg->hdr.msglen));
+            if (ret == -1) {
+                perror("write()");
+                exit(EXIT_FAILURE);
+            }
+            if (ret < ntohl(msg->hdr.msglen)) {
+                if (write(s, (u_char *)msg + ret, ntohl(msg->hdr.msglen) - ret) == -1) {
                     perror("write()");
                     exit(EXIT_FAILURE);
                 }
@@ -383,6 +386,8 @@ int main(int argc, char *argv[]) {
                     nanosleep(&delay, NULL);
                 }
             }
+            totmsgs++;
+        }
         close(s);
         exit(EXIT_SUCCESS);
         break;
