@@ -10,6 +10,7 @@ This is the reference implementation repository. By now hpfeeds exists in other 
  - Ruby: https://github.com/fw42/hpfeedsrb
  - More Ruby: https://github.com/vicvega/hpfeeds-ruby
  - JS (within node.js): https://github.com/fw42/honeymap/blob/master/server/node_modules/hpfeeds/index.js
+ - C++: https://github.com/tentacool/tentacool
 
 ## About
 hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads.
