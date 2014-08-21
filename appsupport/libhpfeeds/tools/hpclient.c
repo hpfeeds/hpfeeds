@@ -74,10 +74,7 @@ u_char *read_msg(int s) {
     len = 4;
     templen = len;
     while ((templen > 0) && (len < msglen)) {
-        if (msglen - 4 < READ_BLOCK_SIZE)
-            readlen = msglen - 4;
-        else
-            readlen = READ_BLOCK_SIZE;
+        readlen = (msglen - 4 < READ_BLOCK_SIZE ? msglen - 4 : READ_BLOCK_SIZE);
         templen = read(s, tempbuf, readlen);
         memcpy(buffer + len, tempbuf, templen);
         len += templen;
