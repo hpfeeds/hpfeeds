@@ -235,7 +235,7 @@ def snort_alerts(identifier, payload, gi):
 
 	return message
 
-def wordpot_alerts(identifier, payload, gi):
+def wordpot_event(identifier, payload, gi):
 	try:
 		dec = ezdict(json.loads(str(payload)))
 	except:

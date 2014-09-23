@@ -10,7 +10,8 @@
         "beeswarm.hive",
         "kippo.sessions",
         "conpot.events",
-        "snort.alerts"
+        "snort.alerts",
+        "wordpot.events",
     ],
     "GEOLOC_CHAN": "geoloc.events"
 }

@@ -17,7 +17,8 @@ CHANNELS = [
         'beeswarm.hive',
         'kippo.sessions',
         'conpot.events',
-        'snort.alerts'
+        'snort.alerts',
+        'wordpot.events',
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -45,7 +46,7 @@ PROCESSORS = {
         'kippo.sessions': [kippo_sessions,],
         'conpot.events': [conpot_events,],
         'snort.alerts': [snort_alerts,],
-        'wordpot.alerts': [wordpot_alerts,],
+        'wordpot.events': [wordpot_event,],
 }
 
 def main():
