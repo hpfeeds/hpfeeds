@@ -235,6 +235,30 @@ def snort_alerts(identifier, payload, gi):
 
 	return message
 
+def amun_events(identifier, payload, gi):
+        try:
+                dec = ezdict(json.loads(str(payload)))
+                tstamp = datetime.datetime.now()
+        except:
+                print 'exception processing amun event'
+                traceback.print_exc()
+                return
+
+        a_family = get_addr_family(dec.attackerIP)
+        if a_family == socket.AF_INET:
+                geoloc = geoloc_none( gi[a_family].record_by_addr(dec.attackerIP) )
+                geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.victimIP) )
+        elif a_family == socket.AF_INET6:
+                geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.attackerIP) )
+                geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dec.victimIP) )
+
+
+        return {'type': 'amun.events', 'sensor': identifier, 'time': timestr(tstamp),
+                'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': dec.attackerIP,
+                'latitude2': geoloc2['latitude'], 'longitude2': geoloc2['longitude'], 'dest': dec.victimIP,
+                'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
+                'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
+
 def wordpot_event(identifier, payload, gi):
 	try:
 		dec = ezdict(json.loads(str(payload)))

@@ -4,6 +4,7 @@
     "IDENT": "geoloc", 
     "SECRET": "",
     "CHANNELS": [
+        "amun.events",
         "dionaea.connections",
         "dionaea.capture",
         "glastopf.events",
