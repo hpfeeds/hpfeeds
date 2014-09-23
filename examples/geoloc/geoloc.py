@@ -45,6 +45,7 @@ PROCESSORS = {
         'kippo.sessions': [kippo_sessions,],
         'conpot.events': [conpot_events,],
         'snort.alerts': [snort_alerts,],
+        'wordpot.alerts': [wordpot_alerts,],
 }
 
 def main():
