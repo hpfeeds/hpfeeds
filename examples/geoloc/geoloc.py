@@ -19,6 +19,7 @@ CHANNELS = [
     'kippo.sessions',
     'conpot.events',
     'snort.alerts'
+    'wordpot.events',
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -40,13 +41,14 @@ else:
 
 PROCESSORS = {
     'amun.events': [amun_events],
-        'glastopf.events': [glastopf_event,],
-        'dionaea.capture': [dionaea_capture,],
-        'dionaea.connections': [dionaea_connections,],
-        'beeswarm.hive': [beeswarm_hive,],
-        'kippo.sessions': [kippo_sessions,],
-        'conpot.events': [conpot_events,],
-        'snort.alerts': [snort_alerts,],
+    'glastopf.events': [glastopf_event,],
+    'dionaea.capture': [dionaea_capture,],
+    'dionaea.connections': [dionaea_connections,],
+    'beeswarm.hive': [beeswarm_hive,],
+    'kippo.sessions': [kippo_sessions,],
+    'conpot.events': [conpot_events,],
+    'snort.alerts': [snort_alerts,],
+    'wordpot.events': [wordpot_event,],
 }
 
 def main():

@@ -259,4 +259,43 @@ def amun_events(identifier, payload, gi):
                 'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code'],
                 'city2': geoloc2['city'], 'country2': geoloc2['country_name'], 'countrycode2': geoloc2['country_code']}
 
+def wordpot_event(identifier, payload, gi):
+	try:
+		dec = ezdict(json.loads(str(payload)))
+	except:
+		print 'exception processing wordpot alert'
+		traceback.print_exc()
+		return
 
+	a_family = get_addr_family(dec.source_ip)
+	if a_family == socket.AF_INET:
+		geoloc = geoloc_none( gi[a_family].record_by_addr(dec.source_ip) )
+		if dec.dest_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.dest_ip) )
+	elif a_family == socket.AF_INET6:
+		geoloc = geoloc_none( gi[a_family].record_by_addr_v6(dec.source_ip) )
+		if dec.dest_ip:
+			geoloc2 = geoloc_none( gi[a_family].record_by_addr(dec.dest_ip) )
+
+	message = {
+		'type': 'wordpot.alerts', 
+		'sensor': identifier, 
+		'time': timestr(datetime.datetime.now()),
+		'latitude': geoloc['latitude'], 
+		'longitude': geoloc['longitude'], 
+		'source': dec.source_ip,
+		'city': geoloc['city'], 
+		'country': geoloc['country_name'], 
+		'countrycode': geoloc['country_code']
+	}
+
+	if geoloc2:
+		message.update({
+			'latitude2': geoloc2['latitude'],
+			'longitude2': geoloc2['longitude'],
+			'city2': geoloc2['city'],
+			'country2': geoloc2['country_name'],
+			'countrycode2': geoloc2['country_code']
+		})
+
+	return message
