@@ -20,6 +20,8 @@ CHANNELS = [
     'conpot.events',
     'snort.alerts'
     'wordpot.events',
+    'shockpot.events',
+    'p0f.events',
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -49,6 +51,8 @@ PROCESSORS = {
     'conpot.events': [conpot_events,],
     'snort.alerts': [snort_alerts,],
     'wordpot.events': [wordpot_event,],
+    'shockpot.events': [shockpot_event,],
+    'p0f.events': [p0f_event,],
 }
 
 def main():
