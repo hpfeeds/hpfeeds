@@ -7,6 +7,7 @@ import hpfeeds
 from processors import *
 
 import GeoIP
+import traceback
 
 HOST = 'localhost'
 PORT = 10000
@@ -20,6 +21,8 @@ CHANNELS = [
     'conpot.events',
     'snort.alerts'
     'wordpot.events',
+    'shockpot.events',
+    'p0f.events',
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -49,6 +52,8 @@ PROCESSORS = {
     'conpot.events': [conpot_events,],
     'snort.alerts': [snort_alerts,],
     'wordpot.events': [wordpot_event,],
+    'shockpot.events': [shockpot_event,],
+    'p0f.events': [p0f_event,],
 }
 
 def main():
@@ -71,8 +76,9 @@ def main():
         for p in procs:
             try:
                 m = p(identifier, payload, gi)
-            except:
+            except Exception, e:
                 print "invalid message %s" % payload
+                traceback.print_exc(file=sys.stdout)
                 continue
             try: tmp = json.dumps(m)
             except: print 'DBG', m

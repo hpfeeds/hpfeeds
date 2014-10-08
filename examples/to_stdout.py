@@ -4,9 +4,10 @@ import sys
 import logging
 logging.basicConfig(level=logging.WARNING)
 import hpfeeds
-outstream = sys.stdout
 
 def main():
+    outstream = sys.stdout
+
     if len(sys.argv) < 5:
         print >> sys.stderr, "Usage: python %s <host> <port> <ident> <secret> <channel,channel2,channel3,...> [logfile]"%(sys.argv[0])
         sys.exit(1)

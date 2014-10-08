@@ -13,6 +13,8 @@
         "conpot.events",
         "snort.alerts",
         "wordpot.events",
+        "shockpot.events",
+        "p0f.events"
     ],
     "GEOLOC_CHAN": "geoloc.events"
 }
