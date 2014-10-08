@@ -301,7 +301,7 @@ def wordpot_event(identifier, payload, gi):
 	return message
 
 # TODO: use this function everywhere else is can be to clean up this code.
-def create_message(event_type, identifier, src_ip, dst_ip):
+def create_message(event_type, identifier, gi, src_ip, dst_ip):
 	a_family = get_addr_family(src_ip)
 	if a_family == socket.AF_INET:
 		geoloc = geoloc_none( gi[a_family].record_by_addr(src_ip) )
@@ -351,7 +351,7 @@ def shockpot_event(identifier, payload, gi):
 	except:
 		dest_ip = None
 
-	return create_message('shockpot.events', identifier, src_ip=dec.source_ip, dst_ip=dest_ip)
+	return create_message('shockpot.events', identifier, gi, src_ip=dec.source_ip, dst_ip=dest_ip)
 
 def p0f_event(identifier, payload, gi):
 	try:
@@ -360,4 +360,4 @@ def p0f_event(identifier, payload, gi):
 		print 'exception processing p0f alert'
 		traceback.print_exc()
 		return None
-	return create_message('p0f.events', identifier, src_ip=dec.client_ip, dst_ip=dec.server_ip)
+	return create_message('p0f.events', identifier, gi, src_ip=dec.client_ip, dst_ip=dec.server_ip)

@@ -7,6 +7,7 @@ import hpfeeds
 from processors import *
 
 import GeoIP
+import traceback
 
 HOST = 'localhost'
 PORT = 10000
@@ -75,8 +76,9 @@ def main():
         for p in procs:
             try:
                 m = p(identifier, payload, gi)
-            except:
+            except Exception, e:
                 print "invalid message %s" % payload
+                traceback.print_exc(file=sys.stdout)
                 continue
             try: tmp = json.dumps(m)
             except: print 'DBG', m
