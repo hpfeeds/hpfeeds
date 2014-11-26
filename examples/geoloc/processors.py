@@ -110,7 +110,6 @@ def suricata_events(identifier, payload, gi):
 def amun_events(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))
-        tstamp = datetime.datetime.now()
     except:
         print 'exception processing amun event'
         traceback.print_exc()
