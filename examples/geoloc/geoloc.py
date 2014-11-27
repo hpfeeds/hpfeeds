@@ -23,6 +23,7 @@ CHANNELS = [
     'wordpot.events',
     'shockpot.events',
     'p0f.events',
+    'suricata.events',
 ]
 GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
@@ -54,6 +55,7 @@ PROCESSORS = {
     'wordpot.events': [wordpot_event,],
     'shockpot.events': [shockpot_event,],
     'p0f.events': [p0f_event,],
+    'suricata.events': [suricata_events,],
 }
 
 def main():
