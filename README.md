@@ -27,7 +27,8 @@ To support multiple data sources and sinks per user we manage the Authkeys in th
 ```
 git clone https://github.com/rep/hpfeeds/
 cd hpfeeds
-python setup.py instalation
+python setup.py build
+python setup.py install
 ```
 
 ## Wire Protocol
