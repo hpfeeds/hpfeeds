@@ -1,5 +1,4 @@
 import sys
-import datetime
 import logging
 logging.basicConfig(level=logging.CRITICAL)
 
@@ -24,9 +23,7 @@ CHANNELS = [
     'shockpot.events',
     'p0f.events',
     'suricata.events',
-    'elastichoney.events',
 ]
-GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
 SECRET = ''
 
@@ -38,7 +35,6 @@ if len(sys.argv) > 1:
     PORT        = config["PORT"]
     # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
     CHANNELS    = [c.encode("utf-8") for c in config["CHANNELS"]]
-    GEOLOC_CHAN = config["GEOLOC_CHAN"].encode("utf-8")
     IDENT       = config["IDENT"].encode("utf-8")
     SECRET      = config["SECRET"].encode("utf-8")
 else:
@@ -57,7 +53,6 @@ PROCESSORS = {
     'shockpot.events': [shockpot_event,],
     'p0f.events': [p0f_event,],
     'suricata.events': [suricata_events,],
-    'elastichoney.events': [elastichoney_events,],
 }
 
 def main():
@@ -84,12 +79,13 @@ def main():
                 print "invalid message %s" % payload
                 traceback.print_exc(file=sys.stdout)
                 continue
-            try: tmp = json.dumps(m)
-            except: print 'DBG', m
-            if m != None: hpc.publish(GEOLOC_CHAN, json.dumps(m))
-
-        if not p:
-            print 'not p?'
+            try: 
+                tmp = json.dumps(m)
+            except: 
+                print 'DBG', m
+            if m != None: 
+                # TODO: write message to log in CIM compatible format
+                pass
 
     def on_error(payload):
         print >>sys.stderr, ' -> errormessage from server: {0}'.format(payload)
@@ -103,7 +99,6 @@ def main():
     except KeyboardInterrupt:
         pass
     except:
-        import traceback
         traceback.print_exc()
     finally:
         hpc.close()
