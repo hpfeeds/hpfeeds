@@ -188,7 +188,7 @@ def p0f_event(identifier, payload, gi):
         return None
     return create_message('p0f.events', identifier, gi, src_ip=dec.client_ip, dst_ip=dec.server_ip)
 
-def elastichoney_event(identifier, payload, gi):
+def elastichoney_events(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))
     except:
