@@ -187,3 +187,12 @@ def p0f_event(identifier, payload, gi):
         traceback.print_exc()
         return None
     return create_message('p0f.events', identifier, gi, src_ip=dec.client_ip, dst_ip=dec.server_ip)
+
+def elastichoney_events(identifier, payload, gi):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing elastichoney event'
+        traceback.print_exc()
+        return None
+    return create_message('elastichoney.events', identifier, gi, src_ip=dec.source, dst_ip=dec.honeypot)
