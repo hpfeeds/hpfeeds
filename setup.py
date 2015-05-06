@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(
-	name='hpfeeds',
+	name='hpfeeds-threatstream',
 	version='1.0',
 	description='hpfeeds module',
 	author='Mark Schloesser',

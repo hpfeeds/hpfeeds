@@ -1,3 +1,4 @@
 *.pyc
 /.vagrant
 /env
+/build
