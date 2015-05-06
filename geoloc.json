@@ -14,7 +14,8 @@
         "snort.alerts",
         "wordpot.events",
         "shockpot.events",
-        "p0f.events"
+        "p0f.events",
+        "elastichoney.events"
     ],
     "GEOLOC_CHAN": "geoloc.events"
 }
