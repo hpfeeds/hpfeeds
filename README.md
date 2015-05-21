@@ -23,6 +23,15 @@ Access to channels is given to so-called Authkeys which essentially are pairs of
 
 To support multiple data sources and sinks per user we manage the Authkeys in this webinterface after a quick login with a user account. User accounts are only needed for the webinterface - to use the data feed channels, only Authkeys are necessary. Different Authkeys can be granted distinct access rights for channels.
 
+## Installation
+
+```
+git clone https://github.com/rep/hpfeeds/
+cd hpfeeds
+python setup.py build
+python setup.py install
+```
+
 ## Wire Protocol
 
 Each message carries a message header. The message types can make use of "parameters" that are being sent as (length,data) pairs.
