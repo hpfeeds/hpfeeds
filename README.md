@@ -10,6 +10,7 @@ This is the reference implementation repository. By now hpfeeds exists in other 
  - Ruby: https://github.com/fw42/hpfeedsrb
  - More Ruby: https://github.com/vicvega/hpfeeds-ruby
  - JS (within node.js): https://github.com/fw42/honeymap/blob/master/server/node_modules/hpfeeds/index.js
+ - C++: https://github.com/tentacool/tentacool
 
 ## About
 hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads.
@@ -21,6 +22,15 @@ Different feeds are separated by channels and support arbitrary binary payloads.
 Access to channels is given to so-called Authkeys which essentially are pairs of an identifier and a secret. The secret is sent to the server by hashing it together with a per-connection nonce. This way no eavesdroppers can obtain valid credentials. Optionally the protocol can be run on top of SSL/TLS, of course.
 
 To support multiple data sources and sinks per user we manage the Authkeys in this webinterface after a quick login with a user account. User accounts are only needed for the webinterface - to use the data feed channels, only Authkeys are necessary. Different Authkeys can be granted distinct access rights for channels.
+
+## Installation
+
+```
+git clone https://github.com/rep/hpfeeds/
+cd hpfeeds
+python setup.py build
+python setup.py install
+```
 
 ## Wire Protocol
 
