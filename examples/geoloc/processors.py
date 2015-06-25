@@ -136,7 +136,7 @@ def create_message(event_type, identifier, gi, src_ip, dst_ip):
     elif a_family == socket.AF_INET6:
         geoloc = geoloc_none( gi[a_family].record_by_addr_v6(src_ip) )
         if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr(dst_ip) )
+            geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dst_ip) )
 
     message = {
         'type':   event_type, 
