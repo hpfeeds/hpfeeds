@@ -82,6 +82,7 @@ def main():
                 m = p(identifier, payload, gi)
             except Exception, e:
                 print "invalid message %s" % payload
+                import traceback
                 traceback.print_exc(file=sys.stdout)
                 continue
             try: tmp = json.dumps(m)
