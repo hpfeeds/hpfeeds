@@ -87,7 +87,7 @@ def conpot_events(identifier, payload, gi):
         traceback.print_exc()
         return
 
-    return create_message('conpot.events-'+dec.data_type, identifier, gi, src_ip=dec.remote, dst_ip=dec.public_ip)
+    return create_message('conpot.events-'+dec.data_type, identifier, gi, src_ip=remote, dst_ip=dec.public_ip)
 
 def snort_alerts(identifier, payload, gi):
     try:
