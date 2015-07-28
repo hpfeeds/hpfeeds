@@ -167,8 +167,8 @@ def conpot_events(identifier, payload, gi):
 	type = 'conpot.events-'+dec.data_type
 
 	message = {'type': type, 'sensor': identifier, 'time': timestr(tstamp),
-itude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
-y': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
+'latitude': geoloc['latitude'], 'longitude': geoloc['longitude'], 'source': remote,
+'city': geoloc['city'], 'country': geoloc['country_name'], 'countrycode': geoloc['country_code']}
 
 	if dec.public_ip:
 		message['latitude2'] = geoloc2['latitude']
