@@ -74,7 +74,7 @@ def cowrie_sessions(identifier, payload, gi):
         return
     return create_message('cowrie.sessions', identifier, gi, src_ip=dec.peerIP, dst_ip=dec.hostIP)
 
-	def kippo_sessions(identifier, payload, gi):
+def kippo_sessions(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))
     except:
