@@ -65,6 +65,15 @@ def beeswarm_hive(identifier, payload, gi):
         return
     return create_message('beeswarm.hive', identifier, gi, src_ip=dec.attacker_ip, dst_ip=dec.honey_ip)
 
+def cowrie_sessions(identifier, payload, gi):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing cowrie event'
+        traceback.print_exc()
+        return
+    return create_message('cowrie.sessions', identifier, gi, src_ip=dec.peerIP, dst_ip=dec.hostIP)
+
 def kippo_sessions(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))

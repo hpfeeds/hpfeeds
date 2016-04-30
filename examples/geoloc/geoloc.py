@@ -18,6 +18,7 @@ CHANNELS = [
     'glastopf.events',
     'beeswarm.hive',
     'kippo.sessions',
+    'cowrie.sessions',
     'conpot.events',
     'snort.alerts'
     'wordpot.events',
@@ -51,6 +52,7 @@ PROCESSORS = {
     'dionaea.connections': [dionaea_connections,],
     'beeswarm.hive': [beeswarm_hive,],
     'kippo.sessions': [kippo_sessions,],
+    'cowrie.sessions': [cowrie_sessions,],
     'conpot.events': [conpot_events,],
     'snort.alerts': [snort_alerts,],
     'wordpot.events': [wordpot_event,],
