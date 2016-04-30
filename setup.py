@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
 	name='hpfeeds-threatstream',
-	version='1.0',
+	version='1.1',
 	description='hpfeeds module',
 	author='Mark Schloesser',
 	author_email='ms@mwcollect.org',
