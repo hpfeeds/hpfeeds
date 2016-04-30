@@ -65,6 +65,15 @@ def beeswarm_hive(identifier, payload, gi):
         return
     return create_message('beeswarm.hive', identifier, gi, src_ip=dec.attacker_ip, dst_ip=dec.honey_ip)
 
+def cowrie_sessions(identifier, payload, gi):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing cowrie event'
+        traceback.print_exc()
+        return
+    return create_message('cowrie.sessions', identifier, gi, src_ip=dec.peerIP, dst_ip=dec.hostIP)
+
 def kippo_sessions(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -87,7 +96,7 @@ def conpot_events(identifier, payload, gi):
         traceback.print_exc()
         return
 
-    return create_message('conpot.events-'+dec.data_type, identifier, gi, src_ip=dec.remote, dst_ip=dec.public_ip)
+    return create_message('conpot.events-'+dec.data_type, identifier, gi, src_ip=remote, dst_ip=dec.public_ip)
 
 def snort_alerts(identifier, payload, gi):
     try:
@@ -128,6 +137,8 @@ def wordpot_event(identifier, payload, gi):
 
 # TODO: use this function everywhere else is can be to clean up this code.
 def create_message(event_type, identifier, gi, src_ip, dst_ip):
+    geoloc = None
+    geoloc2 = None
     a_family = get_addr_family(src_ip)
     if a_family == socket.AF_INET:
         geoloc = geoloc_none( gi[a_family].record_by_addr(src_ip) )
@@ -136,7 +147,7 @@ def create_message(event_type, identifier, gi, src_ip, dst_ip):
     elif a_family == socket.AF_INET6:
         geoloc = geoloc_none( gi[a_family].record_by_addr_v6(src_ip) )
         if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr(dst_ip) )
+            geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dst_ip) )
 
     message = {
         'type':   event_type, 
