@@ -8,8 +8,8 @@ setup(
 	description='hpfeeds module',
 	author='Mark Schloesser',
 	author_email='ms@mwcollect.org',
-        maintainer='Marc Laliberte'
-        maintainer_email='marclaliberte@gmail.com'
+        maintainer='Marc Laliberte',
+        maintainer_email='marclaliberte@gmail.com',
 	url='https://github.com/marclaliberte/hpfeeds',
 	license='GPL',
 	package_dir = {'': 'lib'},
