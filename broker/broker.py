@@ -101,7 +101,6 @@ class Connection(object):
     def authkey_check(self, ident, rhash):
         akrow = self.srv.get_authkey(ident)
         if not akrow:
-            print "not akrow"
             self.error("Authentication failed.", ident=ident)
             raise BadClient()
 
