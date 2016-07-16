@@ -1,4 +1,4 @@
-!/usr/bin/python
+#!/usr/bin/python
 
 import pymongo
 import sys
@@ -18,7 +18,7 @@ ident = sys.argv[1]
 client = pymongo.MongoClient()
 res = client.hpfeeds.auth_key.remove({"identifier": ident})
 client.fsync()
-client.disconnect()
+client.close()
 
 
 if res['ok']:

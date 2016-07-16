@@ -38,3 +38,15 @@ class Database(object):
                 return NONE
             finally:
                 self.mongo.close()
+
+        if not res: return None
+
+        subchans = res.get('subscribe')
+        pubchans = res.get('publish')
+        secret = res.get('secret')
+        ident = res.get('identifier')
+
+        pubchans = json.dumps(pubchans)
+        subchans = json.dumps(subchans)
+
+        return dict(secret=secret, ident=ident, pubchans=pubchans, subchans=subchans, owner=ident)
