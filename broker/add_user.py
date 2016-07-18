@@ -28,7 +28,7 @@ rec = {
 client = pymongo.MongoClient()
 res = client.hpfeeds.auth_key.update({"identifier": ident}, {"$set": rec}, upsert=True)
 client.fsync()
-client.disconnect()
+client.close()
 
 if res['updatedExisting']:
     print "updated %s"%rec

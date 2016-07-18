@@ -16,9 +16,3 @@ FBNAME = "hpfeeds"
 # SSL options ({} makes plain socket)
 SSLOPTS = {}
 #SSLOPTS = dict(keyfile="./server.key", certfile="./server.crt")
-
-# database addr
-DBPATH = "db.sqlite3"
-
-# how often to save connection stats
-STAT_TIME = 60

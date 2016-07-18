@@ -29,8 +29,6 @@ class Connection(object):
         self.subchans = []
         self.active = True
 
-        self.stats = collections.defaultdict(lambda: 0)
-
     def __del__(self):
         # if this message is not showing up we're leaking references
         log.debug("Connection cleanup {0}".format(self.addr))
@@ -38,7 +36,6 @@ class Connection(object):
     def write(self, data):
         try:
             self.sock.sendall(data)
-            self.stats['bytes_sent'] += len(data)
         except Exception as e:
             #traceback.print_exc()
             log.critical('Exception when writing to conn: {0}'.format(e))
@@ -50,7 +47,6 @@ class Connection(object):
         self.write(proto.msginfo(config.FBNAME, authrand))
 
         self.mandatory_authentication()
-        self.statgreenlet = gevent.spawn(self.periodic_stats)
 
         while True:
             opcode, ident, data = self.read_message()
@@ -67,7 +63,6 @@ class Connection(object):
                     continue
 
                 self.srv.do_publish(self, chan, payload)
-                self.stats["published"] += 1
 
             elif opcode == proto.OP_SUBSCRIBE:
                 chan = data
@@ -125,21 +120,6 @@ class Connection(object):
 
     def forward(self, ident, chan, data):
         self.write(proto.msgpublish(ident, chan, data))
-        self.stats['received'] += 1
-
-    def save_stats(self):
-        log.debug("saving connection stats for {0}".format(self.addr))
-        if self.ak and self.uid and self.stats:
-            self.srv.connstats(self.ak, self.uid, self.stats)
-            self.stats = collections.defaultdict(lambda: 0)
-
-    def periodic_stats(self):
-        while self.active:
-            for i in range(config.STAT_TIME):
-                if not self.active: break
-                gevent.sleep(1)
-            self.save_stats()
-        log.debug("Statistics greenlet exiting for {0}".format(self.addr))
 
     def log(self, msg, *args):
         log.info(msg.format(*args))
@@ -231,9 +211,6 @@ class Server(object):
             "authkey": conn.ak,
             "context": context,
         })
-
-    def connstats(self, *args, **kwargs):
-        return self.db.connstats(*args, **kwargs)
 
     def get_authkey(self, identifier):
         return self.db.get_authkey(identifier)
