@@ -3,12 +3,12 @@
 from distutils.core import setup
 
 setup(
-	name='hpfeeds',
+	name='hpfeeds3',
 	version='1.0',
 	description='hpfeeds module',
-	author='Mark Schloesser',
-	author_email='ms@mwcollect.org',
-	url='https://github.com/rep/hpfeeds',
+	author='John Carr',
+	author_email='john.carr@unrouted.co.uk',
+	url='https://github.com/Jc2k/hpfeeds',
 	license='GPL',
 	package_dir = {'': 'lib'},
 	py_modules = ['hpfeeds'],

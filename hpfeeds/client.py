@@ -11,54 +11,29 @@ import time
 import threading
 import ssl
 
+from .protocol import (
+    msgauth,
+    msgpublish,
+    msgsubscribe,
+    msgauth,
+    readpublish,
+    readsubscribe,
+    Unpacker,
+)
+
 logger = logging.getLogger('pyhpfeeds')
 
-OP_ERROR	= 0
-OP_INFO		= 1
-OP_AUTH		= 2
-OP_PUBLISH	= 3
-OP_SUBSCRIBE	= 4
-BUFSIZ = 16384
 
 __all__ = ["new", "FeedException"]
 
-def msghdr(op, data):
-	return struct.pack('!iB', 5+len(data), op) + data
-def msgpublish(ident, chan, data):
-#	if isinstance(data, str):
-#		data = data.encode('latin1')
-	return msghdr(OP_PUBLISH, struct.pack('!B', len(ident)) + ident + struct.pack('!B', len(chan)) + chan + data)
-def msgsubscribe(ident, chan):
-	return msghdr(OP_SUBSCRIBE, struct.pack('!B', len(ident)) + ident + chan)
-def msgauth(rand, ident, secret):
-	hash = hashlib.sha1(rand+secret).digest()
-	return msghdr(OP_AUTH, struct.pack('!B', len(ident)) + ident + hash)
-
-class FeedUnpack(object):
-	def __init__(self):
-		self.buf = bytearray()
-	def __iter__(self):
-		return self
-	def next(self):
-		return self.unpack()
-	def feed(self, data):
-		self.buf.extend(data)
-	def unpack(self):
-		if len(self.buf) < 5:
-			raise StopIteration('No message.')
-
-		ml, opcode = struct.unpack('!iB', buffer(self.buf,0,5))
-		if len(self.buf) < ml:
-			raise StopIteration('No message.')
-
-		data = bytearray(buffer(self.buf, 5, ml-5))
-		del self.buf[:ml]
-		return opcode, data
 
 class FeedException(Exception):
 	pass
+
+
 class Disconnect(Exception):
 	pass
+
 
 class HPC(object):
 	def __init__(self, host, port, ident, secret, timeout=3, reconnect=True, sleepwait=20):
@@ -73,7 +48,7 @@ class HPC(object):
 		self.s = None
 		self.connecting_lock = threading.Lock()
 		self.subscriptions = set()
-		self.unpacker = FeedUnpack()
+		self.unpacker = Unpacker()
 
 		self.tryconnect()
 
@@ -181,11 +156,7 @@ class HPC(object):
 
 					for opcode, data in self.unpacker:
 						if opcode == OP_PUBLISH:
-							rest = buffer(data, 0)
-							ident, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-							chan, content = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-
-							message_callback(str(ident), str(chan), content)
+							message_callback(*readpublish(data))
 						elif opcode == OP_ERROR:
 							error_callback(data)
 
