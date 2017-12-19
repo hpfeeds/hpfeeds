@@ -3,21 +3,22 @@
 # See the file 'LICENSE' for copying permission.
 
 import sys
-import struct
 import socket
-import hashlib
 import logging
 import time
 import threading
 import ssl
 
 from .protocol import (
+    OP_INFO,
+    OP_PUBLISH,
+    OP_ERROR,
+    BUFSIZ,
     msgauth,
     msgpublish,
     msgsubscribe,
-    msgauth,
+    readinfo,
     readpublish,
-    readsubscribe,
     Unpacker,
 )
 
@@ -35,7 +36,8 @@ class Disconnect(Exception):
     pass
 
 
-class HPC(object):
+class Client(object):
+
     def __init__(self, host, port, ident, secret, timeout=3, reconnect=True, sleepwait=20):
         self.host, self.port = host, port
         self.ident, self.secret = ident, secret
@@ -64,7 +66,9 @@ class HPC(object):
             logger.warn("Socket error: %s", e)
             raise Disconnect()
 
-        if not d: raise Disconnect()
+        if not d:
+            raise Disconnect()
+
         return d
 
     def send(self, data):
@@ -81,20 +85,26 @@ class HPC(object):
 
     def tryconnect(self):
         with self.connecting_lock:
-            if not self.connected:
-                while True:
-                    try:
-                        self.connect()
-                        break
-                    except socket.error, e:
-                        logger.warn('Socket error while connecting: {0}'.format(e))
-                        time.sleep(self.sleepwait)
-                    except FeedException, e:
-                        logger.warn('FeedException while connecting: {0}'.format(e))
-                        time.sleep(self.sleepwait)
-                    except Disconnect as e:
-                        logger.warn('Disconnect while connecting.')
-                        time.sleep(self.sleepwait)
+            if self.connected:
+                return
+
+            while True:
+                try:
+                    return self.connect()
+                except socket.error as e:
+                    logger.warn(
+                        'Socket error while connecting',
+                        exc_info=e,
+                    )
+                except FeedException as e:
+                    logger.warn(
+                        'FeedException while connecting',
+                        exc_info=e,
+                    )
+                except Disconnect as e:
+                    logger.warn('Disconnect while connecting.')
+
+                time.sleep(self.sleepwait)
 
     def connect(self):
         self.close_old()
@@ -102,7 +112,13 @@ class HPC(object):
         logger.info('connecting to {0}:{1}'.format(self.host, self.port))
 
         # Try other resolved addresses (IPv4 or IPv6) if failed.
-        ainfos = socket.getaddrinfo(self.host, 1, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        ainfos = socket.getaddrinfo(
+            self.host,
+            1,
+            socket.AF_UNSPEC,
+            socket.SOCK_STREAM,
+        )
+
         for ainfo in ainfos:
             addr_family = ainfo[0]
             addr = ainfo[4][0]
@@ -110,29 +126,33 @@ class HPC(object):
                 self.s = self.makesocket(addr_family)
                 self.s.settimeout(self.timeout)
                 self.s.connect((addr, self.port))
-            except:
-                import traceback
-                traceback.print_exc()
-                #print 'Could not connect to broker. %s[%s]' % (self.host, addr)
+            except Exception:
+                logger.exception('Could not connect to broker {}[{}]'.format(
+                    self.host,
+                    addr,
+                ))
                 continue
             else:
                 self.connected = True
                 break
 
-        if self.connected == False:
-            raise FeedException('Could not connect to broker [%s].' % (self.host))
+        if self.connected is False:
+            raise FeedException(
+                'Could not connect to broker {}'.format(self.host)
+            )
 
-        try: d = self.s.recv(BUFSIZ)
-        except socket.timeout: raise FeedException('Connection receive timeout.')
+        try:
+            d = self.s.recv(BUFSIZ)
+        except socket.timeout:
+            raise FeedException('Connection receive timeout.')
 
         self.unpacker.feed(d)
         for opcode, data in self.unpacker:
             if opcode == OP_INFO:
-                rest = buffer(data, 0)
-                name, rest = rest[1:1+ord(rest[0])], buffer(rest, 1+ord(rest[0]))
-                rand = str(rest)
-
-                logger.debug('info message name: {0}, rand: {1}'.format(name, repr(rand)))
+                name, rand = readinfo(data)
+                logger.debug(
+                    'info message name: {0}, rand: {1!r}'.format(name, rand)
+                )
                 self.brokername = name
 
                 self.send(msgauth(rand, self.ident, self.secret))
@@ -144,7 +164,7 @@ class HPC(object):
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
         if sys.platform in ('linux2', ):
-            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)    
+            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)
 
     def run(self, message_callback, error_callback):
         while not self.stopped:
@@ -166,7 +186,8 @@ class HPC(object):
                     break
 
                 # end run loops if stopped
-                if self.stopped: break
+                if self.stopped:
+                    break
 
             if not self.stopped and self.reconnect:
                 # connect again if disconnected
@@ -179,7 +200,8 @@ class HPC(object):
 
         try:
             d = self.recv()
-            if not d: return None
+            if not d:
+                return None
 
             self.unpacker.feed(d)
             for opcode, data in self.unpacker:
@@ -192,12 +214,14 @@ class HPC(object):
 
     def close_old(self):
         if self.s:
-            try: self.s.close()
-            except: pass
+            try:
+                self.s.close()
+            except Exception:
+                pass
 
     def subscribe(self, chaninfo):
         if type(chaninfo) == str:
-            chaninfo = [chaninfo,]
+            chaninfo = [chaninfo]
         for c in chaninfo:
             self.subscriptions.add(c)
 
@@ -209,12 +233,13 @@ class HPC(object):
             except Disconnect:
                 self.connected = False
                 logger.info('Disconnected from broker (in subscribe).')
-                if not self.reconnect: raise
+                if not self.reconnect:
+                    raise
                 break
 
     def publish(self, chaninfo, data):
         if type(chaninfo) == str:
-            chaninfo = [chaninfo,]
+            chaninfo = [chaninfo]
         for c in chaninfo:
             try:
                 self.send(msgpublish(self.ident, c, data))
@@ -230,21 +255,28 @@ class HPC(object):
         self.stopped = True
 
     def close(self):
-        try: self.s.close()
-        except: logger.debug('Socket exception when closing (ignored though).')
+        try:
+            self.s.close()
+        except Exception:
+            logger.debug('Socket exception when closing (ignored though).')
 
 
-class HPC_SSL(HPC):
+class SslClient(Client):
     def __init__(self, *args, **kwargs):
         self.certfile = kwargs.pop("certfile", None)
-        HPC.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def makesocket(self, addr_family):
-        s = socket.socket(addr_family, socket.SOCK_STREAM)
-        return ssl.wrap_socket(s, ca_certs=self.certfile, ssl_version=3, cert_reqs=2)
+        sock = socket.socket(addr_family, socket.SOCK_STREAM)
+        return ssl.wrap_socket(
+            sock,
+            ca_certs=self.certfile,
+            ssl_version=3,
+            cert_reqs=2,
+        )
 
 
 def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20, certfile=None):
     if certfile:
-        return HPC_SSL(host, port, ident, secret, timeout, reconnect, certfile=certfile)
-    return HPC(host, port, ident, secret, timeout, reconnect)
+        return SslClient(host, port, ident, secret, timeout, reconnect, certfile=certfile)
+    return Client(host, port, ident, secret, timeout, reconnect)

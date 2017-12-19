@@ -6,6 +6,7 @@ from hpfeeds.protocol import (
     msghdr,
     msgpublish,
     msgsubscribe,
+    readinfo,
     readpublish,
     readsubscribe,
 )
@@ -33,6 +34,11 @@ class TestMessageBuilder(unittest.TestCase):
 
 
 class TestMessageReader(unittest.TestCase):
+
+    def test_readinfo(self):
+        name, rand = readinfo(b'\x07hpfeeds\x01 a\xff')
+        assert name == 'hpfeeds'
+        assert rand == b'\x01 a\xff'
 
     def test_readpublish(self):
         ident, chan, data = readpublish(b'\x05ident\x04chansomedata')

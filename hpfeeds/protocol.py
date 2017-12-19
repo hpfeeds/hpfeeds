@@ -72,6 +72,10 @@ def msgauth(rand, ident, secret):
     return msghdr(OP_AUTH, strpack8(ident) + hash)
 
 
+def readinfo(data):
+    return strunpack8(data)
+
+
 def readsubscribe(data):
     ident, rest = strunpack8(data)
     return ident, force_str(rest)
