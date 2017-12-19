@@ -2,23 +2,17 @@
 # This file is part of hpfeeds - https://github.com/rep/hpfeeds
 # See the file 'LICENSE' for copying permission.
 
-import sys
 import struct
-import socket
 import hashlib
-import logging
-import time
-import threading
-import ssl
 
 
 BUFSIZ = 16384
 
-OP_ERROR    = 0
-OP_INFO        = 1
-OP_AUTH        = 2
-OP_PUBLISH    = 3
-OP_SUBSCRIBE    = 4
+OP_ERROR = 0
+OP_INFO = 1
+OP_AUTH = 2
+OP_PUBLISH = 3
+OP_SUBSCRIBE = 4
 
 MAXBUF = 1024**2
 
@@ -67,7 +61,10 @@ def msgsubscribe(ident, chan):
 
 
 def msgpublish(ident, chan, data):
-    return msghdr(OP_PUBLISH, strpack8(ident) + strpack8(chan) + force_bytes(data))
+    return msghdr(
+        OP_PUBLISH,
+        strpack8(ident) + strpack8(chan) + force_bytes(data),
+    )
 
 
 def msgauth(rand, ident, secret):

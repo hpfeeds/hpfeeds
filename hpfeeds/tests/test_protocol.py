@@ -1,6 +1,14 @@
 import unittest
 
-from hpfeeds.protocol import Unpacker, msgauth, msghdr, msgpublish, msgsubscribe, readpublish, readsubscribe
+from hpfeeds.protocol import (
+    Unpacker,
+    msgauth,
+    msghdr,
+    msgpublish,
+    msgsubscribe,
+    readpublish,
+    readsubscribe,
+)
 
 
 class TestMessageBuilder(unittest.TestCase):
@@ -18,7 +26,10 @@ class TestMessageBuilder(unittest.TestCase):
 
     def test_msgauth(self):
         msg = msgauth(b'rand', 'ident', 'secret')
-        assert msg == b'\x00\x00\x00\x1f\x02\x05ident\xbf\xa9^\x11I\xcd\x9es\x80\xfd\xfcaJW\tZ\xb7\x19\xc1\xb4'
+        assert msg == (
+            b'\x00\x00\x00\x1f\x02\x05ident\xbf\xa9^\x11I\xcd\x9es'
+            b'\x80\xfd\xfcaJW\tZ\xb7\x19\xc1\xb4'
+        )
 
 
 class TestMessageReader(unittest.TestCase):
