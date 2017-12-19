@@ -7,15 +7,12 @@ gevent.monkey.patch_all()  # noqa: E402
 import collections
 import os
 import logging
-import sys
 
 import gevent
 import gevent.server
 
-import config
-from utils import Disconnect, BadClient
-
 from hpfeeds.broker.auth import sqlite
+from hpfeeds.exceptions import BadClient, Disconnect
 from hpfeeds.protocol import (
     BUFSIZ,
     OP_AUTH,
@@ -259,18 +256,3 @@ class Server(object):
         # all subscribed connections allowed to receive by default
         for c in subscribed_conns:
             yield c
-
-
-def main():
-    logging.basicConfig(level=logging.DEBUG if config.DEBUG else logging.INFO)
-    log.info("broker starting up...")
-    s = Server()
-    s.serve_forever()
-    return 0
-
-
-if __name__ == '__main__':
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        pass
