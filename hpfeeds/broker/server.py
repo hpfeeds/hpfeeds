@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import gevent, gevent.server, gevent.monkey
-gevent.monkey.patch_all()
+import gevent
+import gevent.server
+import gevent.monkey
+gevent.monkey.patch_all()  # noqa: E402
 
 import sys
 import os
@@ -12,13 +14,30 @@ import traceback
 
 import config
 import database
-import proto
-import utils
 from utils import Disconnect, BadClient
+
+from hpfeeds.protocol import (
+    BUFSIZ,
+    OP_AUTH,
+    OP_SUBSCRIBE,
+    OP_UNSUBSCRIBE,
+    OP_PUBLISH,
+    msgerror,
+    msginfo,
+    msgpublish,
+    readsubscribe,
+    readpublish,
+    readauth,
+    hashsecret,
+    Unpacker,
+)
+
 
 log = logging.getLogger("broker")
 
+
 class Connection(object):
+
     def __init__(self, sock, addr, srv):
         self.sock = sock
         self.addr = addr
@@ -28,8 +47,7 @@ class Connection(object):
         self.pubchans = []
         self.subchans = []
         self.active = True
-
-        self.stats = collections.defaultdict(lambda: 0)
+        self.unpacker = Unpacker()
 
     def __del__(self):
         # if this message is not showing up we're leaking references
@@ -38,70 +56,75 @@ class Connection(object):
     def write(self, data):
         try:
             self.sock.sendall(data)
-            self.stats['bytes_sent'] += len(data)
+            #  self.stats['bytes_sent'] += len(data)
         except Exception as e:
-            #traceback.print_exc()
-            log.critical('Exception when writing to conn: {0}'.format(e))
-        return
+            log.critical('Exception when writing to conn', exc_info=e)
 
     def handle(self):
         # first send the info message
         self.authrand = authrand = os.urandom(4)
-        self.write(proto.msginfo(config.FBNAME, authrand))
-
-        self.mandatory_authentication()
-        self.statgreenlet = gevent.spawn(self.periodic_stats)
+        self.write(msginfo(config.FBNAME, authrand))
 
         while True:
-            opcode, ident, data = self.read_message()
+            self.unpacker.feed(self.s.recv(BUFSIZ))
+            for opcode, data in self.unpacker:
+                if opcode != OP_AUTH:
+                    self.error('First message was not AUTH.')
+                    raise BadClient()
 
-            if not ident == self.ak:
-                self.error("Invalid authkey in message.", ident=ident)
-                raise BadClient()
+                ident, rhash = readauth(data)
+                self.authkey_check(ident, rhash)
+                break
 
-            if opcode == proto.OP_PUBLISH:
-                chan, payload = proto.split(data, 1)
+        while True:
+            self.unpacker.feed(self.recv(BUFSIZ))
 
-                if not self.may_publish(chan) or chan.endswith("..broker"):
-                    self.error("Authkey not allowed to publish here.", chan=chan)
-                    continue
+            for opcode, data in self.unpacker:
+                if opcode == OP_PUBLISH:
+                    self.do_publish(*readpublish(data))
+                elif opcode == OP_SUBSCRIBE:
+                    self.do_subscribe(*readsubscribe(data))
+                elif opcode == OP_UNSUBSCRIBE:
+                    self.do_unsubscribe(*readsubscribe(data))
+                else:
+                    self.error(
+                        "Unknown message type.",
+                        opcode=opcode,
+                        length=len(data),
+                    )
+                    raise BadClient()
 
-                self.srv.do_publish(self, chan, payload)
-                self.stats["published"] += 1
-
-            elif opcode == proto.OP_SUBSCRIBE:
-                chan = data
-                checkchan = chan
-
-                if chan.endswith('..broker'): checkchan = chan.rsplit('..broker', 1)[0]
-
-                if not self.may_subscribe(checkchan):
-                    self.error("Authkey not allowed to subscribe here.", chan=chan)
-                    continue
-
-                self.srv.do_subscribe(self, ident, chan)
-
-            elif opcode == proto.OP_UNSUBSCRIBE:
-                chan = data
-                self.do_unsubscribe(self, ident, chan)
-
-            else:
-                self.error("Unknown message type.", opcode=opcode, length=len(data))
-                raise BadClient()
-
-    def may_publish(self, chan):
-        return chan in self.pubchans
-
-    def may_subscribe(self, chan):
-        return chan in self.subchans
-
-    def mandatory_authentication(self):
-        opcode, ident, rhash = self.read_message()
-        if not opcode == proto.OP_AUTH:
-            self.error("First message was not AUTH.")
+    def do_publish(self, ident, chan, payload):
+        if not ident == self.ak:
+            self.error("Invalid authkey in message.", ident=ident)
             raise BadClient()
 
-        self.authkey_check(ident, rhash)
+        if chan not in self.pubchans or chan.endswith("..broker"):
+            self.error(
+                "Authkey not allowed to publish here.",
+                chan=chan
+            )
+            return
+
+        self.srv.do_publish(self, chan, payload)
+        #  self.stats["published"] += 1
+
+    def do_subscribe(self, ident, chan):
+        checkchan = chan
+        if chan.endswith('..broker'):
+            checkchan = chan.rsplit('..broker', 1)[0]
+
+        if checkchan not in self.subchans:
+            self.error(
+                "Authkey not allowed to subscribe here.",
+                chan=chan,
+            )
+            return
+
+        self.srv.do_subscribe(self, ident, chan)
+
+    def do_unsubscribe(self, ident, chan):
+        self.do_unsubscribe(self, ident, chan)
 
     def authkey_check(self, ident, rhash):
         akrow = self.srv.get_authkey(ident)
@@ -109,8 +132,7 @@ class Connection(object):
             self.error("Authentication failed.", ident=ident)
             raise BadClient()
 
-        akhash = utils.hash(self.authrand, akrow["secret"])
-
+        akhash = hashsecret(self.authrand, akrow["secret"])
         if not akhash == rhash:
             self.error("Authentication failed.", ident=ident)
             raise BadClient()
@@ -120,40 +142,25 @@ class Connection(object):
         self.pubchans = akrow.get("pubchans", [])
         self.subchans = akrow.get("subchans", [])
 
-    def read_message(self):
-        return proto.read_message(self.sock)
-
     def forward(self, ident, chan, data):
-        self.write(proto.msgpublish(ident, chan, data))
-        self.stats['received'] += 1
-
-    def save_stats(self):
-        log.debug("saving connection stats for {0}".format(self.addr))
-        if self.ak and self.uid and self.stats:
-            self.srv.connstats(self.ak, self.uid, self.stats)
-            self.stats = collections.defaultdict(lambda: 0)
-
-    def periodic_stats(self):
-        while self.active:
-            for i in range(config.STAT_TIME):
-                if not self.active: break
-                gevent.sleep(1)
-            self.save_stats()
-        log.debug("Statistics greenlet exiting for {0}".format(self.addr))
-
-    def log(self, msg, *args):
-        log.info(msg.format(*args))
+        self.write(msgpublish(ident, chan, data))
+        #  self.stats['received'] += 1
 
     def error(self, msg, *args, **context):
         emsg = msg.format(*args)
         log.critical(emsg)
         self.srv.log_error(emsg, self, context)
-        self.write(proto.msgerror(emsg))
+        self.write(msgerror(emsg))
 
 
 class Server(object):
+
     def __init__(self):
-        self.listener = gevent.server.StreamServer((config.FBIP, config.FBPORT), self._newconn, **config.SSLOPTS)
+        self.listener = gevent.server.StreamServer(
+            (config.FBIP, config.FBPORT),
+            self._newconn,
+            **config.SSLOPTS
+        )
         self.db = self.dbclass()
         self.connections = set()
         self.subscribermap = collections.defaultdict(list)
@@ -173,12 +180,13 @@ class Server(object):
         log.debug('Connection from {0}.'.format(addr))
         fc = self.connclass(sock, addr, self)
         self.connections.add(fc)
-        
-        try: fc.handle()
+
+        try:
+            fc.handle()
         except Disconnect:
             log.debug("Connection closed by {0}".format(addr))
         except BadClient:
-            log.warn('Connection ended because of bad client: {0}'.format(addr))
+            log.warn('Connection ended due to bad client: {0}'.format(addr))
 
         fc.active = False
 
@@ -190,26 +198,34 @@ class Server(object):
         del self.conn2chans[fc]
 
         self.connections.remove(fc)
-        try: sock.close()
-        except: pass
+        try:
+            sock.close()
+        except Exception:
+            pass
 
     def do_publish(self, c, chan, data):
-        log.debug('publish to {0} by {1} ak {2} addr {3}'.format(chan, c.uid, c.ak, c.addr))
+        log.debug('publish to {0} by {1} ak {2} addr {3}'.format(
+            chan, c.uid, c.ak, c.addr
+        ))
         try:
             for c2 in self.receivers(chan, c, self.subscribermap[chan]):
                 c2.forward(c.ak, chan, data)
         except Exception as e:
             traceback.print_exc()
-        
+
     def do_subscribe(self, c, ident, chan):
-        log.debug('broker subscribe to {0} by {1}@{2}'.format(chan, ident, c.addr))
+        log.debug('broker subscribe to {0} by {1}@{2}'.format(
+            chan, ident, c.addr
+        ))
         self.subscribermap[chan].append(c)
         self.conn2chans[c].append(chan)
         if not chan.endswith('..broker'):
             self._brokerchan(c, chan, ident, 'join')
-    
+
     def do_unsubscribe(self, c, ident, chan):
-        log.debug('broker unsubscribe to {0} by {1}@{2}'.format(chan, ident, c.addr))
+        log.debug('broker unsubscribe to {0} by {1}@{2}'.format(
+            chan, ident, c.addr
+        ))
         self.subscribermap[chan].remove(c)
         self.conn2chans[c].remove(chan)
         if not chan.endswith('..broker'):
@@ -232,14 +248,12 @@ class Server(object):
             "context": context,
         })
 
-    def connstats(self, *args, **kwargs):
-        return self.db.connstats(*args, **kwargs)
-
     def get_authkey(self, identifier):
         return self.db.get_authkey(identifier)
 
     def receivers(self, chan, conn, subscribed_conns):
-        if not subscribed_conns: return
+        if not subscribed_conns:
+            return
 
         # this is plain hpfeeds mode, no graph
         # all subscribed connections allowed to receive by default
@@ -254,6 +268,9 @@ def main():
     s.serve_forever()
     return 0
 
+
 if __name__ == '__main__':
-    try: sys.exit(main())
-    except KeyboardInterrupt: pass
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        pass

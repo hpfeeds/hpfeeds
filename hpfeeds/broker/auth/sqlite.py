@@ -8,9 +8,12 @@ import config
 
 # inserting a user:
 # sqlite3 db.sqlite3
-# > insert into authkeys (owner, ident, secret, pubchans, subchans) values ('owner', 'ident', 'secret', '["chan1"]', '["chan1"]');
+# > insert into authkeys (owner, ident, secret, pubchans, subchans)
+#      values ('owner', 'ident', 'secret', '["chan1"]', '["chan1"]');
 
-class Database(object):
+
+class Authenticator(object):
+
     def __init__(self):
         self.sql = sqlite3.connect(config.DBPATH)
         self.check_db()
@@ -18,9 +21,9 @@ class Database(object):
     def check_db(self):
         with self.sql:
             try:
-                res = self.sql.execute("select * from logs, authkeys where 1=0")
+                self.sql.execute("select * from logs, authkeys where 1=0")
             except sqlite3.OperationalError:
-                print "setting up tables..."
+                print("setting up tables...")
                 # create tables
                 self.sql.execute("""
                 create table logs (id integer primary key autoincrement,
@@ -49,7 +52,7 @@ class Database(object):
         try:
             c.execute("select * from stats where ak=?", (ak,))
             res = c.fetchone()
-        except:
+        except Exception:
             import traceback
             traceback.print_exc()
             return None
@@ -59,34 +62,44 @@ class Database(object):
         if not res:
             enc = json.dumps(stats)
             with self.sql:
-                self.sql.execute("insert into stats (ak, uid, data) values (?,?,?)", (ak, uid, enc))
+                self.sql.execute(
+                    "insert into stats (ak, uid, data) values (?,?,?)",
+                    (ak, uid, enc),
+                )
         else:
-            rid,_,_,data = res
+            rid, _, _, data = res
             dec = json.loads(data)
             new = dict([(k, stats[k]+dec.get(k, 0)) for k in stats])
             enc = json.dumps(new)
             with self.sql:
-                self.sql.execute("update stats set data=? where id=?", (enc, rid))
+                self.sql.execute(
+                    "update stats set data=? where id=?", (enc, rid)
+                )
 
     def get_authkey(self, ident):
         c = self.sql.cursor()
         try:
             c.execute("select * from authkeys where ident=?", (ident,))
             res = c.fetchone()
-        except:
+        except Exception:
             import traceback
             traceback.print_exc()
             return None
         finally:
             c.close()
 
-        if not res: return None
+        if not res:
+            return None
 
         ak, owner, ident, secret, pubchans, subchans = res
 
         pubchans = json.loads(pubchans)
         subchans = json.loads(subchans)
 
-        return dict(secret=secret, ident=ident, pubchans=pubchans,
-            subchans=subchans, owner=owner
+        return dict(
+            secret=secret,
+            ident=ident,
+            pubchans=pubchans,
+            subchans=subchans,
+            owner=owner,
         )

@@ -13,6 +13,7 @@ OP_INFO = 1
 OP_AUTH = 2
 OP_PUBLISH = 3
 OP_SUBSCRIBE = 4
+OP_UNSUBSCRIBE = 5
 
 MAXBUF = 1024**2
 
@@ -26,6 +27,10 @@ SIZES = {
 
 class ProtocolError(Exception):
     pass
+
+
+def hashsecret(rand, secret):
+    return hashlib.sha1(bytes(rand) + secret.encode('utf-8')).digest()
 
 
 def force_bytes(value):
@@ -56,6 +61,10 @@ def msghdr(op, data):
     return struct.pack('!iB', 5 + len(data), op) + data
 
 
+def msginfo(name, rand):
+    return msghdr(OP_INFO, strpack8(name) + force_bytes(rand))
+
+
 def msgsubscribe(ident, chan):
     return msghdr(OP_SUBSCRIBE, strpack8(ident) + force_bytes(chan))
 
@@ -68,11 +77,18 @@ def msgpublish(ident, chan, data):
 
 
 def msgauth(rand, ident, secret):
-    hash = hashlib.sha1(bytes(rand) + secret.encode('utf-8')).digest()
-    return msghdr(OP_AUTH, strpack8(ident) + hash)
+    return msghdr(OP_AUTH, strpack8(ident) + hashsecret(rand, secret))
+
+
+def msgerror(error):
+    return msghdr(OP_ERROR, force_bytes(error))
 
 
 def readinfo(data):
+    return strunpack8(data)
+
+
+def readauth(data):
     return strunpack8(data)
 
 
