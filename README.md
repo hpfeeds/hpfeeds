@@ -1,11 +1,9 @@
-hpfeeds
-=======
+hpfeeds3
+========
 
-Check out our hpfeeds setup with a social sharing model: http://hpfriends.honeycloud.net/
+This is a python 3 compatible implementation of hpfeeds. Check out the following implementations:
 
-There is a nice introduction by heipei to be read here: http://heipei.github.io/2013/05/11/Using-hpfriends-the-social-data-sharing-platform/
-
-This is the reference implementation repository. By now hpfeeds exists in other languages than Python and C as well! Check out the following implementations:
+ - Python 2: https://github.com/rep/hpfeeds
  - Go: https://github.com/fw42/go-hpfeeds
  - Ruby: https://github.com/fw42/hpfeedsrb
  - More Ruby: https://github.com/vicvega/hpfeeds-ruby
@@ -13,6 +11,7 @@ This is the reference implementation repository. By now hpfeeds exists in other 
  - C++: https://github.com/tentacool/tentacool
 
 ## About
+
 hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads.
 
 We tried to design a simple wire-format so that everyone is able to subscribe to the feeds with his favorite language in almost no time.
