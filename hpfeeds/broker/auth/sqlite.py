@@ -4,8 +4,6 @@
 import json
 import sqlite3
 
-import config
-
 # inserting a user:
 # sqlite3 db.sqlite3
 # > insert into authkeys (owner, ident, secret, pubchans, subchans)
@@ -14,8 +12,8 @@ import config
 
 class Authenticator(object):
 
-    def __init__(self):
-        self.sql = sqlite3.connect(config.DBPATH)
+    def __init__(self, path):
+        self.sql = sqlite3.connect(path)
         self.check_db()
 
     def check_db(self):
@@ -39,42 +37,8 @@ class Authenticator(object):
                     pubchans TEXT, subchans TEXT)
                 """)
 
-    def log(self, row):
-        enc = json.dumps(row)
-        with self.sql:
-            self.sql.execute("insert into logs (data) values (?)", (enc,))
-
     def close(self):
         self.sql.close()
-
-    def connstats(self, ak, uid, stats):
-        c = self.sql.cursor()
-        try:
-            c.execute("select * from stats where ak=?", (ak,))
-            res = c.fetchone()
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            return None
-        finally:
-            c.close()
-
-        if not res:
-            enc = json.dumps(stats)
-            with self.sql:
-                self.sql.execute(
-                    "insert into stats (ak, uid, data) values (?,?,?)",
-                    (ak, uid, enc),
-                )
-        else:
-            rid, _, _, data = res
-            dec = json.loads(data)
-            new = dict([(k, stats[k]+dec.get(k, 0)) for k in stats])
-            enc = json.dumps(new)
-            with self.sql:
-                self.sql.execute(
-                    "update stats set data=? where id=?", (enc, rid)
-                )
 
     def get_authkey(self, ident):
         c = self.sql.cursor()

@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import gevent
-import gevent.server
 import gevent.monkey
 gevent.monkey.patch_all()  # noqa: E402
 
-import sys
+import collections
 import os
 import logging
-import collections
-import traceback
+import sys
+
+import gevent
+import gevent.server
 
 import config
-import database
 from utils import Disconnect, BadClient
 
+from hpfeeds.broker.auth import sqlite
 from hpfeeds.protocol import (
     BUFSIZ,
     OP_AUTH,
@@ -167,7 +167,7 @@ class Server(object):
         self.conn2chans = collections.defaultdict(list)
 
     def dbclass(self):
-        return database.Database()
+        return sqlite.Authenticator('db.sqlite3')
 
     def connclass(self, *args):
         return Connection(*args)
@@ -211,7 +211,7 @@ class Server(object):
             for c2 in self.receivers(chan, c, self.subscribermap[chan]):
                 c2.forward(c.ak, chan, data)
         except Exception as e:
-            traceback.print_exc()
+            log.exception('Error publishing payload')
 
     def do_subscribe(self, c, ident, chan):
         log.debug('broker subscribe to {0} by {1}@{2}'.format(
@@ -237,7 +237,7 @@ class Server(object):
             for c2 in self.receivers(chan, c, self.subscribermap[brokchan]):
                 c2.publish(ident, chan, data)
         except Exception as e:
-            traceback.print_exc()
+            log.exception('Error publishing to broker channels')
 
     def log_error(self, emsg, conn, context):
         return self.db.log({
