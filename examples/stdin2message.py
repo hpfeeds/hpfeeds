@@ -30,7 +30,7 @@ def main():
         print >>sys.stderr, ' -> errormessage from server: {0}'.format(payload)
         hpc.stop()
 
-	#hpc.subscribe(CHANNELS)
+    #hpc.subscribe(CHANNELS)
 
     hpc.s.settimeout(0.01)
 
@@ -50,6 +50,6 @@ def main():
     return 0
 
 if __name__ == '__main__':
-	try: sys.exit(main())
-	except KeyboardInterrupt:sys.exit(0)
+    try: sys.exit(main())
+    except KeyboardInterrupt:sys.exit(0)
 

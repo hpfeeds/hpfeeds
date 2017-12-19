@@ -76,14 +76,14 @@ def msgauth(rand, ident, secret):
 
 
 def readsubscribe(data):
-	ident, rest = strunpack8(data)
-	return ident, force_str(rest)
+    ident, rest = strunpack8(data)
+    return ident, force_str(rest)
 
 
 def readpublish(data):
-	ident, rest = strunpack8(data)
-	chan, rest = strunpack8(rest)
-	return ident, chan, rest
+    ident, rest = strunpack8(data)
+    chan, rest = strunpack8(rest)
+    return ident, chan, rest
 
 
 class Unpacker(object):

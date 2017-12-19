@@ -9,10 +9,10 @@ import config
 
 # custom exception classes
 class Disconnect(Exception):
-	pass
+    pass
 
 class BadClient(Exception):
-	pass
+    pass
 
 def hash(a, b):
-	return hashlib.sha1('{0}{1}'.format(a, b)).digest()
+    return hashlib.sha1('{0}{1}'.format(a, b)).digest()
