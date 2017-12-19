@@ -9,6 +9,7 @@ import time
 import threading
 import ssl
 
+from .exceptions import FeedException, Disconnect
 from .protocol import (
     OP_INFO,
     OP_PUBLISH,
@@ -26,14 +27,6 @@ logger = logging.getLogger('pyhpfeeds')
 
 
 __all__ = ["new", "FeedException"]
-
-
-class FeedException(Exception):
-    pass
-
-
-class Disconnect(Exception):
-    pass
 
 
 class Client(object):

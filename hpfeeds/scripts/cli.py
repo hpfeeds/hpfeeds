@@ -29,7 +29,7 @@ def _main(opts, action, pubdata=None):
 
     if action == 'subscribe':
         def on_message(ident, chan, payload):
-            if [i for i in payload[:20] if i not in string.printable]:
+            if [i for i in payload[:20] if i not in string.printable.encode('utf-8')]:
                 payload = payload[:20].encode('hex') + '...'
             log('publish to {0} by {1}: {2}'.format(chan, ident, payload))
 
