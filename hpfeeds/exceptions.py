@@ -8,3 +8,7 @@ class FeedException(Exception):
 
 class Disconnect(Exception):
     pass
+
+
+class ProtocolException(Disconnect):
+    pass

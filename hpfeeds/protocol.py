@@ -5,6 +5,8 @@
 import struct
 import hashlib
 
+from .exceptions import ProtocolException
+
 
 BUFSIZ = 16384
 
@@ -23,10 +25,6 @@ SIZES = {
     OP_AUTH: 5 + 256 + 20,
     OP_PUBLISH: 5 + MAXBUF,
 }
-
-
-class ProtocolError(Exception):
-    pass
 
 
 def hashsecret(rand, secret):
@@ -123,7 +121,7 @@ class Unpacker(object):
 
         ml, opcode = struct.unpack('!iB', self.buf[0:5])
         if ml > SIZES.get(opcode, MAXBUF):
-            raise ProtocolError('Not respecting MAXBUF.')
+            raise ProtocolException('Not respecting MAXBUF.')
 
         if len(self.buf) < ml:
             raise StopIteration('No message.')
