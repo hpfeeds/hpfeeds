@@ -104,13 +104,16 @@ def readpublish(data):
 class Unpacker(object):
 
     def __init__(self):
-        self.buf = bytearray()
+        self.reset()
 
     def __iter__(self):
         return self
 
     def __next__(self):
         return self.unpack()
+
+    def reset(self):
+        self.buf = bytearray()
 
     def feed(self, data):
         self.buf.extend(data)

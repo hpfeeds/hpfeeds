@@ -60,6 +60,7 @@ class Client(object):
             raise Disconnect()
 
         if not d:
+            logger.warn("recv() returned empty string")
             raise Disconnect()
 
         return d
@@ -134,6 +135,8 @@ class Client(object):
                 'Could not connect to broker {}'.format(self.host)
             )
 
+        self.unpacker.reset()
+
         try:
             d = self.s.recv(BUFSIZ)
         except socket.timeout:
@@ -155,8 +158,7 @@ class Client(object):
 
         self.s.settimeout(None)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-
-        if sys.platform in ('linux2', ):
+        if sys.platform.startswith('linux'):
             self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)
 
     def run(self, message_callback, error_callback):
@@ -173,9 +175,9 @@ class Client(object):
                         elif opcode == OP_ERROR:
                             error_callback(data)
 
-                except Disconnect:
+                except Disconnect as e:
                     self.connected = False
-                    logger.info('Disconnected from broker.')
+                    logger.info('Disconnected from broker.', exc_info=e)
                     break
 
                 # end run loops if stopped
