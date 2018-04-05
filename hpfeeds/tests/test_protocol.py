@@ -65,6 +65,42 @@ class TestMessageReader(unittest.TestCase):
 
 class TestUnpacker(unittest.TestCase):
 
+    def test_unpack_at_max_message_size_unicode_1(self):
+        unpacker = Unpacker()
+        unpacker.feed(msgpublish(b'b', b'a', '\u2603'.encode('utf-8') * 349524))
+        packets = list(iter(unpacker))
+        assert len(unpacker.buf) == 0
+        assert packets[0][0] == 3
+        assert len(packets[0][1]) == (1024 ** 2)
+        #assert packets[0][1].endswith(b'a' * 349525)
+
+    def test_unpack_at_max_message_size_unicode_2(self):
+        unpacker = Unpacker()
+        unpacker.feed(msgpublish(b'', b'', '\u001F'.encode('utf-8') * 1048574))
+        packets = list(iter(unpacker))
+        assert len(unpacker.buf) == 0
+        assert packets[0][0] == 3
+        assert len(packets[0][1]) == (1024 ** 2)
+        #assert packets[0][1].endswith(b'a' * 349525)
+
+    def test_unpack_at_max_message_size(self):
+        unpacker = Unpacker()
+        unpacker.feed(msgpublish(b'', b'', b'a' * 1048574))
+        packets = list(iter(unpacker))
+        assert len(unpacker.buf) == 0
+        assert packets[0][0] == 3
+        assert len(packets[0][1]) == (1024 ** 2)
+        assert packets[0][1].endswith(b'a' * 1048574)
+
+    def test_unpack_at_max_message_size_leftovers(self):
+        unpacker = Unpacker()
+        unpacker.feed(msgpublish(b'', b'', b'a' * 1048574) + b'z' * 1024)
+        packets = [next(iter(unpacker))]
+        assert len(unpacker.buf) == 1024
+        assert packets[0][0] == 3
+        #assert len(packets[0][1]) == (1024 ** 2)
+        #assert packets[0][1].endswith(b'a' * 1048574)
+
     def test_unpack_1(self):
         unpacker = Unpacker()
         unpacker.feed(msghdr(1, b'abcdefghijklmnopqrstuvwxyz'))
