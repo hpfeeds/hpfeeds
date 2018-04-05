@@ -154,7 +154,9 @@ class Client(object):
                 self.send(msgauth(rand, self.ident, self.secret))
                 break
             else:
-                raise FeedException('Expected info message at this point.')
+                raise FeedException('Expected OP_INFO but got another opcode.')
+        else:
+            raise FeedException('Expected OP_INFO but cannot assemble complete message')
 
         self.s.settimeout(None)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
