@@ -123,8 +123,11 @@ class Unpacker(object):
             raise StopIteration('No message.')
 
         ml, opcode = struct.unpack('!iB', self.buf[0:5])
-        max_ml = SIZES.get(opcode, MAXBUF)
 
+        if opcode < OP_ERROR or opcode > OP_UNSUBSCRIBE:
+            raise ProtocolException('Unknown opcode: {}'.format(opcode))
+
+        max_ml = SIZES.get(opcode, MAXBUF)
         if ml > max_ml:
             raise ProtocolException('Pending message (op: {opcode}, ml: {ml}) not respecting MAXBUF (in this case, {max_ml}).'.format(
                 opcode=opcode,
@@ -137,8 +140,5 @@ class Unpacker(object):
 
         data = bytearray(self.buf[5:])
         del self.buf[:ml]
-
-        if opcode < OP_ERROR or opcode > OP_UNSUBSCRIBE:
-            raise ProtocolException('Unknown opcode: {}'.format(opcode))
 
         return opcode, data
