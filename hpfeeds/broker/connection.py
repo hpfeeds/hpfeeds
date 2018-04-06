@@ -5,7 +5,7 @@ import asyncio
 import os
 import logging
 
-from hpfeeds.exceptions import BadClient, Disconnect
+from hpfeeds.exceptions import BadClient, Disconnect, ProtocolException
 from hpfeeds.protocol import (
     BUFSIZ,
     OP_AUTH,
@@ -113,7 +113,7 @@ class Connection(object):
     async def process_unsubscribe(self, ident, chan):
         await self.server.do_unsubscribe(self, ident, chan)
 
-    async def process_incoming_single(self):
+    async def _process_incoming_single(self):
         opcode, data = await self.reader.read_message()
         if opcode == OP_PUBLISH:
             await self.process_publish(*readpublish(data))
@@ -136,10 +136,10 @@ class Connection(object):
             self.authkey_check(*readauth(data))
 
             while self.active:
-                await self.process_incoming_single()
+                await self._process_incoming_single()
 
-        except BadClient as e:
-            await self.write(msgerror(str(e)))
+        except ProtocolException as e:
+            await self.error(str(e))
             self.active = False
 
     async def handle(self):
