@@ -76,22 +76,26 @@ class Connection(object):
         await self.write(msgpublish(ident, chan, payload))
 
     async def error(self, error):
+        log.critical(f'{self}: ERROR: {error}')
         await self.write(msgerror(error))
 
     async def _process_send_queue(self):
-        while self.active or not self.send_queue.empty():
-            try:
+        try:
+            while self.active or not self.send_queue.empty():
                 payload = await self.send_queue.get()
+                if isinstance(payload, Disconnect):
+                    break
                 self.writer.write(payload)
-            except Exception as e:
-                self.active = False
-                self.writer.close()
-                raise
 
-        await self.writer.drain()
-        self.writer.close()
+            # If we didn't hit any exceptions writing to writer then let the
+            # socket empty before continuing
+            await self.writer.drain()
+        finally:
+            self.active = False
+            self.writer.close()
+            log.debug(f'{self}: Stopped processing send queue')
 
-    async def process_publish(self, ident, chan, payload):
+    async def _process_publish(self, ident, chan, payload):
         if not ident == self.ak:
             raise BadClient(f"Invalid authkey in message, ident={ident}")
 
@@ -102,7 +106,7 @@ class Connection(object):
 
         await self.server.publish(self, chan, payload)
 
-    async def process_subscribe(self, ident, chan):
+    async def _process_subscribe(self, ident, chan):
         if chan not in self.subchans:
             raise BadClient(
                 f'Authkey not allowed to sub here. ident={self.ident}, chan={chan}'
@@ -110,17 +114,17 @@ class Connection(object):
 
         await self.server.subscribe(self, chan)
 
-    async def process_unsubscribe(self, ident, chan):
+    async def _process_unsubscribe(self, ident, chan):
         await self.server.unsubscribe(self, chan)
 
     async def _process_incoming_single(self):
         opcode, data = await self.reader.read_message()
         if opcode == OP_PUBLISH:
-            await self.process_publish(*readpublish(data))
+            await self._process_publish(*readpublish(data))
         elif opcode == OP_SUBSCRIBE:
-            await self.process_subscribe(*readsubscribe(data))
+            await self._process_subscribe(*readsubscribe(data))
         elif opcode == OP_UNSUBSCRIBE:
-            await self.process_unsubscribe(*readsubscribe(data))
+            await self._process_unsubscribe(*readsubscribe(data))
         else:
             raise BadClient((
                 'Known opcode at unexpected moment '
@@ -140,24 +144,24 @@ class Connection(object):
 
         except ProtocolException as e:
             await self.error(str(e))
-            self.active = False
+            raise
+
+        finally:
+            log.debug(f'{self}: Stopped processing incoming messages')
 
     async def handle(self):
         self.writer.write(msginfo(self.server.name, self.authrand))
-
-        process_tasks = asyncio.gather(
-            self._process_send_queue(),
-            self._process_incoming(),
-            )
+        log.debug(f'{self}: Sent auth challenge')
 
         try:
-            await process_tasks
-        except asyncio.CancelledError:
+            await asyncio.wait(
+                [self._process_send_queue(), self._process_incoming()],
+                return_when=asyncio.FIRST_EXCEPTION,
+            )
+        finally:
             self.active = False
-            await process_tasks
-            # await process_tasks.cancel()
-
-        self.active = False
+            await self.send_queue.put(Disconnect())
+            log.debug(f'{self}: Stopped watching processing tasks')
 
     def authkey_check(self, ident, rhash):
         akrow = self.server.get_authkey(ident)
