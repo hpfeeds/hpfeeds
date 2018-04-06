@@ -38,6 +38,8 @@ def force_bytes(value):
 
 
 def force_str(value):
+    if isinstance(value, bytearray):
+        value = bytes(value)
     if isinstance(value, bytes):
         return value.decode('utf-8')
     return value
@@ -83,22 +85,28 @@ def msgerror(error):
 
 
 def readinfo(data):
-    return strunpack8(data)
+    ident, rand = strunpack8(data)
+    return force_str(ident), rand
 
 
 def readauth(data):
-    return strunpack8(data)
+    ident, secret = strunpack8(data)
+    return force_str(ident), secret
 
 
 def readsubscribe(data):
     ident, rest = strunpack8(data)
-    return ident, force_str(rest)
+    return force_str(ident), force_str(rest)
 
 
 def readpublish(data):
     ident, rest = strunpack8(data)
     chan, rest = strunpack8(rest)
-    return ident, chan, rest
+    return force_str(ident), force_str(chan), rest
+
+
+def readerror(error):
+    return force_str(error)
 
 
 class Unpacker(object):
@@ -118,9 +126,9 @@ class Unpacker(object):
     def feed(self, data):
         self.buf.extend(data)
 
-    def unpack(self):
+    def ready(self):
         if len(self.buf) < 5:
-            raise StopIteration('No message.')
+            return False
 
         ml, opcode = struct.unpack('!iB', self.buf[0:5])
 
@@ -129,16 +137,22 @@ class Unpacker(object):
 
         max_ml = SIZES.get(opcode, MAXBUF)
         if ml > max_ml:
-            raise ProtocolException('Pending message (op: {opcode}, ml: {ml}) not respecting MAXBUF (in this case, {max_ml}).'.format(
-                opcode=opcode,
-                ml=ml,
-                max_ml=max_ml,
-            ))
+            raise ProtocolException(
+                f'Message too big; op {opcode} ml: {ml} max_ml: {max_ml}'
+            )
 
         if len(self.buf) < ml:
-            raise StopIteration('No message.')
+            return False
 
+        return True
+
+    def pop(self):
+        ml, opcode = struct.unpack('!iB', self.buf[0:5])
         data = bytearray(self.buf[5:])
         del self.buf[:ml]
-
         return opcode, data
+
+    def unpack(self):
+        if not self.ready():
+            raise StopIteration('No message')
+        return self.pop()

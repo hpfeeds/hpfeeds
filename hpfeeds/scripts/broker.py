@@ -21,8 +21,8 @@ def main():
 
     broker = Server(
         auth=sqlite.Authenticator('sqlite.db'),
-        bind_address=args.host,
-        bind_port=args.port,
+        address=args.host,
+        port=args.port,
         name=args.name,
     )
 

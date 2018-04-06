@@ -18,6 +18,7 @@ from .protocol import (
     msgauth,
     msgpublish,
     msgsubscribe,
+    readerror,
     readinfo,
     readpublish,
     Unpacker,
@@ -175,7 +176,7 @@ class Client(object):
                         if opcode == OP_PUBLISH:
                             message_callback(*readpublish(data))
                         elif opcode == OP_ERROR:
-                            error_callback(data)
+                            error_callback(readerror(data))
 
                 except Disconnect as e:
                     self.connected = False
@@ -203,7 +204,7 @@ class Client(object):
             self.unpacker.feed(d)
             for opcode, data in self.unpacker:
                 if opcode == OP_ERROR:
-                    return data
+                    return readerror(data)
         except Disconnect:
             pass
 

@@ -22,11 +22,11 @@ log = logging.getLogger("hpfeeds.broker")
 
 class Server(object):
 
-    def __init__(self, auth, bind_address='127.0.0.1', bind_port=20000, name='hpfeeds'):
+    def __init__(self, auth, address='127.0.0.1', port=20000, name='hpfeeds'):
         self.auth = auth
         self.name = name
-        self.bind_address = bind_address
-        self.bind_port = bind_port
+        self.bind_address = address
+        self.bind_port = port
 
         self.connections = set()
         self.subscriptions = collections.defaultdict(list)
@@ -49,7 +49,7 @@ class Server(object):
                 except Disconnect:
                     log.debug(f'Connection closed by {connection}')
                 except BadClient:
-                    log.warn(f'Connection ended due to bad client: {connection}')
+                    log.warn(f'Connection ended; bad client: {connection}')
         finally:
             for chan in list(connection.active_subscriptions):
                 self.unsubscribe(connection, chan)
@@ -70,7 +70,7 @@ class Server(object):
         RECEIVE_PUBLISH_SIZE.labels(source.ak, chan).observe(len(data))
 
         for dest in self.subscriptions[chan]:
-            await dest.publish(chan, data)
+            await dest.publish(source.ak, chan, data)
 
     async def subscribe(self, source, chan):
         '''
@@ -92,7 +92,12 @@ class Server(object):
 
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
-        server = await asyncio.start_server(self._handle_connection, self.bind_address, self.bind_port)
+        server = await asyncio.start_server(
+            self._handle_connection,
+            self.bind_address,
+            self.bind_port
+        )
+
         try:
             while True:
                 await asyncio.sleep(10)
