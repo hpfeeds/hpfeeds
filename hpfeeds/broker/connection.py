@@ -105,13 +105,13 @@ class Connection(object):
     async def process_subscribe(self, ident, chan):
         if chan not in self.subchans:
             raise BadClient(
-                f'Authkey not allowed to sub here. ident={ident}, chan={chan}'
+                f'Authkey not allowed to sub here. ident={self.ident}, chan={chan}'
             )
 
-        await self.server.do_subscribe(self, ident, chan)
+        await self.server.subscribe(self, chan)
 
     async def process_unsubscribe(self, ident, chan):
-        await self.server.do_unsubscribe(self, ident, chan)
+        await self.server.unsubscribe(self, chan)
 
     async def _process_incoming_single(self):
         opcode, data = await self.reader.read_message()

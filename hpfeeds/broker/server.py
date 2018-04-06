@@ -52,7 +52,7 @@ class Server(object):
                     log.warn(f'Connection ended; bad client: {connection}')
         finally:
             for chan in list(connection.active_subscriptions):
-                self.unsubscribe(connection, chan)
+                await self.unsubscribe(connection, chan)
 
             if connection in self.connections:
                 self.connections.remove(connection)
@@ -76,7 +76,7 @@ class Server(object):
         '''
         Subscribe a connection to a channel
         '''
-        SUBSCRIPTIONS.labels(source.ac, chan).inc()
+        SUBSCRIPTIONS.labels(source.ak, chan).inc()
         self.subscriptions[chan].append(source)
         source.active_subscriptions.add(chan)
 
@@ -86,9 +86,9 @@ class Server(object):
         '''
         if chan in source.active_subscriptions:
             source.active_subscriptions.remove(chan)
-        if source in self.subsciptions[chan]:
-            self.subsciptions[chan].remove(source)
-        SUBSCRIPTIONS.labels(source.ac, chan).dec()
+        if source in self.subscriptions[chan]:
+            self.subscriptions[chan].remove(source)
+        SUBSCRIPTIONS.labels(source.ak, chan).dec()
 
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
