@@ -4,7 +4,7 @@ import unittest
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.connection import HpfeedsReader
 from hpfeeds.broker.server import Server
-from hpfeeds.protocol import msgauth, msgpublish, msgsubscribe, readerror, readinfo, readpublish
+from hpfeeds.protocol import msgauth, msgpublish, msgsubscribe, msgunsubscribe, readerror, readinfo, readpublish
 
 
 class QueueWriter(object):
@@ -214,6 +214,46 @@ class TestBrokerIntegration(unittest.TestCase):
                 'test',
                 'test-chan',
                 b'c'
+            )
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_auth_unsubscribe(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret'))
+            self.client_writer.write(msgsubscribe('test', 'test-chan'))
+            self.client_writer.write(msgpublish('test', 'test-chan', b'1'))
+            self.client_writer.write(msgunsubscribe('test', 'test-chan'))
+            self.client_writer.write(msgpublish('test', 'test-chan', b'2'))
+            self.client_writer.write(msgsubscribe('test', 'test-chan'))
+            self.client_writer.write(msgpublish('test', 'test-chan', b'3'))
+            self.client_writer.write(b'')
+
+            await connection
+
+            # The middle publish event should be missing
+            op, data = await self.client_reader.read_message()
+            assert op == 3
+            assert readpublish(data) == (
+                'test',
+                'test-chan',
+                b'1'
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 3
+            assert readpublish(data) == (
+                'test',
+                'test-chan',
+                b'3'
             )
 
         asyncio.get_event_loop().run_until_complete(inner())

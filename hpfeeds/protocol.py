@@ -69,6 +69,10 @@ def msgsubscribe(ident, chan):
     return msghdr(OP_SUBSCRIBE, strpack8(ident) + force_bytes(chan))
 
 
+def msgunsubscribe(ident, chan):
+    return msghdr(OP_UNSUBSCRIBE, strpack8(ident) + force_bytes(chan))
+
+
 def msgpublish(ident, chan, data):
     return msghdr(
         OP_PUBLISH,
