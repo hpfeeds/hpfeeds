@@ -1,6 +1,5 @@
 from prometheus_client import Counter, Gauge, Histogram
 
-
 CLIENT_CONNECTIONS = Gauge(
     'hpfeeds_broker_client_connections',
     'Number of clients connected to broker',

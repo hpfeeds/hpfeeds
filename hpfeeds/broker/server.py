@@ -5,17 +5,15 @@ import asyncio
 import collections
 import logging
 
-
 from hpfeeds.exceptions import BadClient, Disconnect
 
 from .connection import Connection
 from .prometheus import (
     CLIENT_CONNECTIONS,
-    SUBSCRIPTIONS,
     RECEIVE_PUBLISH_COUNT,
     RECEIVE_PUBLISH_SIZE,
+    SUBSCRIPTIONS,
 )
-
 
 log = logging.getLogger("hpfeeds.broker")
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import sys
-import optparse
 import logging
+import optparse
 import string
+import sys
 
 import hpfeeds
 

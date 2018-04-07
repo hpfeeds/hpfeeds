@@ -2,26 +2,26 @@
 # This file is part of hpfeeds - https://github.com/rep/hpfeeds
 # See the file 'LICENSE' for copying permission.
 
-import sys
-import socket
 import logging
-import time
-import threading
+import socket
 import ssl
+import sys
+import threading
+import time
 
-from .exceptions import FeedException, Disconnect
+from .exceptions import Disconnect, FeedException
 from .protocol import (
+    BUFSIZ,
+    OP_ERROR,
     OP_INFO,
     OP_PUBLISH,
-    OP_ERROR,
-    BUFSIZ,
+    Unpacker,
     msgauth,
     msgpublish,
     msgsubscribe,
     readerror,
     readinfo,
     readpublish,
-    Unpacker,
 )
 
 logger = logging.getLogger('pyhpfeeds')

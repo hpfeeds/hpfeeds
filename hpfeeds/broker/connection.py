@@ -2,26 +2,25 @@
 # -*- coding: utf8 -*-
 
 import asyncio
-import os
 import logging
+import os
 
 from hpfeeds.exceptions import BadClient, Disconnect, ProtocolException
 from hpfeeds.protocol import (
     BUFSIZ,
     OP_AUTH,
+    OP_PUBLISH,
     OP_SUBSCRIBE,
     OP_UNSUBSCRIBE,
-    OP_PUBLISH,
+    Unpacker,
+    hashsecret,
     msgerror,
     msginfo,
     msgpublish,
-    readsubscribe,
-    readpublish,
     readauth,
-    hashsecret,
-    Unpacker,
+    readpublish,
+    readsubscribe,
 )
-
 
 log = logging.getLogger('hpfeeds.connection')
 

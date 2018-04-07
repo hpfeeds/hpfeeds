@@ -2,11 +2,10 @@
 # This file is part of hpfeeds - https://github.com/rep/hpfeeds
 # See the file 'LICENSE' for copying permission.
 
-import struct
 import hashlib
+import struct
 
 from .exceptions import ProtocolException
-
 
 BUFSIZ = 16384
 

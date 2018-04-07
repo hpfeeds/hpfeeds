@@ -4,7 +4,15 @@ import unittest
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.connection import HpfeedsReader
 from hpfeeds.broker.server import Server
-from hpfeeds.protocol import msgauth, msgpublish, msgsubscribe, msgunsubscribe, readerror, readinfo, readpublish
+from hpfeeds.protocol import (
+    msgauth,
+    msgpublish,
+    msgsubscribe,
+    msgunsubscribe,
+    readerror,
+    readinfo,
+    readpublish,
+)
 
 
 class QueueWriter(object):
