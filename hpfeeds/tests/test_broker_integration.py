@@ -4,7 +4,7 @@ import unittest
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.connection import HpfeedsReader
 from hpfeeds.broker.server import Server
-from hpfeeds.protocol import msgauth, msgpublish, msgsubscribe, readinfo, readpublish
+from hpfeeds.protocol import msgauth, msgpublish, msgsubscribe, readerror, readinfo, readpublish
 
 
 class QueueWriter(object):
@@ -96,6 +96,28 @@ class TestBrokerIntegration(unittest.TestCase):
             op, data = await self.client_reader.read_message()
             assert op == 0
             assert data == b'First message was not AUTH'
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_auth_failure(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret2'))
+            self.client_writer.write(b'')
+
+            await connection
+
+            # Should be a publish event
+            op, data = await self.client_reader.read_message()
+            assert op == 0
+            assert readerror(data) == 'Authentication failed for test'
 
         asyncio.get_event_loop().run_until_complete(inner())
 
