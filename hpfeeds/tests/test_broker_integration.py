@@ -72,6 +72,18 @@ class TestBrokerIntegration(unittest.TestCase):
 
         self.client_reader = HpfeedsReader(self.client_reader)
 
+    def make_connection(self):
+        client_reader, server_writer = setup_pipe()
+        server_reader, client_writer = setup_pipe()
+
+        client_reader = HpfeedsReader(client_reader)
+
+        connection = asyncio.ensure_future(
+            self.server._handle_connection(server_reader, server_writer)
+        )
+
+        return connection, client_reader, client_writer
+
     def test_sends_challenge(self):
         async def inner():
             self.client_writer.write(b'')
@@ -215,6 +227,48 @@ class TestBrokerIntegration(unittest.TestCase):
                 'test-chan',
                 b'c'
             )
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_multiple_subscribers(self):
+        async def inner():
+            # Start 5 connections that subscribe to test-chan
+            subscribers = []
+            for i in range(5):
+                conn, reader, writer = self.make_connection()
+
+                op, data = await reader.read_message()
+                assert op == 1
+                name, rand = readinfo(data)
+
+                writer.write(msgauth(rand, 'test', 'secret'))
+                writer.write(msgsubscribe('test', 'test-chan'))
+                subscribers.append((conn, reader, writer))
+
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret'))
+            self.client_writer.write(msgpublish('test', 'test-chan', b'c'))
+            self.client_writer.write(b'')
+
+            await connection
+
+            for conn, reader, writer in subscribers:
+                op, data = await reader.read_message()
+                assert op == 3
+                assert readpublish(data) == (
+                    'test',
+                    'test-chan',
+                    b'c'
+                )
+                writer.write(b'')
+                await conn
 
         asyncio.get_event_loop().run_until_complete(inner())
 
