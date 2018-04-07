@@ -55,7 +55,9 @@ class Connection(object):
         self.ak = None
         self.pubchans = []
         self.subchans = []
+
         self.active = True
+
         self.send_queue = asyncio.Queue()
         self.unpacker = Unpacker()
         self.authrand = os.urandom(4)
