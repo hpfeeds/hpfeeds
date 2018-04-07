@@ -6,7 +6,6 @@ chardet==3.0.4
 codecov==2.0.15
 coverage==4.5.1
 flake8==3.5.0
--e git+git@github.com:Jc2k/hpfeeds3@43a0437a45032b519a2b7bd15599b46cada23223#egg=hpfeeds3
 idna==2.6
 mccabe==0.6.1
 pluggy==0.6.0
