@@ -111,7 +111,7 @@ class Connection(object):
     async def _process_subscribe(self, ident, chan):
         if chan not in self.subchans:
             raise BadClient(
-                f'Authkey not allowed to sub here. ident={self.ident}, chan={chan}'
+                f'Authkey not allowed to sub here. ident={self.ak}, chan={chan}'
             )
 
         await self.server.subscribe(self, chan)

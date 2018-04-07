@@ -99,7 +99,7 @@ class TestBrokerIntegration(unittest.TestCase):
 
         asyncio.get_event_loop().run_until_complete(inner())
 
-    def test_auth_failure(self):
+    def test_auth_failure_wrong_secret(self):
         async def inner():
             connection = asyncio.ensure_future(
                 self.server._handle_connection(self.server_reader, self.server_writer)
@@ -114,10 +114,79 @@ class TestBrokerIntegration(unittest.TestCase):
 
             await connection
 
-            # Should be a publish event
+            # Should be an error
             op, data = await self.client_reader.read_message()
             assert op == 0
             assert readerror(data) == 'Authentication failed for test'
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_auth_failure_no_such_ident(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test2', 'secret'))
+            self.client_writer.write(b'')
+
+            await connection
+
+            # Should be an error
+            op, data = await self.client_reader.read_message()
+            assert op == 0
+            assert readerror(data) == 'Authentication failed for test2'
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_permission_to_sub(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret'))
+            self.client_writer.write(msgsubscribe('test', 'test-chan-2'))
+
+            # Should be an error
+            op, data = await self.client_reader.read_message()
+            assert op == 0
+            assert readerror(data) == 'Authkey not allowed to sub here. ident=test, chan=test-chan-2'
+
+            self.client_writer.write(b'')
+            await connection
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_permission_to_pub(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret'))
+            self.client_writer.write(msgsubscribe('test', 'test-chan'))
+            self.client_writer.write(msgpublish('test', 'test-chan-2', b'c'))
+
+            # Should be an error
+            op, data = await self.client_reader.read_message()
+            assert op == 0
+            assert readerror(data) == 'Authkey not allowed to pub here. ident=test, chan=test-chan-2'
+
+            self.client_writer.write(b'')
+            await connection
 
         asyncio.get_event_loop().run_until_complete(inner())
 
