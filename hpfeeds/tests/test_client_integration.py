@@ -5,7 +5,7 @@ import unittest
 
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
-from hpfeeds.client import Client
+from hpfeeds import client
 from hpfeeds.protocol import readpublish
 
 
@@ -49,7 +49,7 @@ class TestClientIntegration(unittest.TestCase):
         self.server_thread.start()
 
     def test_subscribe_and_publish(self):
-        c = Client('127.0.0.1', 20000, 'test', 'secret')
+        c = client.new('127.0.0.1', 20000, 'test', 'secret')
         c.subscribe('test-chan')
         c._subscribe()
         c.publish('test-chan', b'data')
