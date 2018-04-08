@@ -42,7 +42,10 @@ class QueueReader(object):
 
     async def read(self, amt):
         if not self.buffer:
-            self.buffer = await self.queue.get()
+            try:
+                self.buffer = await asyncio.wait_for(self.queue.get(), 1)
+            except asyncio.TimeoutError:
+                return b''
 
         buffer, self.buffer = self.buffer[:amt], self.buffer[amt:]
 
@@ -204,6 +207,29 @@ class TestBrokerIntegration(unittest.TestCase):
             op, data = await self.client_reader.read_message()
             assert op == 0
             assert readerror(data) == 'Authkey not allowed to pub here. ident=test, chan=test-chan-2'
+
+            self.client_writer.write(b'')
+            await connection
+
+        asyncio.get_event_loop().run_until_complete(inner())
+
+    def test_pub_ident_checked(self):
+        async def inner():
+            connection = asyncio.ensure_future(
+                self.server._handle_connection(self.server_reader, self.server_writer)
+            )
+
+            op, data = await self.client_reader.read_message()
+            assert op == 1
+            name, rand = readinfo(data)
+
+            self.client_writer.write(msgauth(rand, 'test', 'secret'))
+            self.client_writer.write(msgpublish('wrong-ident', 'test-chan', b'c'))
+
+            # Should be an error
+            op, data = await self.client_reader.read_message()
+            assert op == 0
+            assert readerror(data) == 'Invalid authkey in message, ident=wrong-ident'
 
             self.client_writer.write(b'')
             await connection
