@@ -27,3 +27,7 @@ def main():
     )
 
     return aiorun.run(broker.serve_forever())
+
+
+if __name__ == '__main__':
+    main()
