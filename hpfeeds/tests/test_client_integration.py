@@ -3,9 +3,9 @@ import logging
 import threading
 import unittest
 
+from hpfeeds import client
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
-from hpfeeds import client
 from hpfeeds.protocol import readpublish
 
 
