@@ -151,7 +151,7 @@ class Unpacker(object):
 
     def pop(self):
         ml, opcode = struct.unpack('!iB', self.buf[0:5])
-        data = bytearray(self.buf[5:])
+        data = bytes(self.buf[5:][:ml-5])
         del self.buf[:ml]
         return opcode, data
 

@@ -193,6 +193,15 @@ class Client(object):
 
         logger.info('Stopped, exiting run loop.')
 
+    def _read_message(self):
+        d = self.recv()
+        if not d:
+            raise Disconnect()
+
+        self.unpacker.feed(d)
+        for opcode, data in self.unpacker:
+            return (opcode, data)
+
     def wait(self, timeout=1):
         self.s.settimeout(timeout)
 

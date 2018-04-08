@@ -61,6 +61,8 @@ class Connection(object):
         self.unpacker = Unpacker()
         self.authrand = os.urandom(4)
 
+        self._wait_closed = asyncio.Future()
+
     def __str__(self):
         peer, port = self.writer.get_extra_info('peername')
         ident = self.ak
@@ -91,6 +93,8 @@ class Connection(object):
             # If we didn't hit any exceptions writing to writer then let the
             # socket empty before continuing
             await self.writer.drain()
+        except ConnectionError as e:
+            log.debug(f'{self}: {str(e)}')
         finally:
             self.active = False
             self.writer.close()
@@ -163,6 +167,10 @@ class Connection(object):
             self.active = False
             await self.send_queue.put(Disconnect())
             log.debug(f'{self}: Stopped watching processing tasks')
+            self._wait_closed.set_result(None)
+
+    async def wait_closed(self):
+        await self._wait_closed
 
     def authkey_check(self, ident, rhash):
         akrow = self.server.get_authkey(ident)
