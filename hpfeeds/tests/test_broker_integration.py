@@ -76,7 +76,7 @@ class TestBrokerIntegration(unittest.TestCase):
             }
         })
 
-        self.server = Server(authenticator, address='127.0.0.1', port=20000)
+        self.server = Server(authenticator, host='127.0.0.1', port=20000)
 
         self.client_reader, self.server_writer = setup_pipe()
         self.server_reader, self.client_writer = setup_pipe()
