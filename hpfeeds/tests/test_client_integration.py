@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import socket
 import threading
 import unittest
 
@@ -28,7 +29,7 @@ class TestClientIntegration(unittest.TestCase):
                 }
             })
 
-            self.server = Server(authenticator, '127.0.0.1', 20000)
+            self.server = Server(authenticator, sock=self.sock)
 
             self.log.debug('Starting server')
             future = asyncio.ensure_future(self.server.serve_forever())
@@ -43,13 +44,17 @@ class TestClientIntegration(unittest.TestCase):
         loop.run_until_complete(inner())
 
     def setUp(self):
+        self.sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('127.0.0.1', 0))
+        self.port = sock.getsockname()[1]
+
         self.server_thread = threading.Thread(
             target=self._server_thread,
         )
         self.server_thread.start()
 
     def test_subscribe_and_publish(self):
-        c = client.new('127.0.0.1', 20000, 'test', 'secret')
+        c = client.new('127.0.0.1', self.port, 'test', 'secret')
         c.subscribe('test-chan')
         c._subscribe()
         c.publish('test-chan', b'data')

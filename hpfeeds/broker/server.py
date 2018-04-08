@@ -20,11 +20,12 @@ log = logging.getLogger("hpfeeds.broker")
 
 class Server(object):
 
-    def __init__(self, auth, address='127.0.0.1', port=20000, name='hpfeeds'):
+    def __init__(self, auth, address=None, port=None, sock=None, name='hpfeeds'):
         self.auth = auth
         self.name = name
         self.bind_address = address
         self.bind_port = port
+        self.sock = sock
 
         self.connections = set()
         self.subscriptions = collections.defaultdict(list)
@@ -93,7 +94,8 @@ class Server(object):
         server = await asyncio.start_server(
             self._handle_connection,
             self.bind_address,
-            self.bind_port
+            self.bind_port,
+            sock=self.sock,
         )
 
         try:
