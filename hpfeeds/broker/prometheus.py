@@ -1,4 +1,11 @@
-from prometheus_client import Counter, Gauge, Histogram
+from aiohttp import web
+from prometheus_client import (
+    REGISTRY,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 CLIENT_CONNECTIONS = Gauge(
     'hpfeeds_broker_client_connections',
@@ -22,3 +29,22 @@ RECEIVE_PUBLISH_SIZE = Histogram(
     'Sizes of messages received by broker for a channel',
     ['ident', 'chan'],
 )
+
+
+async def metrics(request):
+    data = generate_latest(REGISTRY)
+    return web.Response(text=data.decode('utf-8'), content_type='text/plain', charset='utf-8')
+
+
+async def start_metrics_server():
+    app = web.Application()
+    app.router.add_get('/metrics', metrics)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, 'localhost', 8080)
+
+    await site.start()
+
+    return runner

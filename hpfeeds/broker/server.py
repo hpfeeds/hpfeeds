@@ -13,6 +13,7 @@ from .prometheus import (
     RECEIVE_PUBLISH_COUNT,
     RECEIVE_PUBLISH_SIZE,
     SUBSCRIPTIONS,
+    start_metrics_server,
 )
 
 log = logging.getLogger("hpfeeds.broker")
@@ -92,6 +93,8 @@ class Server(object):
 
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
+        metrics_server = await start_metrics_server()
+
         server = await asyncio.start_server(
             self._handle_connection,
             host=self.host,
@@ -114,3 +117,6 @@ class Server(object):
 
             log.debug(f'Waiting for {self} to wrap up')
             await server.wait_closed()
+
+            log.debug('Waiting for stats server to wrap up')
+            await metrics_server.cleanup()
