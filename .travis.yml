@@ -1,0 +1,18 @@
+language: python
+python:
+  - "3.6"
+
+sudo: false
+
+cache: pip
+
+install:
+  - pip install -U pip setuptools wheel
+  - pip install -r requirements.txt
+
+script:
+  - py.test --cov=. hpfeeds
+  - flake8 hpfeeds
+
+after_success:
+  - codecov

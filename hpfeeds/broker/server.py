@@ -1,258 +1,114 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import gevent.monkey
-gevent.monkey.patch_all()  # noqa: E402
-
+import asyncio
 import collections
-import os
 import logging
 
-import gevent
-import gevent.server
-
-from hpfeeds.broker.auth import sqlite
 from hpfeeds.exceptions import BadClient, Disconnect
-from hpfeeds.protocol import (
-    BUFSIZ,
-    OP_AUTH,
-    OP_SUBSCRIBE,
-    OP_UNSUBSCRIBE,
-    OP_PUBLISH,
-    msgerror,
-    msginfo,
-    msgpublish,
-    readsubscribe,
-    readpublish,
-    readauth,
-    hashsecret,
-    Unpacker,
+
+from .connection import Connection
+from .prometheus import (
+    CLIENT_CONNECTIONS,
+    RECEIVE_PUBLISH_COUNT,
+    RECEIVE_PUBLISH_SIZE,
+    SUBSCRIPTIONS,
 )
 
-
-log = logging.getLogger("broker")
-
-
-class Connection(object):
-
-    def __init__(self, sock, addr, srv):
-        self.sock = sock
-        self.addr = addr
-        self.srv = srv
-        self.uid = None
-        self.ak = None
-        self.pubchans = []
-        self.subchans = []
-        self.active = True
-        self.unpacker = Unpacker()
-
-    def __del__(self):
-        # if this message is not showing up we're leaking references
-        log.debug("Connection cleanup {0}".format(self.addr))
-
-    def write(self, data):
-        try:
-            self.sock.sendall(data)
-            #  self.stats['bytes_sent'] += len(data)
-        except Exception as e:
-            log.critical('Exception when writing to conn', exc_info=e)
-
-    def handle(self):
-        # first send the info message
-        self.authrand = authrand = os.urandom(4)
-        self.write(msginfo(config.FBNAME, authrand))
-
-        while True:
-            self.unpacker.feed(self.s.recv(BUFSIZ))
-            for opcode, data in self.unpacker:
-                if opcode != OP_AUTH:
-                    self.error('First message was not AUTH.')
-                    raise BadClient()
-
-                ident, rhash = readauth(data)
-                self.authkey_check(ident, rhash)
-                break
-
-        while True:
-            self.unpacker.feed(self.recv(BUFSIZ))
-
-            for opcode, data in self.unpacker:
-                if opcode == OP_PUBLISH:
-                    self.do_publish(*readpublish(data))
-                elif opcode == OP_SUBSCRIBE:
-                    self.do_subscribe(*readsubscribe(data))
-                elif opcode == OP_UNSUBSCRIBE:
-                    self.do_unsubscribe(*readsubscribe(data))
-                else:
-                    self.error(
-                        "Unknown message type.",
-                        opcode=opcode,
-                        length=len(data),
-                    )
-                    raise BadClient()
-
-    def do_publish(self, ident, chan, payload):
-        if not ident == self.ak:
-            self.error("Invalid authkey in message.", ident=ident)
-            raise BadClient()
-
-        if chan not in self.pubchans or chan.endswith("..broker"):
-            self.error(
-                "Authkey not allowed to publish here.",
-                chan=chan
-            )
-            return
-
-        self.srv.do_publish(self, chan, payload)
-        #  self.stats["published"] += 1
-
-    def do_subscribe(self, ident, chan):
-        checkchan = chan
-        if chan.endswith('..broker'):
-            checkchan = chan.rsplit('..broker', 1)[0]
-
-        if checkchan not in self.subchans:
-            self.error(
-                "Authkey not allowed to subscribe here.",
-                chan=chan,
-            )
-            return
-
-        self.srv.do_subscribe(self, ident, chan)
-
-    def do_unsubscribe(self, ident, chan):
-        self.do_unsubscribe(self, ident, chan)
-
-    def authkey_check(self, ident, rhash):
-        akrow = self.srv.get_authkey(ident)
-        if not akrow:
-            self.error("Authentication failed.", ident=ident)
-            raise BadClient()
-
-        akhash = hashsecret(self.authrand, akrow["secret"])
-        if not akhash == rhash:
-            self.error("Authentication failed.", ident=ident)
-            raise BadClient()
-
-        self.ak = ident
-        self.uid = akrow["owner"]
-        self.pubchans = akrow.get("pubchans", [])
-        self.subchans = akrow.get("subchans", [])
-
-    def forward(self, ident, chan, data):
-        self.write(msgpublish(ident, chan, data))
-        #  self.stats['received'] += 1
-
-    def error(self, msg, *args, **context):
-        emsg = msg.format(*args)
-        log.critical(emsg)
-        self.srv.log_error(emsg, self, context)
-        self.write(msgerror(emsg))
+log = logging.getLogger("hpfeeds.broker")
 
 
 class Server(object):
 
-    def __init__(self):
-        self.listener = gevent.server.StreamServer(
-            (config.FBIP, config.FBPORT),
-            self._newconn,
-            **config.SSLOPTS
-        )
-        self.db = self.dbclass()
+    def __init__(self, auth, address=None, port=None, sock=None, name='hpfeeds'):
+        self.auth = auth
+        self.name = name
+        self.bind_address = address
+        self.bind_port = port
+        self.sock = sock
+
         self.connections = set()
-        self.subscribermap = collections.defaultdict(list)
-        self.conn2chans = collections.defaultdict(list)
+        self.subscriptions = collections.defaultdict(list)
 
-    def dbclass(self):
-        return sqlite.Authenticator('db.sqlite3')
+    async def _handle_connection(self, reader, writer):
+        '''
+        This is called for each connection to our bound address/port to setup a
+        new Connection object and handle lifecycle management.
+        '''
 
-    def connclass(self, *args):
-        return Connection(*args)
+        connection = Connection(self, reader, writer)
+        self.connections.add(connection)
 
-    def serve_forever(self):
-        log.info("StreamServer ssl_enabled=%s", str(self.listener.ssl_enabled))
-        self.listener.serve_forever()
-
-    def _newconn(self, sock, addr):
-        log.debug('Connection from {0}.'.format(addr))
-        fc = self.connclass(sock, addr, self)
-        self.connections.add(fc)
+        log.debug(f'Connection from {connection}.')
 
         try:
-            fc.handle()
-        except Disconnect:
-            log.debug("Connection closed by {0}".format(addr))
-        except BadClient:
-            log.warn('Connection ended due to bad client: {0}'.format(addr))
+            with CLIENT_CONNECTIONS.track_inprogress():
+                try:
+                    await connection.handle()
+                except Disconnect:
+                    log.debug(f'Connection closed by {connection}')
+                except BadClient:
+                    log.warn(f'Connection ended; bad client: {connection}')
+        finally:
+            for chan in list(connection.active_subscriptions):
+                await self.unsubscribe(connection, chan)
 
-        fc.active = False
+            if connection in self.connections:
+                self.connections.remove(connection)
 
-        for chan in self.conn2chans[fc]:
-            self.subscribermap[chan].remove(fc)
-            if fc.ak:
-                self._brokerchan(fc, chan, fc.ak, 'leave')
-
-        del self.conn2chans[fc]
-
-        self.connections.remove(fc)
-        try:
-            sock.close()
-        except Exception:
-            pass
-
-    def do_publish(self, c, chan, data):
-        log.debug('publish to {0} by {1} ak {2} addr {3}'.format(
-            chan, c.uid, c.ak, c.addr
-        ))
-        try:
-            for c2 in self.receivers(chan, c, self.subscribermap[chan]):
-                c2.forward(c.ak, chan, data)
-        except Exception as e:
-            log.exception('Error publishing payload')
-
-    def do_subscribe(self, c, ident, chan):
-        log.debug('broker subscribe to {0} by {1}@{2}'.format(
-            chan, ident, c.addr
-        ))
-        self.subscribermap[chan].append(c)
-        self.conn2chans[c].append(chan)
-        if not chan.endswith('..broker'):
-            self._brokerchan(c, chan, ident, 'join')
-
-    def do_unsubscribe(self, c, ident, chan):
-        log.debug('broker unsubscribe to {0} by {1}@{2}'.format(
-            chan, ident, c.addr
-        ))
-        self.subscribermap[chan].remove(c)
-        self.conn2chans[c].remove(chan)
-        if not chan.endswith('..broker'):
-            self._brokerchan(c, chan, ident, 'leave')
-
-    def _brokerchan(self, c, chan, ident, data):
-        brokchan = chan + '..broker'
-        try:
-            for c2 in self.receivers(chan, c, self.subscribermap[brokchan]):
-                c2.publish(ident, chan, data)
-        except Exception as e:
-            log.exception('Error publishing to broker channels')
-
-    def log_error(self, emsg, conn, context):
-        return self.db.log({
-            "msg": emsg,
-            "ip": conn.addr[0],
-            "user": conn.uid,
-            "authkey": conn.ak,
-            "context": context,
-        })
+            log.debug(f'Disconnection from {connection}; cleanup completed.')
 
     def get_authkey(self, identifier):
-        return self.db.get_authkey(identifier)
+        return self.auth.get_authkey(identifier)
 
-    def receivers(self, chan, conn, subscribed_conns):
-        if not subscribed_conns:
-            return
+    async def publish(self, source, chan, data):
+        '''
+        Called by a connection to push data to all subscribers of a channel
+        '''
+        RECEIVE_PUBLISH_COUNT.labels(source.ak, chan).inc()
+        RECEIVE_PUBLISH_SIZE.labels(source.ak, chan).observe(len(data))
 
-        # this is plain hpfeeds mode, no graph
-        # all subscribed connections allowed to receive by default
-        for c in subscribed_conns:
-            yield c
+        for dest in self.subscriptions[chan]:
+            await dest.publish(source.ak, chan, data)
+
+    async def subscribe(self, source, chan):
+        '''
+        Subscribe a connection to a channel
+        '''
+        SUBSCRIPTIONS.labels(source.ak, chan).inc()
+        self.subscriptions[chan].append(source)
+        source.active_subscriptions.add(chan)
+
+    async def unsubscribe(self, source, chan):
+        '''
+        Unsubscribe a connection from a channel
+        '''
+        if chan in source.active_subscriptions:
+            source.active_subscriptions.remove(chan)
+        if source in self.subscriptions[chan]:
+            self.subscriptions[chan].remove(source)
+        SUBSCRIPTIONS.labels(source.ak, chan).dec()
+
+    async def serve_forever(self):
+        ''' Start handling connections. Await on this to listen forever. '''
+        server = await asyncio.start_server(
+            self._handle_connection,
+            self.bind_address,
+            self.bind_port,
+            sock=self.sock,
+        )
+
+        try:
+            while True:
+                await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            server.close()
+
+            for future in asyncio.as_completed([c.close() for c in list(self.connections)]):
+                try:
+                    await future
+                except Exception as e:
+                    log.exception(e)
+
+            log.debug(f'Waiting for {self} to wrap up')
+            await server.wait_closed()

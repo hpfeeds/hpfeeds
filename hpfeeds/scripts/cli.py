@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
-import sys
-import optparse
 import logging
+import optparse
 import string
+import sys
 
 import hpfeeds
 
 
 def log(msg):
     print('[feedcli] {0}'.format(msg))
+
+
+def on_message(ident, chan, payload):
+    if [i for i in payload[:20] if i not in string.printable.encode('utf-8')]:
+        payload = payload[:20].encode('hex') + '...'
+    log('publish to {0} by {1}: {2}'.format(chan, ident, payload))
 
 
 def _main(opts, action, pubdata=None):
@@ -25,18 +31,13 @@ def _main(opts, action, pubdata=None):
         log('Error: {0}'.format(e))
         return 1
 
+    def on_error(payload):
+        log('Error message from broker: {0}'.format(payload))
+        hpc.stop()
+
     log('connected to {0}'.format(hpc.brokername))
 
     if action == 'subscribe':
-        def on_message(ident, chan, payload):
-            if [i for i in payload[:20] if i not in string.printable.encode('utf-8')]:
-                payload = payload[:20].encode('hex') + '...'
-            log('publish to {0} by {1}: {2}'.format(chan, ident, payload))
-
-        def on_error(payload):
-            log('Error message from broker: {0}'.format(payload))
-            hpc.stop()
-
         hpc.subscribe(opts.channels)
         try:
             hpc.run(on_message, on_error)

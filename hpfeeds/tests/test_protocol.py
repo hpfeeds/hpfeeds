@@ -67,12 +67,13 @@ class TestUnpacker(unittest.TestCase):
 
     def test_unpack_at_max_message_size_unicode_1(self):
         unpacker = Unpacker()
-        unpacker.feed(msgpublish(b'b', b'a', '\u2603'.encode('utf-8') * 349524))
+        data = msgpublish(b'b', b'a', '\u2603'.encode('utf-8') * 349524)
+        unpacker.feed(data)
         packets = list(iter(unpacker))
         assert len(unpacker.buf) == 0
         assert packets[0][0] == 3
         assert len(packets[0][1]) == (1024 ** 2)
-        #assert packets[0][1].endswith(b'a' * 349525)
+        # assert packets[0][1].endswith(b'a' * 349525)
 
     def test_unpack_at_max_message_size_unicode_2(self):
         unpacker = Unpacker()
@@ -81,7 +82,7 @@ class TestUnpacker(unittest.TestCase):
         assert len(unpacker.buf) == 0
         assert packets[0][0] == 3
         assert len(packets[0][1]) == (1024 ** 2)
-        #assert packets[0][1].endswith(b'a' * 349525)
+        # assert packets[0][1].endswith(b'a' * 349525)
 
     def test_unpack_at_max_message_size(self):
         unpacker = Unpacker()
@@ -98,8 +99,8 @@ class TestUnpacker(unittest.TestCase):
         packets = [next(iter(unpacker))]
         assert len(unpacker.buf) == 1024
         assert packets[0][0] == 3
-        #assert len(packets[0][1]) == (1024 ** 2)
-        #assert packets[0][1].endswith(b'a' * 1048574)
+        # assert len(packets[0][1]) == (1024 ** 2)
+        # assert packets[0][1].endswith(b'a' * 1048574)
 
     def test_unpack_1(self):
         unpacker = Unpacker()

@@ -1,7 +1,3 @@
-class BadClient(Exception):
-    pass
-
-
 class FeedException(Exception):
     pass
 
@@ -11,4 +7,8 @@ class Disconnect(Exception):
 
 
 class ProtocolException(Disconnect):
+    pass
+
+
+class BadClient(ProtocolException):
     pass
