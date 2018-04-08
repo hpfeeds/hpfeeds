@@ -102,12 +102,11 @@ class Server(object):
         except asyncio.CancelledError:
             server.close()
 
-            for connection in list(self.connections):
-                connection.active = False
-
-            for connection in list(self.connections):
-                log.debug(f'Waiting for {connection} to wrap up')
-                await connection.wait_closed()
+            for future in asyncio.as_completed([c.close() for c in list(self.connections)]):
+                try:
+                    await future
+                except Exception as e:
+                    log.exception(e)
 
             log.debug(f'Waiting for {self} to wrap up')
             await server.wait_closed()

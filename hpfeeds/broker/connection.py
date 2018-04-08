@@ -94,7 +94,7 @@ class Connection(object):
             # socket empty before continuing
             await self.writer.drain()
         except ConnectionError as e:
-            log.debug(f'{self}: {str(e)}')
+            log.debug(f'{self}: process_send_queue: {str(e)}')
         finally:
             self.active = False
             self.writer.close()
@@ -159,17 +159,30 @@ class Connection(object):
         log.debug(f'{self}: Sent auth challenge')
 
         try:
-            await asyncio.wait(
-                [self._process_send_queue(), self._process_incoming()],
-                return_when=asyncio.FIRST_EXCEPTION,
-            )
+            tasks = asyncio.as_completed([self._process_send_queue(), self._process_incoming()])
+            for task in tasks:
+                log.debug(f'{self}: coro {task} exited')
+                try:
+                    await task
+                except Disconnect:
+                    log.debug('Peer disconnected')
+                except Exception as e:
+                    log.exception(e)
+
+                self._close()
+
         finally:
-            self.active = False
-            await self.send_queue.put(Disconnect())
             log.debug(f'{self}: Stopped watching processing tasks')
             self._wait_closed.set_result(None)
 
-    async def wait_closed(self):
+    def _close(self):
+        if self.active:
+            asyncio.ensure_future(self.send_queue.put(Disconnect()))
+            self.active = False
+
+    async def close(self, no_wait=False):
+        self._close()
+        log.debug(f'{self}: Waiting for connection to close')
         await self._wait_closed
 
     def authkey_check(self, ident, rhash):
