@@ -21,6 +21,7 @@ RUN mkdir /app/var
 WORKDIR /app/var
 VOLUME /app/var
 
-EXPOSE 20000
+EXPOSE 20000/tcp
+EXPOSE 9431/tcp
 
-CMD ["/app/bin/python", "-m", "hpfeeds.scripts.broker"]
+CMD ["/app/bin/hpfeeds-broker", "--bind=0.0.0.0:20000", "--exporter=0.0.0.0:9431"]

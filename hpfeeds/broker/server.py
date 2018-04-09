@@ -21,16 +21,26 @@ log = logging.getLogger("hpfeeds.broker")
 
 class Server(object):
 
-    def __init__(self, auth, host=None, port=None, sock=None, ssl=None, name='hpfeeds'):
+    def __init__(self, auth, bind=None, exporter=None, sock=None, ssl=None, name='hpfeeds'):
         self.auth = auth
         self.name = name
-        self.host = host
-        self.port = port
+
+        self.host, self.port = self._parse_endpoint(bind)
         self.sock = sock
         self.ssl = ssl
 
+        self.exporter = self._parse_endpoint(exporter)
+
         self.connections = set()
         self.subscriptions = collections.defaultdict(list)
+
+    def _parse_endpoint(self, endpoint):
+        if not endpoint:
+            return (None, None)
+        elif ':' not in endpoint:
+            raise ValueError('Invalid bind addr')
+        else:
+            return endpoint.split(':', 1)
 
     async def _handle_connection(self, reader, writer):
         '''
@@ -93,7 +103,9 @@ class Server(object):
 
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
-        metrics_server = await start_metrics_server()
+
+        if self.exporter:
+            metrics_server = await start_metrics_server(*self.exporter)
 
         server = await asyncio.start_server(
             self._handle_connection,
@@ -118,5 +130,6 @@ class Server(object):
             log.debug(f'Waiting for {self} to wrap up')
             await server.wait_closed()
 
-            log.debug('Waiting for stats server to wrap up')
-            await metrics_server.cleanup()
+            if self.exporter:
+                log.debug('Waiting for stats server to wrap up')
+                await metrics_server.cleanup()
