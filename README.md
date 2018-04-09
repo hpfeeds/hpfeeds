@@ -1,6 +1,8 @@
 hpfeeds3
 ========
 
+[![PyPI](https://img.shields.io/pypi/v/hpfeeds3.svg)](https://pypi.python.org/pypi/hpfeeds3) [![Codecov](https://img.shields.io/codecov/c/github/Jc2k/hpfeeds3.svg)](https://codecov.io/gh/Jc2k/hpfeeds3)
+
 This is a python 3 compatible implementation of hpfeeds. Check out the following implementations:
 
  - Python 2: https://github.com/rep/hpfeeds
