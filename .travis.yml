@@ -8,7 +8,7 @@ cache: pip
 
 install:
   - pip install -U pip setuptools wheel
-  - pip install -r requirements.txt
+  - pip install -r dev.txt -r requirements.txt
 
 script:
   - py.test --cov=. hpfeeds

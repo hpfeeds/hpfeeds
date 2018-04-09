@@ -17,4 +17,18 @@ setup(
         hpfeeds = hpfeeds.scripts.cli:main
         hpfeeds-broker = hpfeeds.scripts.broker:main
     ''',
+    extra_require = {
+        'test': [
+            'flake8',
+            'flake8-isort',
+            'pytest',
+            'pytest-cov',
+            'codecov',
+        ],
+        'broker': [
+            'aiorun',
+            'aiohttp',
+            'prometheus_client',
+        ],
+    },
 )
