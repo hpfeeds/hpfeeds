@@ -12,6 +12,22 @@ This project aims to deliver a modern python 3 compatible broker written on top 
 
 ## Installation
 
+To use the client you need to install it in your python environment with `pip`.
+
 ```
 pip install hpfeeds3
 ```
+
+The core client does not have any dependencies. You can install the broker dependencies with pip too:
+
+```
+pip install hpfeeds3[broker]
+```
+
+You can also run a broker with Docker:
+
+```
+docker run -p "0.0.0.0:20000:20000" -p "0.0.0.0:9431:9431" jc2k/hpfeeds3-broker:latest
+```
+
+It will store access keys in an sqlite database in `/app/var`. The `sqlite` client installed in the container for managing access. You should make sure `/app/var` is a volume. Your clients can connect to port `20000`, and prometheus can connect on port `9431`.
