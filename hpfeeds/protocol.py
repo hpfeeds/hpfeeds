@@ -5,7 +5,7 @@
 import hashlib
 import struct
 
-from .exceptions import ProtocolException
+from .exceptions import ProtocolException, MessageTooBig
 
 BUFSIZ = 16384
 
@@ -52,7 +52,7 @@ def strpack8(x):
 
 def strunpack8(x):
     # unpacks a string with 1 byte length field
-    length = x[0]
+    length = ord(x[0:1])
     return force_str(x[1:1+length]), x[1+length:]
 
 
@@ -123,6 +123,10 @@ class Unpacker(object):
     def __next__(self):
         return self.unpack()
 
+    def next(self):
+        # For python2.7 compatibility only
+        return self.__next__()
+
     def reset(self):
         self.buf = bytearray()
 
@@ -140,9 +144,7 @@ class Unpacker(object):
 
         max_ml = SIZES.get(opcode, MAXBUF)
         if ml > max_ml:
-            raise ProtocolException(
-                f'Message too big; op {opcode} ml: {ml} max_ml: {max_ml}'
-            )
+            raise MessageTooBig(opcode, ml, max_ml)
 
         if len(self.buf) < ml:
             return False
