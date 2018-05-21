@@ -47,6 +47,7 @@ class Connection(object):
         self.server = server
         self.reader = HpfeedsReader(reader)
         self.writer = writer
+        self.peer, self.port = self.writer.get_extra_info('peername')
 
         self.active_subscriptions = set()
 
@@ -64,7 +65,7 @@ class Connection(object):
         self._wait_closed = asyncio.Future()
 
     def __str__(self):
-        peer, port = self.writer.get_extra_info('peername')
+        peer, port = self.peer, self.port
         ident = self.ak
         owner = self.uid
         return (
