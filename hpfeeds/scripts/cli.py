@@ -2,6 +2,7 @@
 
 import logging
 import optparse
+import os
 import string
 import sys
 
@@ -114,6 +115,22 @@ def opts():
         data = ' '.join(args[1:])
     elif action == 'sendfile':
         data = ' '.join(args[1:])
+
+    if options.certfile:
+        if not os.path.exists(options.certfile):
+            parser.error('If --tlscert is specified it must be a valid path to a file')
+
+    if not options.host:
+        parser.error('You must specify a host')
+
+    if not options.port:
+        parser.error('You must specify a port')
+
+    if not options.ident:
+        parser.error('You must specify an ident')
+
+    if not options.secret:
+        parser.error('You must specify a secret')
 
     return options, action, data
 
