@@ -1,0 +1,3 @@
+recursive-include hpfeeds *
+include *
+global-exclude *.pyc
