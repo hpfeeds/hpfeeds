@@ -62,7 +62,7 @@ def _main(opts, action, pubdata=None):
     return 0
 
 
-def opts():
+def get_parser():
     parser = optparse.OptionParser()
     parser.add_option(
         "-c", "--chan",
@@ -96,6 +96,12 @@ def opts():
         "--debug",
         action="store_const", dest='debug',
         help="enable debug log output", default=False, const=True)
+
+    return parser
+
+
+def opts():
+    parser = get_parser()
 
     options, args = parser.parse_args()
 
