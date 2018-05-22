@@ -92,32 +92,32 @@ class HPFeedsProtocol(Protocol):
         self.transport.loseConnection()
 
     def dataReceived(self, data):
-		self.unpacker.feed(data)
-		try:
-			for opcode, data in self.unpacker:
-				self.messageReceived(opcode, data)
-		except ProtocolException as e:
+        self.unpacker.feed(data)
+        try:
+            for opcode, data in self.unpacker:
+                self.messageReceived(opcode, data)
+        except ProtocolException as e:
             # Can't recover from a protocol decoding error, so drop connection
-			self.protocolError(str(e))
-			self.transport.loseConnection()
+            self.protocolError(str(e))
+            self.transport.loseConnection()
 
     def error(self, error):
-    	self.transport.write(msgerror(error))
+        self.transport.write(msgerror(error))
 
     def info(self, name, rand):
-		self.transport.write(msginfo(name, rand))
+        self.transport.write(msginfo(name, rand))
 
     def auth(self, rand, ident, secret):
-		self.transport.write(msgauth(rand, ident, secret))
+        self.transport.write(msgauth(rand, ident, secret))
 
     def publish(self, ident, channel, payload):
         self.transport.write(msgpublish(ident, channel, payload))
 
     def subscribe(self, ident, channel):
-		self.transport.write(msgsubscribe(ident, channel))
+        self.transport.write(msgsubscribe(ident, channel))
 
     def unsubscribe(self, ident, channel):
-		self.transport.write(msgunsubscribe(ident, channel))
+        self.transport.write(msgunsubscribe(ident, channel))
 
 
 class ClientHPFeedsProtocol(HPFeedsProtocol):
