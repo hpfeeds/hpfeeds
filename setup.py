@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='hpfeeds3',
-    version='0.0.1',
+    version='0.9',
     description='Python implementation of the honeypot feeds broker',
     author='John Carr',
     author_email='john.carr@unrouted.co.uk',
