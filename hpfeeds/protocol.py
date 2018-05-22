@@ -5,7 +5,7 @@
 import hashlib
 import struct
 
-from .exceptions import ProtocolException, MessageTooBig
+from .exceptions import MessageTooBig, ProtocolException
 
 BUFSIZ = 16384
 
