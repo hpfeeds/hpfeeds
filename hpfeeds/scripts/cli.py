@@ -110,10 +110,7 @@ def opts():
     if args[0] not in ['subscribe', 'publish', 'sendfile']:
         parser.error('You need to give "subscribe" or "publish" as <action>.')
 
-    if options.debug:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.CRITICAL)
+    logging.basicConfig(level=logging.DEBUG if options.debug else logging.CRITICAL)
 
     action = args[0]
     data = None

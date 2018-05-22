@@ -1,9 +1,5 @@
-from twisted.internet.protocol import Protocol
-from twisted.python import log
-
 from hpfeeds.exceptions import ProtocolException
 from hpfeeds.protocol import (
-    BUFSIZ,
     OP_AUTH,
     OP_ERROR,
     OP_INFO,
@@ -11,18 +7,21 @@ from hpfeeds.protocol import (
     OP_SUBSCRIBE,
     OP_UNSUBSCRIBE,
     Unpacker,
-    msgerror,
     msgauth,
+    msgerror,
     msginfo,
     msgpublish,
     msgsubscribe,
     msgunsubscribe,
+    readauth,
     readerror,
     readinfo,
     readpublish,
     readsubscribe,
     readunsubscribe,
 )
+from twisted.internet.protocol import Protocol
+from twisted.python import log
 
 
 class HPFeedsProtocol(Protocol):
