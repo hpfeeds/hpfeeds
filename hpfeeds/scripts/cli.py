@@ -88,7 +88,7 @@ def opts():
         action="store", dest='output', nargs=1, type='string',
         help="publish log filename")
     parser.add_option(
-        "--certfile",
+        "--tlscert",
         action="store", dest='certfile', nargs=1, type='string',
         help="certfile for ssl verification (CA)", default=None)
     parser.add_option(
