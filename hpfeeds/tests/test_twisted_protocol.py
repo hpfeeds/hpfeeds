@@ -178,3 +178,10 @@ class TestTwistedClientProtocol(unittest.TestCase):
 
     def test_info(self):
         self.assertRaises(RuntimeError, self.protocol.info, 'name', b'\x00' * 4)
+
+
+class TestTwistedClientProtocolConnReady(unittest.TestCase):
+
+    def test_connectionReady(self):
+        self.protocol = ClientProtocol()
+        self.protocol.connectionReady()
