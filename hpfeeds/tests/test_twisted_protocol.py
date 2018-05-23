@@ -1,11 +1,7 @@
-import asyncio
-import logging
-import socket
-import threading
 import unittest
 from unittest import mock
 
-from hpfeeds.twisted import BaseProtocol
+from hpfeeds.twisted import BaseProtocol, ClientProtocol
 
 
 class TestTwistedBaseProtocol(unittest.TestCase):
@@ -73,6 +69,8 @@ class TestTwistedBaseProtocolDecoding(unittest.TestCase):
         self.onPublish = self.patch_object(self.protocol, 'onPublish')
         self.onSubscribe = self.patch_object(self.protocol, 'onSubscribe')
         self.onUnsubscribe = self.patch_object(self.protocol, 'onUnsubscribe')
+        self.protocolError = self.patch_object(self.protocol, 'protocolError')
+        self.transport = self.patch_object(self.protocol, 'transport')
 
     def patch_object(self, *args, **kwargs):
         patcher = mock.patch.object(*args, **kwargs)
@@ -108,3 +106,44 @@ class TestTwistedBaseProtocolDecoding(unittest.TestCase):
         self.protocol.dataReceived(b'\x00\x00\x00\x0f\x05\x05identchan')
         assert self.onUnsubscribe.call_args[0][0] == 'ident'
         assert self.onUnsubscribe.call_args[0][1] == 'chan'
+
+    def test_invalid_opcode(self):
+        # We test this seperately as the unpacker also enforces valid opcodes
+        # So normally this won't be hit.
+        self.protocol.messageReceived(77, b'\x05identchan')
+        assert self.protocolError.call_args[0][0] == 'Unknown message opcode: 77'
+        self.transport.loseConnection.assert_called_with()
+
+    def test_invalid_opcode_2(self):
+        self.protocol.dataReceived(b'\x00\x00\x00\x0f\x06\x05identchan')
+        assert self.protocolError.call_args[0][0] == 'Unknown opcode: 6'
+        self.transport.loseConnection.assert_called_with()
+
+    def test_invalid_size(self):
+        self.protocol.dataReceived(b'\x00\xff\xff\xff\x05\x05identchan')
+        assert self.protocolError.call_args[0][0] == 'Message too big; op 5 ml: 16777215 max_ml: 1048576'
+        self.transport.loseConnection.assert_called_with()
+
+
+class TestTwistedClientProtocol(unittest.TestCase):
+
+    def setUp(self):
+        self.protocol = ClientProtocol()
+
+        self.protocol.factory = mock.Mock()
+        self.protocol.factory.ident = 'ident'
+        self.protocol.factory.secret = 'secret'
+
+        self.transport = self.patch_object(self.protocol, 'transport')
+        self.connectionReady = self.patch_object(self.protocol, 'connectionReady')
+
+    def patch_object(self, *args, **kwargs):
+        patcher = mock.patch.object(*args, **kwargs)
+        self.addCleanup(patcher.stop)
+        return patcher.start()
+
+    def test_onInfo(self):
+        # A client should auto-reply to an OP_INFO the call connectionReady
+        self.protocol.onInfo('hpfeeds', b'\x00' * 4)
+        assert self.transport.write.call_args[0][0] == \
+            b'\x00\x00\x00\x1f\x02\x05ident\x16\xa3\x11\xd5\xc2`\xcd\xc1\xee\xf3\x8b\xaf"\xdf\x97\x18\x90t&\xac'

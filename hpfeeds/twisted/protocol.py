@@ -1,3 +1,6 @@
+from twisted.internet.protocol import Protocol
+from twisted.python import log
+
 from hpfeeds.exceptions import ProtocolException
 from hpfeeds.protocol import (
     OP_AUTH,
@@ -20,8 +23,6 @@ from hpfeeds.protocol import (
     readsubscribe,
     readunsubscribe,
 )
-from twisted.internet.protocol import Protocol
-from twisted.python import log
 
 
 class BaseProtocol(Protocol):
@@ -87,7 +88,7 @@ class BaseProtocol(Protocol):
             return self.onUnsubscribe(*readunsubscribe(data))
 
         # Can't recover from an unknown opcode, so drop connection
-        self.protocolError('Unknown opcode: {!r}'.format(opcode))
+        self.protocolError('Unknown message opcode: {!r}'.format(opcode))
         self.transport.loseConnection()
 
     def dataReceived(self, data):
