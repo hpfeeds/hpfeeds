@@ -136,6 +136,7 @@ class TestTwistedClientProtocol(unittest.TestCase):
 
         self.transport = self.patch_object(self.protocol, 'transport')
         self.connectionReady = self.patch_object(self.protocol, 'connectionReady')
+        self.protocolError = self.patch_object(self.protocol, 'protocolError')
 
     def patch_object(self, *args, **kwargs):
         patcher = mock.patch.object(*args, **kwargs)
@@ -147,3 +148,27 @@ class TestTwistedClientProtocol(unittest.TestCase):
         self.protocol.onInfo('hpfeeds', b'\x00' * 4)
         assert self.transport.write.call_args[0][0] == \
             b'\x00\x00\x00\x1f\x02\x05ident\x16\xa3\x11\xd5\xc2`\xcd\xc1\xee\xf3\x8b\xaf"\xdf\x97\x18\x90t&\xac'
+
+    def test_onAuth(self):
+        ''' Client should never receive an OP_AUTH message - it is an error if it does '''
+        self.protocol.dataReceived(b'\x00\x00\x00\x1f\x02\x05ident\x16\xa3\x11\xd5\xc2`\xcd\xc1\xee\xf3\x8b\xaf"\xdf\x97\x18\x90t&\xac')
+        assert self.protocolError.call_args[0][0] == 'Unexpected OP_AUTH'
+        self.transport.loseConnection.assert_called_with()
+
+    def test_onSubscribe(self):
+        ''' Client should never receive an OP_SUBSCRIBE message - it is an error if it does '''
+        self.protocol.dataReceived(b'\x00\x00\x00\x0f\x04\x05identchan')
+        assert self.protocolError.call_args[0][0] == 'Unexpected OP_SUBSCRIBE'
+        self.transport.loseConnection.assert_called_with()
+
+    def test_onUnsubscribe(self):
+        ''' Client should never receive an OP_UNSUBSCRIBE message - it is an error if it does '''
+        self.protocol.dataReceived(b'\x00\x00\x00\x0f\x05\x05identchan')
+        assert self.protocolError.call_args[0][0] == 'Unexpected OP_UNSUBSCRIBE'
+        self.transport.loseConnection.assert_called_with()
+
+    def test_error(self):
+        self.assertRaises(RuntimeError, self.protocol.error, 'error')
+
+    def test_info(self):
+        self.assertRaises(RuntimeError, self.protocol.info, 'name', b'\x00' * 4)
