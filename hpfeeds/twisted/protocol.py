@@ -24,7 +24,7 @@ from twisted.internet.protocol import Protocol
 from twisted.python import log
 
 
-class HPFeedsProtocol(Protocol):
+class BaseProtocol(Protocol):
 
     def __init__(self):
         self.unpacker = Unpacker()
@@ -40,37 +40,37 @@ class HPFeedsProtocol(Protocol):
         '''
         Called by messageReceived when an OP_ERROR has been parsed.
         '''
-        raise NotImplemented(self.onError)
+        raise NotImplementedError(self.onError)
 
     def onInfo(self, name, rand):
         '''
         Called by messageReceived when an OP_INFO has been parsed.
         '''
-        raise NotImplemented(self.onInfo)
+        raise NotImplementedError(self.onInfo)
 
     def onAuth(self, name, rand):
         '''
         Called by messageReceived when an OP_AUTH has been parsed.
         '''
-        raise NotImplemented(self.onAuth)
+        raise NotImplementedError(self.onAuth)
 
     def onPublish(self, ident, chan, data):
         '''
         Called by messageReceived when an OP_PUBLISH has been parsed.
         '''
-        raise NotImplemented(self.onPublish)
+        raise NotImplementedError(self.onPublish)
 
-    def onSubscribe(self, ident, chan, data):
+    def onSubscribe(self, ident, chan):
         '''
         Called by messageReceived when an OP_SUBSCRIBE has been parsed.
         '''
-        raise NotImplemented(self.onSubscribe)
+        raise NotImplementedError(self.onSubscribe)
 
-    def onUnsubscribe(self, ident, chan, data):
+    def onUnsubscribe(self, ident, chan):
         '''
         Called by messageReceived when an OP_UNSUBSCRIBE has been parsed.
         '''
-        raise NotImplemented(self.onUnsubscribe)
+        raise NotImplementedError(self.onUnsubscribe)
 
     def messageReceived(self, opcode, data):
         if opcode == OP_ERROR:
@@ -119,7 +119,7 @@ class HPFeedsProtocol(Protocol):
         self.transport.write(msgunsubscribe(ident, channel))
 
 
-class ClientHPFeedsProtocol(HPFeedsProtocol):
+class ClientProtocol(BaseProtocol):
 
     '''
     A base class for implementing hpfeeds client functionality in Twisted.
@@ -152,7 +152,7 @@ class ClientHPFeedsProtocol(HPFeedsProtocol):
         self.protocolError('Unexpected OP_AUTH')
         self.transport.loseConnection()
 
-    def onSubscribe(self, ident, chan, data):
+    def onSubscribe(self, ident, chan):
         '''
         Called by messageReceived when an OP_SUBSCRIBE has been parsed.
 
@@ -162,7 +162,7 @@ class ClientHPFeedsProtocol(HPFeedsProtocol):
         self.protocolError('Unexpected OP_SUBSCRIBE')
         self.transport.loseConnection()
 
-    def onUnsubscribe(self, ident, chan, data):
+    def onUnsubscribe(self, ident, chan):
         '''
         Called by messageReceived when an OP_UNSUBSCRIBE has been parsed.
 

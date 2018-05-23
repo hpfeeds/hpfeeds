@@ -102,6 +102,11 @@ def readsubscribe(data):
     return force_str(ident), force_str(rest)
 
 
+def readunsubscribe(data):
+    ident, rest = strunpack8(data)
+    return force_str(ident), force_str(rest)
+
+
 def readpublish(data):
     ident, rest = strunpack8(data)
     chan, rest = strunpack8(rest)
