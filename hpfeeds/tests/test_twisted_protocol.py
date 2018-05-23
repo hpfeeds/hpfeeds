@@ -58,6 +58,9 @@ class TestTwistedBaseProtocol(unittest.TestCase):
         self.protocol.unsubscribe('ident', 'chan')
         assert self.transport.write.call_args[0][0] == b'\x00\x00\x00\x0f\x05\x05identchan'
 
+    def test_protocolError(self):
+        self.protocol.protocolError('reason')
+
 
 class TestTwistedBaseProtocolDecoding(unittest.TestCase):
 
@@ -142,6 +145,9 @@ class TestTwistedClientProtocol(unittest.TestCase):
         patcher = mock.patch.object(*args, **kwargs)
         self.addCleanup(patcher.stop)
         return patcher.start()
+
+    def test_connectionReady(self):
+        self.protocol.connectionReady()
 
     def test_onInfo(self):
         # A client should auto-reply to an OP_INFO the call connectionReady
