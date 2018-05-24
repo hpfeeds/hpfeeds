@@ -14,6 +14,12 @@ class _Protocol(ClientProtocol):
     by ClientService.
     '''
 
+    def connectionMade(self):
+        try:
+            self.transport.setTcpKeepAlive(10)
+        except AttributeError:
+            pass
+
     def connectionReady(self):
         '''
         Called when a connection has been established and authentication has
