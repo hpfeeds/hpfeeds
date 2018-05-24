@@ -15,10 +15,8 @@ class _Protocol(ClientProtocol):
     '''
 
     def connectionMade(self):
-        try:
+        if hasattr(self.transport, 'setTcpKeepAlive'):
             self.transport.setTcpKeepAlive(10)
-        except AttributeError:
-            pass
 
     def connectionReady(self):
         '''
