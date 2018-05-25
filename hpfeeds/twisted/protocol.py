@@ -49,7 +49,7 @@ class BaseProtocol(Protocol):
         '''
         raise NotImplementedError(self.onInfo)
 
-    def onAuth(self, name, rand):
+    def onAuth(self, ident, secret):
         '''
         Called by messageReceived when an OP_AUTH has been parsed.
         '''

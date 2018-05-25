@@ -12,6 +12,29 @@ CLIENT_CONNECTIONS = Gauge(
     'Number of clients connected to broker',
 )
 
+CONNECTION_MADE = Counter(
+    'hpfeeds_broker_connection_made',
+    'Number of connections established',
+)
+
+CONNECTION_READY = Counter(
+    'hpfeeds_broker_connection_ready',
+    'Number of connections established + authenticated',
+    ['ident'],
+)
+
+CONNECTION_ERROR = Counter(
+    'hpfeeds_broker_connection_error',
+    'Number of connections that experienced a protocol error',
+    ['ident', 'category'],
+)
+
+CONNECTION_LOST = Counter(
+    'hpfeeds_broker_connection_lost',
+    'Number of connections lost',
+    ['ident'],
+)
+
 SUBSCRIPTIONS = Gauge(
     'hpfeeds_broker_subscriptions',
     'Number of subscriptions to a channel',
@@ -29,6 +52,18 @@ RECEIVE_PUBLISH_SIZE = Histogram(
     'Sizes of messages received by broker for a channel',
     ['ident', 'chan'],
 )
+
+
+def reset():
+    ''' Reset the metrics to 0. This is intended for tests **only**. '''
+    CLIENT_CONNECTIONS._value.set(0)
+    SUBSCRIPTIONS._metrics = {}
+    RECEIVE_PUBLISH_SIZE._metrics = {}
+    RECEIVE_PUBLISH_COUNT._metrics = {}
+    CONNECTION_ERROR._metrics = {}
+    CONNECTION_LOST._metrics = {}
+    CONNECTION_MADE._value.set(0)
+    CONNECTION_READY._metrics = {}
 
 
 async def metrics(request):
