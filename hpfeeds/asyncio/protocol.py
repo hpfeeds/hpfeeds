@@ -48,7 +48,7 @@ class BaseProtocol(asyncio.Protocol):
         '''
         raise NotImplementedError(self.on_info)
 
-    def on_auth(self, name, rand):
+    def on_auth(self, ident, secret):
         '''
         Called by message_received when an OP_AUTH has been parsed.
         '''
