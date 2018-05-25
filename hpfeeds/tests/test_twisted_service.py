@@ -5,6 +5,7 @@ import unittest
 
 from twisted.internet import asyncioreactor
 
+from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
 from hpfeeds.twisted import ClientSessionService
@@ -22,6 +23,8 @@ class TestClientIntegration(unittest.TestCase):
         cls.loop = asyncio.get_event_loop()
 
     def setUp(self):
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+
         self.sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('127.0.0.1', 0))
         self.port = sock.getsockname()[1]
@@ -50,6 +53,8 @@ class TestClientIntegration(unittest.TestCase):
             # Wait till client connected
             await client.whenConnected.asFuture(self.loop)
 
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+
             self.log.debug('Publishing test message')
             client.publish('test-chan', b'test message')
 
@@ -65,6 +70,7 @@ class TestClientIntegration(unittest.TestCase):
 
         self.loop.run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
 
     def test_late_subscribe_and_publish(self):
         async def inner():
@@ -77,6 +83,8 @@ class TestClientIntegration(unittest.TestCase):
 
             # Wait till client connected
             await client.whenConnected.asFuture(self.loop)
+
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
 
             # Subscribe to a new thing after connection is up
             client.subscribe('test-chan')
@@ -101,3 +109,4 @@ class TestClientIntegration(unittest.TestCase):
 
         self.loop.run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0

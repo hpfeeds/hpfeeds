@@ -4,6 +4,7 @@ import socket
 import unittest
 
 from hpfeeds.asyncio import Client
+from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
 
@@ -13,6 +14,8 @@ class TestAsyncioClientIntegration(unittest.TestCase):
     log = logging.getLogger('hpfeeds.test_asyncio_client')
 
     def setUp(self):
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+
         self.sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('127.0.0.1', 0))
         self.port = sock.getsockname()[1]
@@ -40,6 +43,8 @@ class TestAsyncioClientIntegration(unittest.TestCase):
             # Wait till client connected
             await client.when_connected
 
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+
             self.log.debug('Publishing test message')
             client.publish('test-chan', b'test message')
 
@@ -55,6 +60,7 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         asyncio.get_event_loop().run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
 
     def test_late_subscribe_and_publish(self):
         async def inner():
@@ -66,6 +72,8 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
             # Wait till client connected
             await client.when_connected
+
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
 
             # Subscribe to a new thing after connection is up
             client.subscribe('test-chan')
@@ -90,3 +98,4 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         asyncio.get_event_loop().run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
