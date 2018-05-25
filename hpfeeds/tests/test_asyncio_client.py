@@ -125,3 +125,46 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         # Again, we should test this directly after calling unsubscribe(), but no ability to wait
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0
+
+    def test_late_subscribe_and_publish_async_with(self):
+        async def inner():
+            self.log.debug('Starting server')
+            server_future = asyncio.ensure_future(self.server.serve_forever())
+
+            self.log.debug('Creating client service')
+            async with ClientSession('127.0.0.1', self.port, 'test', 'secret') as client:
+                assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+                assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 1
+
+                # Subscribe to a new thing after connection is up
+                client.subscribe('test-chan')
+
+                self.log.debug('Publishing test message')
+                client.publish('test-chan', b'test message')
+
+                self.log.debug('Waiting for read()')
+                assert ('test', 'test-chan', b'test message') == await client.read()
+
+                # We would test this after call to subscribe, but need to wait until sure server has processed command
+                assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 1
+
+                # Unsubscribe while the connection is up
+                client.unsubscribe('test-chan')
+
+                # FIXME: How to test that did anything!
+
+                # This will only have incremented when server has processed auth message
+                # Test can only reliably assert this is the case after reading a message
+                assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
+
+            self.log.debug('Stopping server')
+            server_future.cancel()
+            await server_future
+
+        asyncio.get_event_loop().run_until_complete(inner())
+        assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1
+
+        # Again, we should test this directly after calling unsubscribe(), but no ability to wait
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0
