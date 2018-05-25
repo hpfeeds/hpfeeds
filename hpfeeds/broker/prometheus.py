@@ -54,6 +54,18 @@ RECEIVE_PUBLISH_SIZE = Histogram(
 )
 
 
+def reset():
+    ''' Reset the metrics to 0. This is intended for tests **only**. '''
+    CLIENT_CONNECTIONS._value.set(0)
+    SUBSCRIPTIONS._metrics = {}
+    RECEIVE_PUBLISH_SIZE._metrics = {}
+    RECEIVE_PUBLISH_COUNT._metrics = {}
+    CONNECTION_ERROR._metrics = {}
+    CONNECTION_LOST._metrics = {}
+    CONNECTION_MADE._value.set(0)
+    CONNECTION_READY._metrics = {}
+
+
 async def metrics(request):
     data = generate_latest(REGISTRY)
     return web.Response(text=data.decode('utf-8'), content_type='text/plain', charset='utf-8')

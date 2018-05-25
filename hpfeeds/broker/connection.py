@@ -35,17 +35,13 @@ class Connection(BaseProtocol):
         super().__init__()
 
     def connection_made(self, transport):
-        print("connection_made 1")
         CLIENT_CONNECTIONS.inc()
         CONNECTION_MADE.inc()
 
         self.server.connections.add(self)
-        print("connection_made 1")
 
         self.transport = transport
         self.peer, self.port = transport.get_extra_info('peername')
-
-        print("connection_made 1")
 
         self.info(self.server.name, self.authrand)
 

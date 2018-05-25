@@ -29,10 +29,7 @@ def parse(mock_write):
 class TestBrokerConnection(unittest.TestCase):
 
     def setUp(self):
-        prometheus.CLIENT_CONNECTIONS._value.set(0)
-        prometheus.SUBSCRIPTIONS._metrics = {}
-        prometheus.RECEIVE_PUBLISH_SIZE._metrics = {}
-        prometheus.RECEIVE_PUBLISH_COUNT._metrics = {}
+        prometheus.reset()
 
         authenticator = Authenticator({
             'test': {

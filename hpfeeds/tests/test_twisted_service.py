@@ -23,7 +23,11 @@ class TestClientIntegration(unittest.TestCase):
         cls.loop = asyncio.get_event_loop()
 
     def setUp(self):
+        prometheus.reset()
+
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) is None
 
         self.sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('127.0.0.1', 0))
@@ -54,12 +58,17 @@ class TestClientIntegration(unittest.TestCase):
             await client.whenConnected.asFuture(self.loop)
 
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 1
 
             self.log.debug('Publishing test message')
             client.publish('test-chan', b'test message')
 
             self.log.debug('Waiting for read()')
             assert ('test', 'test-chan', b'test message') == await client.read().asFuture(self.loop)
+
+            # This will only have incremented when server has processed auth message
+            # Test can only reliably assert this is the case after reading a message
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
 
             self.log.debug('Stopping client')
             await client.stopService().asFuture(self.loop)
@@ -71,6 +80,7 @@ class TestClientIntegration(unittest.TestCase):
         self.loop.run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1
 
     def test_late_subscribe_and_publish(self):
         async def inner():
@@ -85,6 +95,7 @@ class TestClientIntegration(unittest.TestCase):
             await client.whenConnected.asFuture(self.loop)
 
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 1
 
             # Subscribe to a new thing after connection is up
             client.subscribe('test-chan')
@@ -100,6 +111,10 @@ class TestClientIntegration(unittest.TestCase):
 
             # FIXME: How to test that did anything!
 
+            # This will only have incremented when server has processed auth message
+            # Test can only reliably assert this is the case after reading a message
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
+
             self.log.debug('Stopping client')
             await client.stopService().asFuture(self.loop)
 
@@ -110,3 +125,4 @@ class TestClientIntegration(unittest.TestCase):
         self.loop.run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1

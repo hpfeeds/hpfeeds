@@ -45,10 +45,7 @@ class TestClientIntegration(unittest.TestCase):
         loop.run_until_complete(inner())
 
     def setUp(self):
-        prometheus.CLIENT_CONNECTIONS._value.set(0)
-        prometheus.SUBSCRIPTIONS._metrics = {}
-        prometheus.RECEIVE_PUBLISH_SIZE._metrics = {}
-        prometheus.RECEIVE_PUBLISH_COUNT._metrics = {}
+        prometheus.reset()
 
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
 
