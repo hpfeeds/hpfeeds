@@ -54,7 +54,7 @@ class _Protocol(ClientProtocol):
         self.client.read_queue.put_nowait((ident, chan, data))
 
 
-class Client(object):
+class ClientSession(object):
 
     '''
     A service that maintains a connection to a hpfeeds broker and provides
@@ -99,7 +99,7 @@ class Client(object):
             try:
                 await self._tryconnect()
             except Exception as e:
-                self.log.exception(e)
+                self. log.exception(e)
 
             await self.when_closed
             self.when_connected = asyncio.Future()
@@ -135,3 +135,16 @@ class Client(object):
         if self.protocol:
             self.protocol.transport.close()
         await self.when_closed
+
+    def __enter__(self):
+        raise TypeError("Use async with instead")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    async def __aenter__(self):
+        await self.when_connected
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()

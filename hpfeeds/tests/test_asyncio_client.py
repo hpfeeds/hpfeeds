@@ -3,7 +3,7 @@ import logging
 import socket
 import unittest
 
-from hpfeeds.asyncio import Client
+from hpfeeds.asyncio import ClientSession
 from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
@@ -39,7 +39,7 @@ class TestAsyncioClientIntegration(unittest.TestCase):
             server_future = asyncio.ensure_future(self.server.serve_forever())
 
             self.log.debug('Creating client service')
-            client = Client('127.0.0.1', self.port, 'test', 'secret')
+            client = ClientSession('127.0.0.1', self.port, 'test', 'secret')
             client.subscribe('test-chan')
 
             # Wait till client connected
@@ -82,7 +82,7 @@ class TestAsyncioClientIntegration(unittest.TestCase):
             server_future = asyncio.ensure_future(self.server.serve_forever())
 
             self.log.debug('Creating client service')
-            client = Client('127.0.0.1', self.port, 'test', 'secret')
+            client = ClientSession('127.0.0.1', self.port, 'test', 'secret')
 
             # Wait till client connected
             await client.when_connected
