@@ -66,6 +66,9 @@ class TestClientIntegration(unittest.TestCase):
             self.log.debug('Waiting for read()')
             assert ('test', 'test-chan', b'test message') == await client.read().asFuture(self.loop)
 
+            # We would test this after call to subscribe, but need to wait until sure server has processed command
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 1
+
             # This will only have incremented when server has processed auth message
             # Test can only reliably assert this is the case after reading a message
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
@@ -81,6 +84,9 @@ class TestClientIntegration(unittest.TestCase):
         assert len(self.server.connections) == 0, 'Connection left dangling'
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1
+
+        # Closing should auto unsubscribe
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0
 
     def test_late_subscribe_and_publish(self):
         async def inner():
@@ -106,10 +112,11 @@ class TestClientIntegration(unittest.TestCase):
             self.log.debug('Waiting for read()')
             assert ('test', 'test-chan', b'test message') == await client.read().asFuture(self.loop)
 
+            # We would test this after call to subscribe, but need to wait until sure server has processed command
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 1
+
             # Unsubscribe while the connection is up
             client.unsubscribe('test-chan')
-
-            # FIXME: How to test that did anything!
 
             # This will only have incremented when server has processed auth message
             # Test can only reliably assert this is the case after reading a message
@@ -126,3 +133,6 @@ class TestClientIntegration(unittest.TestCase):
         assert len(self.server.connections) == 0, 'Connection left dangling'
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1
+
+        # Again, we should test this directly after calling unsubscribe(), but no ability to wait
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0

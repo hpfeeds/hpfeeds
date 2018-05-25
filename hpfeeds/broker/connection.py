@@ -84,9 +84,6 @@ class Connection(BaseProtocol):
             self.transport.close()
             return
 
-        print(akrow)
-        print(type(akrow))
-
         akhash = hashsecret(self.authrand, akrow["secret"])
         if not akhash == secret:
             CONNECTION_ERROR.labels(ident, 'invalid-secret').inc()

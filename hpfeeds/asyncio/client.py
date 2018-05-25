@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import socket
 import sys
 
@@ -41,7 +42,7 @@ class _Protocol(ClientProtocol):
         self.client.when_connected.set_result(None)
 
     def connection_lost(self, reason):
-        self.client.reconnect()
+        self.client.when_closed.set_result(None)
 
     def on_publish(self, ident, chan, data):
         '''
@@ -60,6 +61,8 @@ class Client(object):
     helpers for reading and writing to the broker.
     '''
 
+    log = logging.getLogger('hpfeeds.asyncio.client')
+
     def __init__(self, host, port, ident, secret):
         self.host = host
         self.port = port
@@ -70,7 +73,9 @@ class Client(object):
         self.subscriptions = set()
         self.protocol = None
 
-        self.reconnect()
+        self.when_connected = asyncio.Future()
+        self.closing = False
+        self._ensure_connected = asyncio.ensure_future(self.reconnect())
 
     async def _tryconnect(self):
         while True:
@@ -86,10 +91,18 @@ class Client(object):
 
             await asyncio.sleep(1)
 
-    def reconnect(self):
-        self.protocol = None
-        self.when_connected = asyncio.Future()
-        asyncio.ensure_future(self._tryconnect())
+    async def reconnect(self):
+        while not self.closing:
+            self.protocol = None
+            self.when_closed = asyncio.Future()
+
+            try:
+                await self._tryconnect()
+            except Exception as e:
+                self.log.exception(e)
+
+            await self.when_closed
+            self.when_connected = asyncio.Future()
 
     def publish(self, chan, payload):
         if self.protocol:
@@ -117,6 +130,8 @@ class Client(object):
         '''
         return self.read_queue.get()
 
-    def close(self):
+    async def close(self):
+        self.closing = True
         if self.protocol:
             self.protocol.transport.close()
+        await self.when_closed
