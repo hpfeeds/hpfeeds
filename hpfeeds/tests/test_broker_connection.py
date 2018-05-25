@@ -44,7 +44,7 @@ class TestBrokerConnection(unittest.TestCase):
 
     def make_connection(self):
         transport = mock.Mock()
-        transport.get_extra_info.return_value = ('127.0.0.1', 80)
+        transport.get_extra_info.side_effect = lambda name: ('127.0.0.1', 80) if name == 'peername' else None
 
         connection = Connection(self.server)
         connection.connection_made(transport)

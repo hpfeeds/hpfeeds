@@ -3,6 +3,8 @@
 
 import logging
 import os
+import socket
+import sys
 
 from hpfeeds.asyncio.protocol import BaseProtocol
 from hpfeeds.protocol import OP_AUTH, hashsecret
@@ -42,6 +44,14 @@ class Connection(BaseProtocol):
 
         self.transport = transport
         self.peer, self.port = transport.get_extra_info('peername')
+
+        sock = transport.get_extra_info('socket')
+        if sock is not None:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if sys.platform.startswith('linux'):
+                sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)
+                sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPINTVL, 5)
+                sock.setsockopt(socket.SOL_TCP, socket.TCP_KEEPCNT, 3)
 
         self.info(self.server.name, self.authrand)
 
