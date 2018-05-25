@@ -271,7 +271,7 @@ class Client(object):
 class SslClient(Client):
     def __init__(self, *args, **kwargs):
         self.certfile = kwargs.pop("certfile", None)
-        super().__init__(*args, **kwargs)
+        super(SslClient, self).__init__(*args, **kwargs)
 
     def makesocket(self, addr_family):
         sock = socket.socket(addr_family, socket.SOCK_STREAM)
