@@ -75,7 +75,7 @@ async def start_metrics_server(host, port):
     app = web.Application()
     app.router.add_get('/metrics', metrics)
 
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, access_log=None)
     await runner.setup()
 
     site = web.TCPSite(runner, host, port)
