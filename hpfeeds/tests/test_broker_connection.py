@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 
+from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.connection import Connection
 from hpfeeds.broker.server import Server
@@ -28,6 +29,11 @@ def parse(mock_write):
 class TestBrokerConnection(unittest.TestCase):
 
     def setUp(self):
+        prometheus.CLIENT_CONNECTIONS._value.set(0)
+        prometheus.SUBSCRIPTIONS._metrics = {}
+        prometheus.RECEIVE_PUBLISH_SIZE._metrics = {}
+        prometheus.RECEIVE_PUBLISH_COUNT._metrics = {}
+
         authenticator = Authenticator({
             'test': {
                 'secret': 'secret',
