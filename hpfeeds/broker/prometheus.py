@@ -12,6 +12,29 @@ CLIENT_CONNECTIONS = Gauge(
     'Number of clients connected to broker',
 )
 
+CONNECTION_MADE = Counter(
+    'hpfeeds_broker_connection_made',
+    'Number of connections established',
+)
+
+CONNECTION_READY = Counter(
+    'hpfeeds_broker_connection_ready',
+    'Number of connections established + authenticated',
+    ['ident'],
+)
+
+CONNECTION_ERROR = Counter(
+    'hpfeeds_broker_connection_error',
+    'Number of connections that experienced a protocol error',
+    ['ident', 'category'],
+)
+
+CONNECTION_LOST = Counter(
+    'hpfeeds_broker_connection_lost',
+    'Number of connections lost',
+    ['ident'],
+)
+
 SUBSCRIPTIONS = Gauge(
     'hpfeeds_broker_subscriptions',
     'Number of subscriptions to a channel',
