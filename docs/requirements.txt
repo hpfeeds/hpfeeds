@@ -1,4 +1,2 @@
-aiohttp==3.2.1
-aiorun==2018.3.1
-prometheus-client==0.2.0
+pip>9.0.2
 sphinxcontrib-asyncio
