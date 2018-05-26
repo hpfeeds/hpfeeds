@@ -5,7 +5,7 @@ hpfeeds is a lightweight authenticated publish-subscribe protocol that supports 
 
 
 Key Features
-============
+------------
 
  * Async non-blocking asyncio-powered broker
  * Supports asyncio
@@ -16,7 +16,7 @@ Key Features
 
 
 Running a broker
-================
+----------------
 
 Every deployment of hpfeeds needs at least one broker. All messages are
 published to the broker and it passes it to the relevant subscribers.
@@ -28,7 +28,7 @@ broker.
 
 
 Library Installation
-====================
+--------------------
 
 .. code-block:: bash
 
@@ -43,7 +43,7 @@ dependencies:
 
 
 asyncio
-=======
+-------
 
 If you are using Python 3.6+ and starting a new project then asyncio might be
 the way to go. We ship a non blocking asyncio implementation of our hpfeeds out
@@ -53,7 +53,7 @@ of the box.
 
 
 Twisted
-=======
+-------
 
 Twisted is a python 2 and 3 compatible asynchronous networking framework. It's
 mature and takes a lot of pain out of building robust services. We ship a native
@@ -64,7 +64,7 @@ dependencies beyond Twisted itself.
 
 
 Synchronous client
-==================
+------------------
 
 The synchronous client is great for prototyping new subscribers and publishers.
 It has no external dependencies.
@@ -74,8 +74,9 @@ It has no external dependencies.
 
 .. _hpfeeds-source:
 
+
 Source code
-===========
+-----------
 
 The project is hosted on `GitHub <https://github.com/Jc2k/hpfeeds3>`_.
 
@@ -94,7 +95,7 @@ Continuous Integration.
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
