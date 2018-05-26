@@ -1,4 +1,4 @@
-aiohttp==3.1.2
+aiohttp==3.2.1
 aiorun==2018.3.1
 async-timeout==2.0.1
 attrs==17.4.0
