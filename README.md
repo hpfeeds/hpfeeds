@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/hpfeeds3.svg)](https://pypi.python.org/pypi/hpfeeds3)
 [![Codecov](https://img.shields.io/codecov/c/github/Jc2k/hpfeeds3.svg)](https://codecov.io/gh/Jc2k/hpfeeds3)
-[![Read the Docs](https://img.shields.io/readthedocs/hpfeeds3.svg)](https://hpfeeds3.readthedocs.org)
+[![Read the Docs](https://readthedocs.org/projects/hpfeeds3/badge/?version=latest)](https://hpfeeds3.readthedocs.io/en/latest/?badge=latest)
 
 ## About
 
