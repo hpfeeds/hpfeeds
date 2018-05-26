@@ -17,6 +17,11 @@ setup(
         hpfeeds = hpfeeds.scripts.cli:main
         hpfeeds-broker = hpfeeds.scripts.broker:main
     ''',
+    project_urls={
+        'Documentation': 'https://hpfeeds3.readthedocs.org/',
+        'Code': 'https://github.com/Jc2k/hpfeeds3',
+        'Issue tracker': 'https://github.com/Jc2k/hpfeeds3/issues',
+    },
     extra_require = {
         'test': [
             'flake8',
