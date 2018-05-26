@@ -17,11 +17,13 @@ Key Features
 Running a broker
 ================
 
-The simplest way to run a broker is with our official Docker image:
+Every deployment of hpfeeds needs at least one broker. All messages are
+published to the broker and it passes it to the relevant subscribers.
 
-.. code-block:: bash
+ * :doc:`broker`
 
-   $ docker run -p "0.0.0.0:20000:20000" -p "0.0.0.0:9431:9431" jc2k/hpfeeds3-broker:latest
+You may also be interested in Tentacool, a C++ implementation of a hpfeeds
+broker.
 
 
 Library Installation
@@ -39,8 +41,37 @@ dependencies:
    $ pip install hpfeeds3[broker]
 
 
-.. _hpfeeds-source:
+asyncio
+=======
 
+If you are using Python 3.6+ and starting a new project then asyncio might be
+the way to go. We ship a non blocking asyncio implementation of our hpfeeds out
+of the box.
+
+* :doc:`Client reference <asyncio_reference>`
+
+
+Twisted
+=======
+
+Twisted is a python 2 and 3 compatible asynchronous networking framework. It's
+mature and takes a lot of pain out of building robust services. We ship a native
+Twisted implementation of hpfeeds out of the box, with no additional
+dependencies beyond Twisted itself.
+
+* :doc:`Client reference <twisted_reference>`
+
+
+Synchronous client
+==================
+
+The synchronous client is great for prototyping new subscribers and publishers.
+It has no external dependencies.
+
+ * :doc:`Client reference <client_reference>`
+
+
+.. _hpfeeds-source:
 
 Source code
 ===========

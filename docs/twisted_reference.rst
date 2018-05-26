@@ -1,18 +1,18 @@
-.. _hpfeeds-asyncio-client-reference:
+.. _hpfeeds-twisted-client-reference:
 
 
 Client Reference
 ================
 
-.. module:: hpfeeds3.asyncio
-.. currentmodule:: hpfeeds3.asyncio
+.. module:: hpfeeds3.twisted
+.. currentmodule:: hpfeeds3.twisted
 
 
 Client Session
 --------------
 
-Client session is the recommended interface for subscribing and publish to a
-hpfeeds broker with asyncio.
+ClientSessionService is the recommended interface for subscribing and publish to
+a hpfeeds broker with Twisted.
 
 
 Usage example::
@@ -30,16 +30,14 @@ Usage example::
     loop.run_until_complete(main())
 
 
-.. class:: ClientSession(host, port, ident, secret)
+.. class:: ClientSessionService(endpoint, ident, secret)
 
    The class for creating client sessions and publish/subscribing.
 
    Instances of this class will automatically maintain a connection to the
    broker and try to reconnect if that connection fails.
 
-   :param str host: The broker to connect to.
-
-   :param str port: The port to connect to.
+   :param str endpoint: A Twisted endpoint describing the broker to connect to.
 
    :param str ident: The identity to authenticate with.
 
