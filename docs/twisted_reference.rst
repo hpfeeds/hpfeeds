@@ -17,17 +17,17 @@ a hpfeeds broker with Twisted.
 
 Usage example::
 
-    import asyncio
-    from hpfeeds.asyncio import ClientSession
+    from twisted.internet.defer import ensureDeferred
+    from twisted.internet.task import react
+    from hpfeeds.twisted import ClientSessionService
 
 
     async def main():
-        async with ClientSession('localhost', 20000, 'ident', 'secret') as client:
+        async with ClientSessionService('localhost', 20000, 'ident', 'secret') as client:
             client.publish('channel', b'{"data": "fefefefefefef"}')
 
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    react(ensureDeferred(main()))
 
 
 .. class:: ClientSessionService(endpoint, ident, secret)

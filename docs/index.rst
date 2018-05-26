@@ -1,7 +1,8 @@
 Welcome to hpfeeds3
 ===================
 
-hpfeeds client and server for Python.
+hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads. hpfeeds3 is a library containing python 2 +3 implementations, as well as asyncio and Twisted implementations. It also contains a modern asyncio powered broker.
+
 
 Key Features
 ============
@@ -76,7 +77,7 @@ It has no external dependencies.
 Source code
 ===========
 
-The project is hosted on GitHub_
+The project is hosted on `GitHub <https://github.com/Jc2k/hpfeeds3>`_.
 
 Please feel free to file an issue on the `bug tracker
 <https://github.com/Jc2k/hpfeeds3/issues>`_ if you have found a bug
