@@ -3,27 +3,24 @@ import logging
 import socket
 import unittest
 
-from twisted.internet import asyncioreactor
-
 from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
 from hpfeeds.twisted import ClientSessionService
 
+from .fakebroker import setup_asyncio_reactor
 
-class TestClientIntegration(unittest.TestCase):
+
+class TestClientIntegrationWithAioBroker(unittest.TestCase):
 
     log = logging.getLogger('hpfeeds.testserver')
 
-    @classmethod
-    def setUpClass(cls):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        asyncioreactor.install(eventloop=loop)
-        cls.loop = asyncio.get_event_loop()
-
     def setUp(self):
+        setup_asyncio_reactor(self)
+
         prometheus.reset()
+
+        self.loop = asyncio.get_event_loop()
 
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 0
