@@ -168,3 +168,24 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         # Again, we should test this directly after calling unsubscribe(), but no ability to wait
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0
+
+    def test_late_subscribe_and_publish_async_for(self):
+        async def inner():
+            server_future = asyncio.ensure_future(self.server.serve_forever())
+
+            async with ClientSession('127.0.0.1', self.port, 'test', 'secret') as client:
+                client.subscribe('test-chan')
+
+                client.publish('test-chan', b'test message')
+
+                async for ident, chan, payload in client:
+                    assert ident == 'test'
+                    assert chan == 'test-chan'
+                    assert payload == b'test message'
+                    break
+
+            server_future.cancel()
+            await server_future
+
+        asyncio.get_event_loop().run_until_complete(inner())
+        assert len(self.server.connections) == 0, 'Connection left dangling'
