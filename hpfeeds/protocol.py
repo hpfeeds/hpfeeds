@@ -27,12 +27,13 @@ SIZES = {
 }
 
 
-if sys.version_info[0] == 2:
-    binary_type = str
-    text_type = unicode
-else:
+if sys.version_info[0] == 3:
     binary_type = bytes
     text_type = str
+    unicode = str
+else:
+    binary_type = str
+    text_type = unicode
 
 
 def hashsecret(rand, secret):
