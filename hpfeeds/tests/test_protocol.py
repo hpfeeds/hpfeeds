@@ -67,7 +67,7 @@ class TestUnpacker(unittest.TestCase):
 
     def test_unpack_at_max_message_size_unicode_1(self):
         unpacker = Unpacker()
-        data = msgpublish(b'b', b'a', '\u2603'.encode('utf-8') * 349524)
+        data = msgpublish(b'b', b'a', u'\u2603'.encode('utf-8') * 349524)
         unpacker.feed(data)
         packets = list(iter(unpacker))
         assert len(unpacker.buf) == 0
@@ -77,7 +77,7 @@ class TestUnpacker(unittest.TestCase):
 
     def test_unpack_at_max_message_size_unicode_2(self):
         unpacker = Unpacker()
-        unpacker.feed(msgpublish(b'', b'', '\u001F'.encode('utf-8') * 1048574))
+        unpacker.feed(msgpublish(b'', b'', u'\u001F'.encode('utf-8') * 1048574))
         packets = list(iter(unpacker))
         assert len(unpacker.buf) == 0
         assert packets[0][0] == 3
