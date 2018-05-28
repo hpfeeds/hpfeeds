@@ -1,19 +1,22 @@
 import asyncio
-import logging
 import socket
 import unittest
+
+from twisted.internet import defer
 
 from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.server import Server
 from hpfeeds.twisted import ClientSessionService
 
-from .fakebroker import setup_asyncio_reactor
+from .fakebroker import (
+    FakeBroker,
+    setup_asyncio_reactor,
+    setup_default_reactor,
+)
 
 
 class TestClientIntegrationWithAioBroker(unittest.TestCase):
-
-    log = logging.getLogger('hpfeeds.testserver')
 
     def setUp(self):
         setup_asyncio_reactor(self)
@@ -43,10 +46,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
 
     def test_subscribe_and_publish(self):
         async def inner():
-            self.log.debug('Starting server')
+            print('Starting server')
             server_future = asyncio.ensure_future(self.server.serve_forever())
 
-            self.log.debug('Creating client service')
+            print('Creating client service')
             client = ClientSessionService(f'tcp:127.0.0.1:{self.port}', 'test', 'secret')
             client.subscribe('test-chan')
             client.startService()
@@ -57,10 +60,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 1
 
-            self.log.debug('Publishing test message')
+            print('Publishing test message')
             client.publish('test-chan', b'test message')
 
-            self.log.debug('Waiting for read()')
+            print('Waiting for read()')
             assert ('test', 'test-chan', b'test message') == await client.read().asFuture(self.loop)
 
             # We would test this after call to subscribe, but need to wait until sure server has processed command
@@ -70,10 +73,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
             # Test can only reliably assert this is the case after reading a message
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
 
-            self.log.debug('Stopping client')
+            print('Stopping client')
             await client.stopService().asFuture(self.loop)
 
-            self.log.debug('Stopping server')
+            print('Stopping server')
             server_future.cancel()
             await server_future
 
@@ -87,10 +90,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
 
     def test_late_subscribe_and_publish(self):
         async def inner():
-            self.log.debug('Starting server')
+            print('Starting server')
             server_future = asyncio.ensure_future(self.server.serve_forever())
 
-            self.log.debug('Creating client service')
+            print('Creating client service')
             client = ClientSessionService(f'tcp:127.0.0.1:{self.port}', 'test', 'secret')
             client.startService()
 
@@ -103,10 +106,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
             # Subscribe to a new thing after connection is up
             client.subscribe('test-chan')
 
-            self.log.debug('Publishing test message')
+            print('Publishing test message')
             client.publish('test-chan', b'test message')
 
-            self.log.debug('Waiting for read()')
+            print('Waiting for read()')
             assert ('test', 'test-chan', b'test message') == await client.read().asFuture(self.loop)
 
             # We would test this after call to subscribe, but need to wait until sure server has processed command
@@ -119,10 +122,10 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
             # Test can only reliably assert this is the case after reading a message
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
 
-            self.log.debug('Stopping client')
+            print('Stopping client')
             await client.stopService().asFuture(self.loop)
 
-            self.log.debug('Stopping server')
+            print('Stopping server')
             server_future.cancel()
             await server_future
 
@@ -133,3 +136,81 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
 
         # Again, we should test this directly after calling unsubscribe(), but no ability to wait
         assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0
+
+
+class TestClientNativeTwisted(unittest.TestCase):
+
+    def setUp(self):
+        self.reactor = setup_default_reactor(self)
+
+        self.server = FakeBroker()
+        self.server.start()
+
+    def test_subscribe_and_publish_coroutine(self):
+        async def inner(reactor):
+            print('Creating client service')
+            client = ClientSessionService(f'tcp:127.0.0.1:{self.server.port}', 'test', 'secret')
+            client.subscribe('test-chan')
+
+            print('Starting client service')
+            client.startService()
+
+            # Wait till client connected
+            print('Waiting to be connected')
+            await client.whenConnected
+
+            print('Publishing test message')
+            client.publish('test-chan', b'test message')
+
+            print('Waiting for read()')
+            assert ('test', 'test-chan', b'test message') == client.read()
+
+            print('Stopping client')
+            await client.stopService()
+
+            print('Stopping server for reals')
+            await self.server.close()
+
+        defer.ensureDeferred(inner(self.reactor)).addBoth(lambda *x: self.reactor.stop())
+        self.reactor.run()
+
+    def test_subscribe_and_publish_with(self):
+        async def inner(reactor):
+            print('Creating client service')
+            async with ClientSessionService(f'tcp:127.0.0.1:{self.server.port}', 'test', 'secret') as client:
+                client.subscribe('test-chan')
+
+                print('Publishing test message')
+                client.publish('test-chan', b'test message')
+
+                print('Waiting for read()')
+                assert ('test', 'test-chan', b'test message') == client.read()
+
+            print('Stopping server for reals')
+            await self.server.close()
+
+        defer.ensureDeferred(inner(self.reactor)).addBoth(lambda *x: self.reactor.stop())
+        self.reactor.run()
+
+    def test_subscribe_and_publish_async_for(self):
+        async def inner(reactor):
+            print('Creating client service')
+            async with ClientSessionService(f'tcp:127.0.0.1:{self.server.port}', 'test', 'secret') as client:
+                client.subscribe('test-chan')
+
+                print('Publishing test message')
+                client.publish('test-chan', b'test message')
+
+                print('Testing async-for')
+                async for ident, channel, payload in client:
+                    assert ident == 'test'
+                    assert channel == 'test-chan'
+                    assert payload == b'test message'
+
+                    client.stopService()
+
+                print('Wait for server to stop')
+                await self.server.close()
+
+        defer.ensureDeferred(inner(self.reactor)).addBoth(lambda *x: self.reactor.stop())
+        self.reactor.run()
