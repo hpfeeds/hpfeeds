@@ -1,7 +1,8 @@
 import unittest
-from unittest import mock
 
 from hpfeeds.twisted import BaseProtocol, ClientProtocol
+
+from .utils import mock
 
 
 class TestTwistedBaseProtocol(unittest.TestCase):

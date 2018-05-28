@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import logging
 import unittest
 
@@ -22,7 +24,8 @@ class TestClientIntegration(unittest.TestCase):
         @defer.inlineCallbacks
         def inner(reactor):
             self.log.debug('Creating client service')
-            client = ClientSessionService(f'tcp:127.0.0.1:{self.server.port}', 'test', 'secret')
+            endpoint = 'tcp:127.0.0.1:{}'.format(self.server.port)
+            client = ClientSessionService(endpoint, 'test', 'secret')
             client.subscribe('test-chan')
 
             self.log.debug('Starting client service')

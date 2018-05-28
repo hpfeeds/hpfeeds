@@ -1,8 +1,9 @@
 import os
 import unittest
-from unittest import mock
 
 from hpfeeds.broker.auth.env import Authenticator
+
+from .utils import mock
 
 
 class TestAuthenticator(unittest.TestCase):

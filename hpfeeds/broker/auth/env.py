@@ -2,7 +2,10 @@ import os
 
 
 def get_key(ident, value, default=None):
-    return os.environ.get(f'HPFEEDS_{ident.upper()}_{value.upper()}', default=default)
+    ident = ident.upper()
+    value = value.upper()
+    key = '_'.join(('HPFEEDS', ident, value))
+    return os.environ.get(key, default)
 
 
 class Authenticator(object):

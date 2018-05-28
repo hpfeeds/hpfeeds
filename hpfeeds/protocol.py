@@ -4,6 +4,7 @@
 
 import hashlib
 import struct
+import sys
 
 from .exceptions import MessageTooBig, ProtocolException
 
@@ -26,21 +27,33 @@ SIZES = {
 }
 
 
+if sys.version_info[0] == 2:
+    binary_type = str
+    text_type = unicode
+else:
+    binary_type = bytes
+    text_type = str
+
+
 def hashsecret(rand, secret):
     return hashlib.sha1(bytes(rand) + secret.encode('utf-8')).digest()
 
 
 def force_bytes(value):
-    if isinstance(value, str):
+    if isinstance(value, text_type):
         return value.encode('utf-8')
     return value
 
 
 def force_str(value):
+    if isinstance(value, str):
+        return value
     if isinstance(value, bytearray):
         value = bytes(value)
-    if isinstance(value, bytes):
+    if isinstance(value, binary_type):
         return value.decode('utf-8')
+    if isinstance(value, text_type):
+        return value.encode('utf-8')
     return value
 
 
