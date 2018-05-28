@@ -1,6 +1,6 @@
-aiohttp==3.2.1
-aiorun==2018.3.1
-async-timeout==2.0.1
+aiohttp==3.2.1; python_version > '3.5'
+aiorun==2018.3.1; python_version > '3.5'
+async-timeout==2.0.1; python_version > '3.5'
 attrs==17.4.0
 chardet==3.0.4
 idna==2.6

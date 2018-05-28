@@ -1,5 +1,6 @@
 language: python
 python:
+  - "2.7"
   - "3.6"
 
 sudo: false
@@ -12,7 +13,7 @@ install:
 
 script:
   - py.test --cov=. hpfeeds
-  - flake8 hpfeeds
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then flake8 hpfeeds; fi
 
 after_success:
   - codecov

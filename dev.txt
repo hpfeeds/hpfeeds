@@ -1,4 +1,4 @@
-aiomock==0.1.0
+aiomock==0.1.0; python_version > '3.5'
 certifi==2018.1.18
 codecov==2.0.15
 coverage==4.5.1
