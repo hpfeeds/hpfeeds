@@ -118,12 +118,12 @@ class ClientSessionService(MultiService):
         @asyncio.coroutine
         def __aenter__(self):
             self.startService()
-            yield from self.whenConnected
+            yield self.whenConnected
             return self
 
         @asyncio.coroutine
         def __aexit__(self, exc_type, exc_val, exc_tb):
-            yield from self.stopService()
+            yield self.stopService()
 
         @asyncio.coroutine
         def __aiter__(self):
@@ -133,5 +133,5 @@ class ClientSessionService(MultiService):
         def __anext__(self):
             if not self.running:
                 raise StopAsyncIteration()
-            message = yield from self.read()
+            message = yield self.read()
             return message
