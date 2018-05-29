@@ -116,20 +116,24 @@ class ClientSessionService(MultiService):
         import asyncio
 
         @asyncio.coroutine
+        @defer.inlineCallbacks
         def __aenter__(self):
             self.startService()
             yield self.whenConnected
             return self
 
         @asyncio.coroutine
+        @defer.inlineCallbacks
         def __aexit__(self, exc_type, exc_val, exc_tb):
             yield self.stopService()
 
         @asyncio.coroutine
+        @defer.inlineCallbacks
         def __aiter__(self):
             return self
 
         @asyncio.coroutine
+        @defer.inlineCallbacks
         def __anext__(self):
             if not self.running:
                 raise StopAsyncIteration()
