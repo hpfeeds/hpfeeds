@@ -74,6 +74,27 @@ Usage example::
      Unsubscribe from the named channel.
 
 
+Writing a simple subscriber for asyncio
+---------------------------------------
+
+You can just async for over your client to read from the broker forever::
+
+    import asyncio
+    from hpfeeds.asyncio import ClientSession
+
+
+    async def main():
+        async with ClientSession('localhost', 20000, 'ident', 'secret') as client:
+            client.subscribe('channel')
+
+            async for ident, channel, payload in client:
+                print(payload)
+
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+
 Using hpfeeds with aiostream
 ----------------------------
 

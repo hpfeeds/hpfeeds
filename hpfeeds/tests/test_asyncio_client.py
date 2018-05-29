@@ -189,3 +189,23 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         asyncio.get_event_loop().run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+
+    def test_late_subscribe_and_publish_for_async_iter(self):
+        async def inner():
+            server_future = asyncio.ensure_future(self.server.serve_forever())
+
+            async def example_iter():
+                yield b'test message'
+
+            async with ClientSession('127.0.0.1', self.port, 'test', 'secret') as client:
+                client.subscribe('test-chan')
+
+                await client.publish_async_iterable('test-chan', example_iter())
+
+                assert ('test', 'test-chan', b'test message') == await client.read()
+
+            server_future.cancel()
+            await server_future
+
+        asyncio.get_event_loop().run_until_complete(inner())
+        assert len(self.server.connections) == 0, 'Connection left dangling'

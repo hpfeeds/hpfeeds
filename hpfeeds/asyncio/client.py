@@ -108,6 +108,10 @@ class ClientSession(object):
         if self.protocol:
             self.protocol.publish(self.ident, chan, payload)
 
+    async def publish_async_iterable(self, channel, async_iterator):
+        async for payload in async_iterator:
+            self.publish(channel, payload)
+
     def subscribe(self, topic):
         if topic not in self.subscriptions:
             self.subscriptions.add(topic)
