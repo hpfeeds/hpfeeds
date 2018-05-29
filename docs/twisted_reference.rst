@@ -14,29 +14,6 @@ Client Session
 ClientSessionService is the recommended interface for subscribing and publish to
 a hpfeeds broker with Twisted.
 
-
-Usage example::
-
-    from twisted.internet.defer import ensureDeferred
-    from twisted.internet.task import react
-    from hpfeeds.twisted import ClientSessionService
-
-
-    @defer.inlineCallbacks
-    def main():
-        service = ClientSessionService('localhost', 20000, 'ident', 'secret') as client:
-        service.startService()
-        yield service.whenConnected
-
-        service.publish('channel', b'{"data": "fefefefefefef"}')
-
-        yield service.stopService()
-
-    react(ensureDeferred(main()))
-
-See below for an example of how Python 3 syntax sugar makes much much nicer.
-
-
 .. class:: ClientSessionService(endpoint, ident, secret)
 
    :param str endpoint: A Twisted endpoint describing the broker to connect to.
@@ -53,7 +30,7 @@ See below for an example of how Python 3 syntax sugar makes much much nicer.
   .. method:: read()
 
       Retrieve a single message from the broker.
-      
+
       :return: A `Deferred` that fires on delivery of a message by the broker.
       :rtype: twisted.internet.defer.Deferred
 
@@ -76,62 +53,3 @@ See below for an example of how Python 3 syntax sugar makes much much nicer.
      :param str channel: The channel to subscribe to.
 
      Unsubscribe from the named channel.
-
-
-Writing a simple subscriber
----------------------------
-
-You can just async for over your client to read from the broker forever::
-
-   import asyncio
-   from hpfeeds.asyncio import ClientSession
-
-
-   async def main():
-       async with ClientSession('localhost', 20000, 'ident', 'secret') as client:
-           client.subscribe('channel')
-
-           async for ident, channel, payload in client:
-               print(payload)
-
-
-   loop = asyncio.get_event_loop()
-   loop.run_until_complete(main())
-
-
-Twisted and Python 3
---------------------
-
-If your Python is new enough you can take advantage of coroutines with this
-client.
-
-For example publishing to a broker is now simply::
-
-    from twisted.internet.defer import ensureDeferred
-    from twisted.internet.task import react
-    from hpfeeds.twisted import ClientSessionService
-
-
-    async def main():
-        async with ClientSessionService('localhost', 20000, 'ident', 'secret') as client:
-            client.publish('channel', b'{"data": "fefefefefefef"}')
-
-
-    react(ensureDeferred(main()))
-
-And a simple subscriber now looks like this::
-
-    from twisted.internet.defer import ensureDeferred
-    from twisted.internet.task import react
-    from hpfeeds.twisted import ClientSessionService
-
-
-    async def main():
-        async with ClientSessionService('localhost', 20000, 'ident', 'secret') as client:
-            client.subscribe('channel')
-
-            async for ident, chan, payload in client:
-                print(payload)
-
-
-    react(ensureDeferred(main()))
