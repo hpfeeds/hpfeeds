@@ -55,7 +55,7 @@ Publishing events from an asynchronous iterator
 -----------------------------------------------
 
 You can now construct asynchronous generators in Python 3, and then have
-hpfeeds3 publish directly from the iterator.
+hpfeeds3 publish directly from the iterator::
 
     import asyncio
 
