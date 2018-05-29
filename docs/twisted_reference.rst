@@ -39,24 +39,23 @@ See below for an example of how Python 3 syntax sugar makes much much nicer.
 
 .. class:: ClientSessionService(endpoint, ident, secret)
 
-   The class for creating client sessions and publish/subscribing.
-
-   Instances of this class will automatically maintain a connection to the
-   broker and try to reconnect if that connection fails.
-
    :param str endpoint: A Twisted endpoint describing the broker to connect to.
 
    :param str ident: The identity to authenticate with.
 
    :param str secret: The secret to authenticate with.
 
+   The class for creating client sessions and publish/subscribing.
 
-   .. comethod:: read()
+   Instances of this class will automatically maintain a connection to the
+   broker and try to reconnect if that connection fails.
 
-      :coroutine:
+  .. method:: read()
 
-      Returns a message received by the broker. It's future will not fire until
-      a message is available.
+      Retrieve a single message from the broker.
+      
+      :return: A `Deferred` that fires on delivery of a message by the broker.
+      :rtype: twisted.internet.defer.Deferred
 
   .. method:: publish(channel, payload)
 
