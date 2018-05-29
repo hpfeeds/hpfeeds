@@ -15,6 +15,7 @@ Blocking client
 A simple blocking client that handles reconnecting and authentication.
 Compatible with Python 2.7 and alter.
 
+ * :doc:`Quick Start <client_quickstart>`
  * :doc:`Client reference <client_reference>`
 
 
