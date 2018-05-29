@@ -120,7 +120,7 @@ class ClientSessionService(MultiService):
         def __aenter__(self):
             self.startService()
             yield self.whenConnected
-            return self
+            defer.returnValue(self)
 
         @asyncio.coroutine
         @defer.inlineCallbacks
@@ -130,7 +130,7 @@ class ClientSessionService(MultiService):
         @asyncio.coroutine
         @defer.inlineCallbacks
         def __aiter__(self):
-            return self
+            defer.returnValue(self)
 
         @asyncio.coroutine
         @defer.inlineCallbacks
@@ -138,4 +138,4 @@ class ClientSessionService(MultiService):
             if not self.running:
                 raise StopAsyncIteration()
             message = yield self.read()
-            return message
+            defer.returnValue(message)
