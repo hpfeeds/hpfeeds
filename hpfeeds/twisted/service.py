@@ -1,3 +1,5 @@
+import sys
+
 from twisted.application.internet import ClientService
 from twisted.application.service import MultiService
 from twisted.internet import defer
@@ -110,19 +112,26 @@ class ClientSessionService(MultiService):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    async def __aenter__(self):
-        self.startService()
-        await self.whenConnected
-        return self
+    if sys.version_info[0] > 2:
+        import asyncio
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.stopService()
+        @asyncio.coroutine
+        def __aenter__(self):
+            self.startService()
+            yield from self.whenConnected
+            return self
 
-    async def __aiter__(self):
-        return self
+        @asyncio.coroutine
+        def __aexit__(self, exc_type, exc_val, exc_tb):
+            yield from self.stopService()
 
-    async def __anext__(self):
-        if not self.running:
-            raise StopAsyncIteration()
-        message = await self.read()
-        return message
+        @asyncio.coroutine
+        def __aiter__(self):
+            return self
+
+        @asyncio.coroutine
+        def __anext__(self):
+            if not self.running:
+                raise StopAsyncIteration()
+            message = yield from self.read()
+            return message
