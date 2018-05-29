@@ -46,6 +46,18 @@ And stop it with
 
    $ docker-compose down
 
+You can also install the python package directly:
+
+.. code-block:: bash
+
+   $ pip install hpfeeds3[broker]
+
+You can then run it in the foreground with:
+
+.. code-block:: bash
+
+   $ hpfeeds-broker --bind 0.0.0.0:10000 --name mybroker
+
 
 Authentication
 ==============

@@ -1,18 +1,9 @@
 Welcome to hpfeeds3
 ===================
 
-hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads. hpfeeds3 is a library containing python 2 +3 implementations, as well as asyncio and Twisted implementations. It also contains a modern asyncio powered broker.
+hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads. It is designed to be simple to implement and thus programming language agnostic. hpfeeds3 is a library containing python 2 +3 implementations, as well as asyncio and Twisted implementations. 
 
-
-Key Features
-------------
-
- * Async non-blocking asyncio-powered broker
- * Supports asyncio
- * Supports Twisted
-
-
-.. _hpfeeds-installation:
+It also contains a modern asyncio powered broker with integrated Prometheus monitoring.
 
 
 Running a broker
@@ -27,52 +18,31 @@ You may also be interested in Tentacool, a C++ implementation of a hpfeeds
 broker.
 
 
-Library Installation
---------------------
+Command line client
+-------------------
 
-.. code-block:: bash
-
-   $ pip install hpfeeds3
-
-If you are planning to install a broker you can install the extra broker
-dependencies:
-
-.. code-block:: bash
-
-   $ pip install hpfeeds3[broker]
+We ship with a simple command line that can subscribe to a broker or publish it.
+See :doc:`command line reference <cli>`.
 
 
-asyncio
--------
+Implementor guidelines
+----------------------
 
-If you are using Python 3.6+ and starting a new project then asyncio might be
-the way to go. We ship a non blocking asyncio implementation of our hpfeeds out
-of the box.
-
-* :doc:`Client reference <asyncio_reference>`
+If you are adding hpfeeds to a project we've collected together a few tips :doc:`here <implementors>`.
 
 
-Twisted
--------
+Client reference
+----------------
 
-Twisted is a python 2 and 3 compatible asynchronous networking framework. It's
-mature and takes a lot of pain out of building robust services. We ship a native
-Twisted implementation of hpfeeds out of the box, with no additional
-dependencies beyond Twisted itself.
-
-* :doc:`Client reference <twisted_reference>`
+If you want to use hpfeeds with Python then see our :doc:`client reference guides <clients>`.
 
 
-Synchronous client
-------------------
+Developers
+----------
 
-The synchronous client is great for prototyping new subscribers and publishers.
-It has no external dependencies.
-
- * :doc:`Client reference <client_reference>`
-
-
-.. _hpfeeds-source:
+If you want to add hpfeeds to a non-Python application or you want to understand
+what is happening underneath this library you may be interested in the
+:doc:`Protocol reference <protocol>`.
 
 
 Source code
