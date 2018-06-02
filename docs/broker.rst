@@ -142,6 +142,44 @@ You can set these variables in your `docker-compose.yml`:
         - "0.0.0.0:10000:10000"
 
 
+TLS Authentication
+==================
+
+You can use a self-signed certificate:
+
+.. code-block:: bash
+
+    $ openssl req -x509 -newkey rsa:2048 -keyout broker.key -nodes \
+        -out broker.crt -sha256 -days 1000
+
+You can start the broker using this cert with::
+
+    $  hpfeeds-broker --bind=0.0.0.0:10000 --tlskey=broker.key --tlscert=broker.crt
+
+Or if using docker-compose::
+
+.. code-block:: yaml
+
+   version: '2.1'
+
+   volumes:
+     hpfeeds_userdb: {}
+
+   services:
+     hpfeeds:
+       image: jc2k/hpfeeds3-broker
+       container_name: hpfeeds
+       ports:
+        - "0.0.0.0:10000:10000"
+       volumes:
+        - hpfeeds_data:/app/var
+       command:
+        - '/app/bin/hpfeeds-broker'
+        - '--bind=0.0.0.0:10000'
+        - '--tlskey=broker.key'
+        - '--tlscert=broker.crt'
+
+
 Monitoring
 ==========
 
