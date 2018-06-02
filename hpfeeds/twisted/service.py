@@ -67,7 +67,14 @@ class ClientSessionService(MultiService):
         self.protocol = None
 
         from twisted.internet import reactor
-        self.client_endpoint = clientFromString(reactor, endpoint)
+
+        if isinstance(endpoint, str):
+            self.client_endpoint = clientFromString(reactor, endpoint)
+        elif hasattr(endpoint, 'connect'):
+            self.client_endpoint = endpoint
+        else:
+            raise ValueError('endpoint must be a str or implement IStreamClientEndpoint')
+
         self.client_factory = ClientFactory.forProtocol(_Protocol, ident, secret)
         self.client_factory.service = self
 
