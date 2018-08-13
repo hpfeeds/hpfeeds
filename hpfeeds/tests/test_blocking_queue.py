@@ -1,10 +1,7 @@
-import os
 import select
 import unittest
 
 from hpfeeds.blocking.queue import Queue
-
-from .utils import mock
 
 
 class TestQueuePollable(unittest.TestCase):
