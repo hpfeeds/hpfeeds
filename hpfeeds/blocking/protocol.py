@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from hpfeeds.exceptions import ProtocolException
 from hpfeeds.protocol import (
     OP_AUTH,

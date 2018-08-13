@@ -1,7 +1,8 @@
 import unittest
-from unittest import mock
 
 from hpfeeds.blocking.protocol import BaseProtocol, ClientProtocol
+
+from .utils import mock
 
 
 class TestBaseProtocol(unittest.TestCase):
