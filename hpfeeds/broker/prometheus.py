@@ -35,6 +35,18 @@ CONNECTION_LOST = Counter(
     ['ident'],
 )
 
+CLIENT_SEND_BUFFER_SIZE = Gauge(
+    'hpfeeds_broker_connection_send_buffer_size',
+    'Number of bytes queued for transmission',
+    ['ident'],
+)
+
+CLIENT_RECEIVE_BUFFER_SIZE = Gauge(
+    'hpfeeds_broker_connection_receive_buffer_size',
+    'Number of bytes received but not yet parsed',
+    ['ident'],
+)
+
 SUBSCRIPTIONS = Gauge(
     'hpfeeds_broker_subscriptions',
     'Number of subscriptions to a channel',
@@ -66,7 +78,25 @@ def reset():
     CONNECTION_READY._metrics = {}
 
 
+def collect_metrics(broker):
+    CLIENT_SEND_BUFFER_SIZE._metrics = {}
+    CLIENT_RECEIVE_BUFFER_SIZE._metrics = {}
+
+    send_buffer_size = {}
+    receive_buffer_size = {}
+    for conn in broker.connections:
+        if not conn.ak:
+            continue
+        send_buffer_size[conn.ak] = send_buffer_size.get(conn.ak, 0) + conn.transport.get_write_buffer_size()
+        receive_buffer_size[conn.ak] = receive_buffer_size.get(conn.ak, 0) + len(conn.unpacker.buf)
+
+    for ak in send_buffer_size.keys():
+        CLIENT_SEND_BUFFER_SIZE.labels(ak).set(send_buffer_size[ak])
+        CLIENT_RECEIVE_BUFFER_SIZE.labels(ak).set(receive_buffer_size[ak])
+
+
 async def metrics(request):
+    collect_metrics(request.app.broker)
     data = generate_latest(REGISTRY)
     return web.Response(text=data.decode('utf-8'), content_type='text/plain', charset='utf-8')
 

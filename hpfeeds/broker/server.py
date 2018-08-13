@@ -31,6 +31,8 @@ class Server(object):
         self.connections = set()
         self.subscriptions = collections.defaultdict(list)
 
+        self.when_started = asyncio.Future()
+
     def _parse_endpoint(self, endpoint):
         if not endpoint:
             return (None, None)
@@ -75,6 +77,7 @@ class Server(object):
 
         if self.exporter:
             metrics_server = await start_metrics_server(*self.exporter)
+            metrics_server.app.broker = self
 
         server = await asyncio.get_event_loop().create_server(
             lambda: Connection(self),
@@ -83,6 +86,8 @@ class Server(object):
             sock=self.sock,
             ssl=self.ssl,
         )
+
+        self.when_started.set_result(None)
 
         try:
             while True:
