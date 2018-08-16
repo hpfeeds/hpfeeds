@@ -64,6 +64,9 @@ class TestAsyncioClientIntegration(unittest.TestCase):
             self.log.debug('Stopping client')
             await client.close()
 
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_send_buffer_fill', {'ident': 'test'}) == 12
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_send_buffer_drain', {'ident': 'test'}) == 32
+
             self.log.debug('Stopping server')
             server_future.cancel()
             await server_future

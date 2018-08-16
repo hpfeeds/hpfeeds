@@ -6,11 +6,15 @@ import os
 import socket
 import sys
 
+import wrapt
+
 from hpfeeds.asyncio.protocol import BaseProtocol
 from hpfeeds.protocol import OP_AUTH, hashsecret
 
 from .prometheus import (
     CLIENT_CONNECTIONS,
+    CLIENT_RECEIVE_BUFFER_FILL,
+    CLIENT_SEND_BUFFER_DRAIN,
     CONNECTION_ERROR,
     CONNECTION_LOST,
     CONNECTION_MADE,
@@ -18,6 +22,18 @@ from .prometheus import (
 )
 
 log = logging.getLogger('hpfeeds.broker.connection')
+
+
+class MeteredSocket(wrapt.ObjectProxy):
+
+    def __init__(self, sock, ak):
+        super().__init__(sock)
+        self._self_ak = ak
+
+    def send(self, buffer):
+        n = self.__wrapped__.send(buffer)
+        CLIENT_SEND_BUFFER_DRAIN.labels(self._self_ak).inc(n)
+        return n
 
 
 class Connection(BaseProtocol):
@@ -77,6 +93,11 @@ class Connection(BaseProtocol):
             f'<Connection ident={ident} owner={owner} peer={peer} port={port}'
         )
 
+    def data_received(self, data):
+        if self.ak:
+            CLIENT_RECEIVE_BUFFER_FILL.labels(self.ak).inc(len(data))
+        return super().data_received(data)
+
     def message_received(self, opcode, message):
         if not self.uid and opcode != OP_AUTH:
             CONNECTION_ERROR.labels('', 'invalid-first-message').inc()
@@ -105,6 +126,8 @@ class Connection(BaseProtocol):
         self.uid = akrow["owner"]
         self.pubchans = akrow.get("pubchans", [])
         self.subchans = akrow.get("subchans", [])
+
+        self.transport._sock = MeteredSocket(self.transport._sock, self.ak)
 
         CONNECTION_READY.labels(ident).inc()
 

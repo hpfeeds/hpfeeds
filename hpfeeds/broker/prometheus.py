@@ -47,6 +47,24 @@ CLIENT_RECEIVE_BUFFER_SIZE = Gauge(
     ['ident'],
 )
 
+CLIENT_RECEIVE_BUFFER_FILL = Counter(
+    'hpfeeds_broker_connection_receive_buffer_fill',
+    'Number of bytes queued in the parsing buffer',
+    ['ident'],
+)
+
+CLIENT_SEND_BUFFER_FILL = Counter(
+    'hpfeeds_broker_connection_send_buffer_fill',
+    'Number of bytes queued in the send buffer',
+    ['ident'],
+)
+
+CLIENT_SEND_BUFFER_DRAIN = Counter(
+    'hpfeeds_broker_connection_send_buffer_drain',
+    'Number of bytes drained from the send buffer and sent',
+    ['ident'],
+)
+
 SUBSCRIPTIONS = Gauge(
     'hpfeeds_broker_subscriptions',
     'Number of subscriptions to a channel',
@@ -63,6 +81,7 @@ RECEIVE_PUBLISH_SIZE = Histogram(
     'hpfeeds_broker_receive_publish_size',
     'Sizes of messages received by broker for a channel',
     ['ident', 'chan'],
+    buckets=[1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304],
 )
 
 
@@ -72,6 +91,9 @@ def reset():
     SUBSCRIPTIONS._metrics = {}
     RECEIVE_PUBLISH_SIZE._metrics = {}
     RECEIVE_PUBLISH_COUNT._metrics = {}
+    CLIENT_RECEIVE_BUFFER_FILL._metrics = {}
+    CLIENT_SEND_BUFFER_FILL._metrics = {}
+    CLIENT_SEND_BUFFER_DRAIN._metrics = {}
     CONNECTION_ERROR._metrics = {}
     CONNECTION_LOST._metrics = {}
     CONNECTION_MADE._value.set(0)

@@ -7,6 +7,7 @@ import logging
 
 from .connection import Connection
 from .prometheus import (
+    CLIENT_SEND_BUFFER_FILL,
     RECEIVE_PUBLISH_COUNT,
     RECEIVE_PUBLISH_SIZE,
     SUBSCRIPTIONS,
@@ -52,6 +53,7 @@ class Server(object):
         RECEIVE_PUBLISH_SIZE.labels(source.ak, chan).observe(len(data))
 
         for dest in self.subscriptions[chan]:
+            CLIENT_SEND_BUFFER_FILL.labels(dest.ak).inc(len(data))
             dest.publish(source.ak, chan, data)
 
     def subscribe(self, source, chan):

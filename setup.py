@@ -34,6 +34,7 @@ setup(
             'aiorun',
             'aiohttp',
             'prometheus_client',
+            'wrapt',
         ],
     },
 )
