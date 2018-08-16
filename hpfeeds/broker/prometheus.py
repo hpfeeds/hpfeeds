@@ -65,6 +65,18 @@ CLIENT_SEND_BUFFER_DRAIN = Counter(
     ['ident'],
 )
 
+CLIENT_SEND_BUFFER_DEADLINE_START = Counter(
+    'hpfeeds_broker_connection_send_buffer_deadline_start',
+    'High watermark was exceeded and this connection was put on a deadline timer',
+    ['ident'],
+)
+
+CLIENT_SEND_BUFFER_DEADLINE_RECOVER = Counter(
+    'hpfeeds_broker_connection_send_buffer_deadline_recover',
+    'Buffer recovered to low watermark or better and deadline timer was cancelled',
+    ['ident'],
+)
+
 SUBSCRIPTIONS = Gauge(
     'hpfeeds_broker_subscriptions',
     'Number of subscriptions to a channel',

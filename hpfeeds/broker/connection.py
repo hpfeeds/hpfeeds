@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
+import asyncio
 import logging
 import os
 import socket
@@ -9,11 +10,13 @@ import sys
 import wrapt
 
 from hpfeeds.asyncio.protocol import BaseProtocol
-from hpfeeds.protocol import OP_AUTH, hashsecret
+from hpfeeds.protocol import OP_AUTH, OP_PUBLISH, SIZES, hashsecret
 
 from .prometheus import (
     CLIENT_CONNECTIONS,
     CLIENT_RECEIVE_BUFFER_FILL,
+    CLIENT_SEND_BUFFER_DEADLINE_RECOVER,
+    CLIENT_SEND_BUFFER_DEADLINE_START,
     CLIENT_SEND_BUFFER_DRAIN,
     CONNECTION_ERROR,
     CONNECTION_LOST,
@@ -50,7 +53,25 @@ class Connection(BaseProtocol):
 
         self.authrand = os.urandom(4)
 
+        self._deadline_timer = None
+
         super().__init__()
+
+    def pause_writing(self):
+        async def deadline_timer():
+            await asyncio.sleep(60)
+            CONNECTION_ERROR.labels(self.ak, 'deadline-timer-expired').inc()
+            self.error("Backpressure deadline timer expired")
+            self.transport.close()
+
+        CLIENT_SEND_BUFFER_DEADLINE_START.labels(self.ak).inc()
+        self._deadline_timer = asyncio.ensure_future(deadline_timer())
+
+    def resume_writing(self):
+        if self._deadline_timer:
+            CLIENT_SEND_BUFFER_DEADLINE_RECOVER.labels(self.ak).inc()
+            self._deadline_timer.cancel()
+            self._deadline_timer = None
 
     def connection_made(self, transport):
         CLIENT_CONNECTIONS.inc()
@@ -128,6 +149,9 @@ class Connection(BaseProtocol):
         self.subchans = akrow.get("subchans", [])
 
         self.transport._sock = MeteredSocket(self.transport._sock, self.ak)
+
+        high = SIZES[OP_PUBLISH] * 50
+        self.transport.set_write_buffer_limits(high=high)
 
         CONNECTION_READY.labels(ident).inc()
 
