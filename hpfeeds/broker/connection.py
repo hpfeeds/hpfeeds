@@ -148,7 +148,8 @@ class Connection(BaseProtocol):
         self.pubchans = akrow.get("pubchans", [])
         self.subchans = akrow.get("subchans", [])
 
-        self.transport._sock = MeteredSocket(self.transport._sock, self.ak)
+        if hasattr(self.transport, '_sock'):
+            self.transport._sock = MeteredSocket(self.transport._sock, self.ak)
 
         high = SIZES[OP_PUBLISH] * 50
         self.transport.set_write_buffer_limits(high=high)
