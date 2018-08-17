@@ -63,11 +63,12 @@ class ClientSession(object):
 
     log = logging.getLogger('hpfeeds.asyncio.client')
 
-    def __init__(self, host, port, ident, secret):
+    def __init__(self, host, port, ident, secret, ssl=None):
         self.host = host
         self.port = port
         self.ident = ident
         self.secret = secret
+        self.ssl = ssl
 
         self.read_queue = asyncio.Queue()
         self.subscriptions = set()
@@ -84,6 +85,7 @@ class ClientSession(object):
                     lambda: _Protocol(self),
                     self.host,
                     self.port,
+                    ssl=self.ssl,
                 )
                 return client
             except OSError as e:

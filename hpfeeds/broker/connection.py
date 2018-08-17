@@ -39,6 +39,18 @@ class MeteredSocket(wrapt.ObjectProxy):
         return n
 
 
+class MeteredSSLObject(wrapt.ObjectProxy):
+
+    def __init__(self, sock, ak):
+        super().__init__(sock)
+        self._self_ak = ak
+
+    def write(self, buffer):
+        n = self.__wrapped__.write(buffer)
+        CLIENT_SEND_BUFFER_DRAIN.labels(self._self_ak).inc(n)
+        return n
+
+
 class Connection(BaseProtocol):
 
     def __init__(self, server):
@@ -150,6 +162,8 @@ class Connection(BaseProtocol):
 
         if hasattr(self.transport, '_sock'):
             self.transport._sock = MeteredSocket(self.transport._sock, self.ak)
+        elif hasattr(self.transport, '_ssl_protocol'):
+            self.transport._ssl_protocol._sslpipe._sslobj = MeteredSSLObject(self.transport._ssl_protocol._sslpipe._sslobj, self.ak)
 
         high = SIZES[OP_PUBLISH] * 50
         self.transport.set_write_buffer_limits(high=high)
