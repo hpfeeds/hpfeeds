@@ -2,7 +2,14 @@ language: python
 python:
   - "2.7"
   - "3.6"
-  - "3.7"
+
+# Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
+matrix:
+  include:
+    - name: "Python: 3.7"
+      python: "3.7"
+      dist: xenial
+      sudo: true
 
 sudo: false
 
