@@ -155,7 +155,7 @@ class ClientSession(object):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-    async def __aiter__(self):
+    def __aiter__(self):
         return self
 
     async def __anext__(self):
