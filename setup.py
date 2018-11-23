@@ -22,7 +22,7 @@ setup(
         'Code': 'https://github.com/Jc2k/hpfeeds3',
         'Issue tracker': 'https://github.com/Jc2k/hpfeeds3/issues',
     },
-    extra_require = {
+    extras_require = {
         'test': [
             'flake8',
             'flake8-isort',
