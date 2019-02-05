@@ -111,10 +111,10 @@ class HPC(object):
 					try:
 						self.connect()
 						break
-					except socket.error, e:
+					except socket.error as e:
 						logger.warn('Socket error while connecting: {0}'.format(e))
 						time.sleep(self.sleepwait)
-					except FeedException, e:
+					except FeedException as e:
 						logger.warn('FeedException while connecting: {0}'.format(e))
 						time.sleep(self.sleepwait)
 					except Disconnect as e:
