@@ -135,7 +135,7 @@ def wordpot_event(identifier, payload, gi):
 
     return create_message('wordpot.alerts', identifier, gi, src_ip=dec.source_ip, dst_ip=dec.dest_ip)
 
-def drupot_event(identifier, payload, gi):
+def drupot_events(identifier, payload, gi):
     try:
         dec = ezdict(json.loads(str(payload)))
     except:
