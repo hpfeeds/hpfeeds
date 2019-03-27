@@ -148,7 +148,7 @@ def drupot_events(identifier, payload, gi):
 
 # TODO: use this function everywhere else is can be to clean up this code.
 def create_message(event_type, identifier, gi, src_ip, dst_ip):
-    geo = gi.record_by_addr(src_ip) )
+    geo = gi.city(src_ip)
 
     message = {
         'type':   event_type, 
