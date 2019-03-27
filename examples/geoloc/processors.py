@@ -161,7 +161,7 @@ def create_message(event_type, identifier, gi, src_ip, dst_ip):
         'longitude':   geo.location.longitude, 
         'city':        geo.city.name, 
         'country':     geo.country.name, 
-        'countrycode': geo.country.iso_code
+        'countrycode': geo.country.iso_code,
 
         'latitude2':    geo2.location.latitude,
         'longitude2':   geo2.location.longitude, 
