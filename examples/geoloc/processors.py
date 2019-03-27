@@ -149,6 +149,7 @@ def drupot_events(identifier, payload, gi):
 # TODO: use this function everywhere else is can be to clean up this code.
 def create_message(event_type, identifier, gi, src_ip, dst_ip):
     geo = gi.city(src_ip)
+    geo2 = gi.city(dst_ip)
 
     message = {
         'type':   event_type, 
@@ -161,6 +162,12 @@ def create_message(event_type, identifier, gi, src_ip, dst_ip):
         'city':        geo.city.name, 
         'country':     geo.country.name, 
         'countrycode': geo.country.iso_code
+
+        'latitude2':    geo2.location.latitude,
+        'longitude2':   geo2.location.longitude, 
+        'city2':        geo2.city.name, 
+        'country2':     geo2.country.name, 
+        'countrycode2': geo2.country.iso_code
     }
 
     return message
