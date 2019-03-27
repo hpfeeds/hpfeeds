@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.CRITICAL)
 import hpfeeds
 from processors import *
 
-import GeoIP
+import geoip2
 import traceback
 
 HOST = 'localhost'
@@ -66,9 +66,7 @@ PROCESSORS = {
 
 def main():
     import socket
-    gi = {}
-    gi[socket.AF_INET] = GeoIP.open("/opt/GeoLite2-City.dat",GeoIP.GEOIP_STANDARD)
-    gi[socket.AF_INET6] = GeoIP.open("/opt/GeoLite2-City.dat",GeoIP.GEOIP_STANDARD)
+    gi = geoip2.database.Reader("/opt/GeoLite2-City.mmdb")
 
     try:
         hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)

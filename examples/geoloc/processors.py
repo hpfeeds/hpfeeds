@@ -148,17 +148,7 @@ def drupot_events(identifier, payload, gi):
 
 # TODO: use this function everywhere else is can be to clean up this code.
 def create_message(event_type, identifier, gi, src_ip, dst_ip):
-    geoloc = None
-    geoloc2 = None
-    a_family = get_addr_family(src_ip)
-    if a_family == socket.AF_INET:
-        geoloc = geoloc_none( gi[a_family].record_by_addr(src_ip) )
-        if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr(dst_ip) )
-    elif a_family == socket.AF_INET6:
-        geoloc = geoloc_none( gi[a_family].record_by_addr_v6(src_ip) )
-        if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dst_ip) )
+    geo = gi.record_by_addr(src_ip) )
 
     message = {
         'type':   event_type, 
@@ -166,21 +156,12 @@ def create_message(event_type, identifier, gi, src_ip, dst_ip):
         'time':   timestr(datetime.datetime.now()),
         'source': src_ip,
 
-        'latitude':    geoloc['latitude'], 
-        'longitude':   geoloc['longitude'], 
-        'city':        geoloc['city'], 
-        'country':     geoloc['country_name'], 
-        'countrycode': geoloc['country_code']
+        'latitude':    geo.location.latitude,
+        'longitude':   geo.location.longitude, 
+        'city':        geo.city.name, 
+        'country':     geo.country.name, 
+        'countrycode': geo.country.iso_code
     }
-
-    if geoloc2:
-        message.update({
-            'latitude2':    geoloc2['latitude'],
-            'longitude2':   geoloc2['longitude'],
-            'city2':        geoloc2['city'],
-            'country2':     geoloc2['country_name'],
-            'countrycode2': geoloc2['country_code']
-        })
 
     return message
 
@@ -218,44 +199,6 @@ def elastichoney_events(identifier, payload, gi):
         traceback.print_exc()
         return None
     return create_message('elastichoney.events', identifier, gi, src_ip=dec.source, dst_ip=dec.honeypot)
-
-# TODO: use this function everywhere else is can be to clean up this code.
-def create_message(event_type, identifier, gi, src_ip, dst_ip):
-    geoloc = None
-    geoloc2 = None
-    a_family = get_addr_family(src_ip)
-    if a_family == socket.AF_INET:
-        geoloc = geoloc_none( gi[a_family].record_by_addr(src_ip) )
-        if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr(dst_ip) )
-    elif a_family == socket.AF_INET6:
-        geoloc = geoloc_none( gi[a_family].record_by_addr_v6(src_ip) )
-        if dst_ip:
-            geoloc2 = geoloc_none( gi[a_family].record_by_addr_v6(dst_ip) )
-
-    message = {
-        'type':   event_type, 
-        'sensor': identifier, 
-        'time':   timestr(datetime.datetime.now()),
-        'source': src_ip,
-
-        'latitude':    geoloc['latitude'], 
-        'longitude':   geoloc['longitude'], 
-        'city':        geoloc['city'], 
-        'country':     geoloc['country_name'], 
-        'countrycode': geoloc['country_code']
-    }
-
-    if geoloc2:
-        message.update({
-            'latitude2':    geoloc2['latitude'],
-            'longitude2':   geoloc2['longitude'],
-            'city2':        geoloc2['city'],
-            'country2':     geoloc2['country_name'],
-            'countrycode2': geoloc2['country_code']
-        })
-
-    return message
 
 def shockpot_event(identifier, payload, gi):
     try:
