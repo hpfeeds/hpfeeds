@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.CRITICAL)
 import hpfeeds
 from processors import *
 
-import geoip2
+import geoip2.database
 import traceback
 
 HOST = 'localhost'
