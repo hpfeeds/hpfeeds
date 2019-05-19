@@ -10,6 +10,14 @@ hpfeeds is a lightweight authenticated publish-subscribe protocol. It has a simp
 
 This project aims to deliver a modern python 3 compatible broker written on top of asyncio as well as a python 3 compatible client.
 
+There are other implementations for other languages:
+
+ * Go: https://github.com/hpfeeds/go-hpfeeds
+ * Ruby: https://github.com/fw42/hpfeedsrb
+ * More Ruby: https://github.com/vicvega/hpfeeds-ruby
+ * JS (within node.js): https://github.com/fw42/honeymap/blob/master/server/node_modules/hpfeeds/index.js
+ * C++: https://github.com/tentacool/tentacool
+
 
 ## Installation
 
