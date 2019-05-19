@@ -2,12 +2,10 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='hpfeeds3',
-    version='0.9.9.dev0',
-    description='Python implementation of the honeypot feeds broker',
-    author='John Carr',
-    author_email='john.carr@unrouted.co.uk',
-    url='https://github.com/Jc2k/hpfeeds',
+    name='hpfeeds',
+    version='3.0.0.dev0',
+    description='Python implementation of the hpfeeds client and broker',
+    url='https://github.com/hpfeeds/hpfeeds',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
@@ -18,9 +16,9 @@ setup(
         hpfeeds-broker = hpfeeds.scripts.broker:main
     ''',
     project_urls={
-        'Documentation': 'https://hpfeeds3.readthedocs.org/',
-        'Code': 'https://github.com/Jc2k/hpfeeds3',
-        'Issue tracker': 'https://github.com/Jc2k/hpfeeds3/issues',
+        'Documentation': 'https://hpfeeds.readthedocs.org/',
+        'Code': 'https://github.com/hpfeeds/hpfeeds',
+        'Issue tracker': 'https://github.com/hpfeeds/hpfeeds/issues',
     },
     extras_require = {
         'test': [
