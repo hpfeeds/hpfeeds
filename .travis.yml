@@ -1,0 +1,30 @@
+language: python
+sudo: false
+
+cache: pip
+
+install:
+  - pip install -U pip setuptools wheel
+  - pip install -r dev.txt -r requirements.txt
+
+matrix:
+  include:
+    - name: "flake8"
+      python: 3.6
+      script: flake8 hpfeeds
+
+    - name: "python2.7"
+      python: "2.7"
+      script: py.test --cov=. hpfeeds
+      after_success: codecov
+
+    - name: "python3.6"
+      python: "3.6"
+      script: py.test --cov=. hpfeeds
+      after_success: codecov
+
+    - name: "python3.7"
+      python: "3.7"
+      dist: xenial
+      script: py.test --cov=. hpfeeds
+      after_success: codecov

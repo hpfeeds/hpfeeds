@@ -1,16 +1,38 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
+from setuptools import find_packages, setup
 
 setup(
-	name='hpfeeds',
-	version='1.0',
-	description='hpfeeds module',
-	author='Mark Schloesser',
-	author_email='ms@mwcollect.org',
-	url='https://github.com/rep/hpfeeds',
-	license='GPL',
-	package_dir = {'': 'lib'},
-	py_modules = ['hpfeeds'],
-	scripts=['cli/hpfeeds-client']
+    name='hpfeeds',
+    version='3.0.0.dev0',
+    description='Python implementation of the hpfeeds client and broker',
+    url='https://github.com/hpfeeds/hpfeeds',
+    license='GPL',
+    packages=find_packages(exclude=['ez_setup']),
+    include_package_data=True,
+    zip_safe=False,
+    entry_points='''
+        [console_scripts]
+        hpfeeds = hpfeeds.scripts.cli:main
+        hpfeeds-broker = hpfeeds.scripts.broker:main
+    ''',
+    project_urls={
+        'Documentation': 'https://hpfeeds.readthedocs.org/',
+        'Code': 'https://github.com/hpfeeds/hpfeeds',
+        'Issue tracker': 'https://github.com/hpfeeds/hpfeeds/issues',
+    },
+    extras_require = {
+        'test': [
+            'flake8',
+            'flake8-isort',
+            'pytest',
+            'pytest-cov',
+            'codecov',
+        ],
+        'broker': [
+            'aiorun',
+            'aiohttp',
+            'prometheus_client',
+            'wrapt',
+        ],
+    },
 )
