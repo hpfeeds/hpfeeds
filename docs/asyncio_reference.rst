@@ -4,8 +4,8 @@
 Client Reference
 ================
 
-.. module:: hpfeeds3.asyncio
-.. currentmodule:: hpfeeds3.asyncio
+.. module:: hpfeeds.asyncio
+.. currentmodule:: hpfeeds.asyncio
 
 
 Client Session

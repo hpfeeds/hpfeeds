@@ -16,7 +16,7 @@ as easily as:
 
    $ docker run \
        -p "0.0.0.0:10000:10000" \
-       jc2k/hpfeeds3-broker:latest
+       hpfeeds/hpfeeds-broker:latest
 
 This will start a broker that is listening for publishers and subscribers on
 port 10000.
@@ -29,7 +29,7 @@ It is much more maintainable to use a `docker-compose.yml`:
 
    services:
      hpfeeds:
-       image: jc2k/hpfeeds3-broker
+       image: hpfeeds/hpfeeds-broker
        container_name: hpfeeds
        ports:
         - "0.0.0.0:10000:10000"
@@ -50,7 +50,7 @@ You can also install the python package directly:
 
 .. code-block:: bash
 
-   $ pip install hpfeeds3[broker]
+   $ pip install hpfeeds[broker]
 
 You can then run it in the foreground with:
 
@@ -74,7 +74,7 @@ then you should make sure your broker container has a volume to store the db:
 
    services:
      hpfeeds:
-       image: jc2k/hpfeeds3-broker
+       image: hpfeeds/hpfeeds-broker
        container_name: hpfeeds
        ports:
         - "0.0.0.0:10000:10000"
@@ -129,7 +129,7 @@ You can set these variables in your `docker-compose.yml`:
 
    services:
      hpfeeds:
-       image: jc2k/hpfeeds3-broker
+       image: hpfeeds/hpfeeds-broker
        environment:
          HPFEEDS_TEST_SECRET: 'test'
          HPFEEDS_TEST_SUBCHANS: 'spam'
@@ -167,7 +167,7 @@ Or if using docker-compose::
 
    services:
      hpfeeds:
-       image: jc2k/hpfeeds3-broker
+       image: hpfeeds/hpfeeds-broker
        container_name: hpfeeds
        ports:
         - "0.0.0.0:10000:10000"
@@ -203,7 +203,7 @@ expose the port:
 
     services:
       hpfeeds:
-        image: jc2k/hpfeeds3-broker
+        image: hpfeeds/hpfeeds-broker
         container_name: hpfeeds
         ports:
          - "0.0.0.0:10000:10000"
@@ -219,7 +219,7 @@ If you are overriding the command line, the setting that controls the port is `-
 
    services:
      hpfeeds:
-       image: jc2k/hpfeeds3-broker
+       image: hpfeeds/hpfeeds-broker
        environment:
          HPFEEDS_TEST_SECRET: 'test'
          HPFEEDS_TEST_SUBCHANS: 'spam'

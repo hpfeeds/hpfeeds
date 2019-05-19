@@ -4,8 +4,8 @@
 Client Reference
 ================
 
-.. module:: hpfeeds3.client
-.. currentmodule:: hpfeeds3.client
+.. module:: hpfeeds.client
+.. currentmodule:: hpfeeds.client
 
 
 .. class:: Client(host, port, ident, secret, timeout, reconnect, sleepwait)

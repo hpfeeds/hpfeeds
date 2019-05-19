@@ -1,7 +1,7 @@
-Welcome to hpfeeds3
-===================
+Welcome to hpfeeds
+==================
 
-hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads. It is designed to be simple to implement and thus programming language agnostic. hpfeeds3 is a library containing python 2 +3 implementations, as well as asyncio and Twisted implementations. 
+hpfeeds is a lightweight authenticated publish-subscribe protocol that supports arbitrary binary payloads. It is designed to be simple to implement and thus programming language agnostic. hpfeed3 is a library containing python 2 +3 implementations, as well as asyncio and Twisted implementations. 
 
 It also contains a modern asyncio powered broker with integrated Prometheus monitoring.
 
@@ -48,13 +48,13 @@ what is happening underneath this library you may be interested in the
 Source code
 -----------
 
-The project is hosted on `GitHub <https://github.com/Jc2k/hpfeeds3>`_.
+The project is hosted on `GitHub <https://github.com/hpfeeds/hpfeeds>`_.
 
 Please feel free to file an issue on the `bug tracker
-<https://github.com/Jc2k/hpfeeds3/issues>`_ if you have found a bug
+<https://github.com/hpfeeds/hpfeeds/issues>`_ if you have found a bug
 or have some suggestion in order to improve the library.
 
-The library uses `Travis <https://travis-ci.com/Jc2k/hpfeeds3>`_ for
+The library uses `Travis <https://travis-ci.com/hpfeeds/hpfeeds>`_ for
 Continuous Integration.
 
 

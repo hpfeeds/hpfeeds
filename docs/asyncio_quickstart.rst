@@ -4,8 +4,8 @@
 Client Quickstart
 =================
 
-.. module:: hpfeeds3.asyncio
-.. currentmodule:: hpfeeds3.asyncio
+.. module:: hpfeeds.asyncio
+.. currentmodule:: hpfeeds.asyncio
 
 
 Most common tasks you'll need to perform in asyncio against a hpfeeds broker
@@ -55,7 +55,7 @@ Publishing events from an asynchronous iterator
 -----------------------------------------------
 
 You can now construct asynchronous generators in Python 3, and then have
-hpfeeds3 publish directly from the iterator::
+hpfeeds publish directly from the iterator::
 
     import asyncio
 

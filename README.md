@@ -1,8 +1,8 @@
-# hpfeeds3
+# hpfeeds
 
-[![PyPI](https://img.shields.io/pypi/v/hpfeeds3.svg)](https://pypi.python.org/pypi/hpfeeds3)
-[![Codecov](https://img.shields.io/codecov/c/github/Jc2k/hpfeeds3.svg)](https://codecov.io/gh/Jc2k/hpfeeds3)
-[![Read the Docs](https://readthedocs.org/projects/hpfeeds3/badge/?version=latest)](https://hpfeeds3.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://img.shields.io/pypi/v/hpfeeds.svg)](https://pypi.python.org/pypi/hpfeeds)
+[![Codecov](https://img.shields.io/codecov/c/github/hpfeeds/hpfeeds.svg)](https://codecov.io/gh/hpfeeds/hpfeeds)
+[![Read the Docs](https://readthedocs.org/projects/hpfeeds/badge/?version=latest)](https://hpfeeds.readthedocs.io/en/latest/?badge=latest)
 
 ## About
 
@@ -16,19 +16,19 @@ This project aims to deliver a modern python 3 compatible broker written on top 
 To use the client you need to install it in your python environment with `pip`.
 
 ```
-pip install hpfeeds3
+pip install hpfeeds
 ```
 
 The core client does not have any dependencies. You can install the broker dependencies with pip too:
 
 ```
-pip install hpfeeds3[broker]
+pip install hpfeeds[broker]
 ```
 
 You can also run a broker with Docker:
 
 ```
-docker run -p "0.0.0.0:20000:20000" -p "0.0.0.0:9431:9431" jc2k/hpfeeds3-broker:latest
+docker run -p "0.0.0.0:20000:20000" -p "0.0.0.0:9431:9431" hpfeeds/hpfeeds-broker:latest
 ```
 
 It will store access keys in an sqlite database in `/app/var`. The `sqlite` client installed in the container for managing access. You should make sure `/app/var` is a volume. Your clients can connect to port `20000`, and prometheus can connect on port `9431`.

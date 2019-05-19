@@ -4,8 +4,8 @@
 Twisted Quickstart
 ==================
 
-.. module:: hpfeeds3.twisted
-.. currentmodule:: hpfeeds3.twisted
+.. module:: hpfeeds.twisted
+.. currentmodule:: hpfeeds.twisted
 
 
 Most common tasks you'll need to perform in Twisted against a hpfeeds broker

@@ -4,8 +4,8 @@
 Client Quickstart
 =================
 
-.. module:: hpfeeds3.client
-.. currentmodule:: hpfeeds3.client
+.. module:: hpfeeds.client
+.. currentmodule:: hpfeeds.client
 
 
 Use the :py:class:`Client` class to perform blocking synchronous operations

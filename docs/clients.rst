@@ -2,11 +2,11 @@ Client Reference
 ================
 
 This library contains 3 implementations of hpfeeds client. All are shipped in
-the ``hpfeeds3`` wheel and can be installed with pip:
+the ``hpfeeds`` wheel and can be installed with pip:
 
 .. code-block:: bash
 
-   $ pip install hpfeeds3
+   $ pip install hpfeeds
 
 
 Blocking client

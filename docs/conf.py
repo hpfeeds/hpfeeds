@@ -19,9 +19,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'hpfeeds3'
-copyright = '2018, John Carr'
-author = 'John Carr'
+project = 'hpfeeds'
+copyright = '2018, HPFeeds Team'
+author = 'HPFeeds Team'
 
 # The short X.Y version
 version = ''
@@ -105,7 +105,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'hpfeeds3doc'
+htmlhelp_basename = 'hpfeedsdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -132,7 +132,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'hpfeeds3.tex', 'hpfeeds3 Documentation',
+    (master_doc, 'hpfeeds.tex', 'hpfeeds Documentation',
      'John Carr', 'manual'),
 ]
 
@@ -142,7 +142,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'hpfeeds3', 'hpfeeds3 Documentation',
+    (master_doc, 'hpfeeds', 'hpfeeds Documentation',
      [author], 1)
 ]
 
@@ -153,8 +153,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'hpfeeds3', 'hpfeeds3 Documentation',
-     author, 'hpfeeds3', 'One line description of project.',
+    (master_doc, 'hpfeeds', 'hpfeeds Documentation',
+     author, 'hpfeeds', 'One line description of project.',
      'Miscellaneous'),
 ]
 

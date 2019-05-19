@@ -4,8 +4,8 @@
 Client Reference
 ================
 
-.. module:: hpfeeds3.twisted
-.. currentmodule:: hpfeeds3.twisted
+.. module:: hpfeeds.twisted
+.. currentmodule:: hpfeeds.twisted
 
 
 Client Session
