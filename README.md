@@ -12,15 +12,27 @@ This project aims to deliver a modern python 3 compatible broker written on top 
 
 ## Installation
 
-To use the client you need to install it in your python environment with `pip`.
+The core client does not have any dependencies. You can install it with with `pip`.
 
-```
+```bash
 pip install hpfeeds
 ```
 
-The core client does not have any dependencies. You can install the broker dependencies with pip too:
+You can run a command line tail of a hpfeeds channel with the command line:
 
+```bash
+hpfeeds subscribe --host localhost -p 10000 -i myident -s mysecret -c mychannel
 ```
+
+You can also publish a single event too:
+
+```bash
+hpfeeds publish --host localhost -p 10000 -i myident -s mysecret -c mychannel '{"event": "ping"}'
+```
+
+You can install the broker dependencies with pip too:
+
+```bash
 pip install hpfeeds[broker]
 ```
 
@@ -31,3 +43,5 @@ docker run -p "0.0.0.0:20000:20000" -p "0.0.0.0:9431:9431" hpfeeds/hpfeeds-broke
 ```
 
 It will store access keys in an sqlite database in `/app/var`. The `sqlite` client installed in the container for managing access. You should make sure `/app/var` is a volume. Your clients can connect to port `20000`, and prometheus can connect on port `9431`.
+
+More detailed documentation is available at https://python.hpfeeds.org.
