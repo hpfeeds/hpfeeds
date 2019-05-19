@@ -1,16 +1,4 @@
 language: python
-python:
-  - "2.7"
-  - "3.6"
-
-# Enable 3.7 without globally enabling sudo and dist: xenial for other build jobs
-matrix:
-  include:
-    - name: "Python: 3.7"
-      python: "3.7"
-      dist: xenial
-      sudo: true
-
 sudo: false
 
 cache: pip
@@ -19,9 +7,24 @@ install:
   - pip install -U pip setuptools wheel
   - pip install -r dev.txt -r requirements.txt
 
-script:
-  - py.test --cov=. hpfeeds
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.6' ]]; then flake8 hpfeeds; fi
+matrix:
+  include:
+    - name: "flake8"
+      python: 3.6
+      script: flake8 hpfeeds
 
-after_success:
-  - codecov
+    - name: "python2.7"
+      python: "2.7"
+      script: py.test --cov=. hpfeeds
+      after_success: codecov
+
+    - name: "python3.6"
+      python: "3.6"
+      script: py.test --cov=. hpfeeds
+      after_success: codecov
+
+    - name: "python3.7"
+      python: "3.7"
+      dist: xenial
+      script: py.test --cov=. hpfeeds
+      after_success: codecov
