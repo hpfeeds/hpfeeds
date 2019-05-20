@@ -37,14 +37,6 @@ Client reference
 If you want to use hpfeeds with Python then see our :doc:`client reference guides <clients>`.
 
 
-Developers
-----------
-
-If you want to add hpfeeds to a non-Python application or you want to understand
-what is happening underneath this library you may be interested in the
-:doc:`Protocol reference <protocol>`.
-
-
 Source code
 -----------
 
