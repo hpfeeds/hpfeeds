@@ -146,6 +146,17 @@ def drupot_events(identifier, payload, gi):
     return create_message('drupot.alerts', identifier, gi, src_ip=dec.SrcIp,
             dst_ip=dec.DestIp)
 
+def agave_events(identifier, payload, gi):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing agave alert'
+        traceback.print_exc()
+        return
+
+    return create_message('agave.alerts', identifier, gi, src_ip=dec.SrcIp,
+            dst_ip=dec.DestIp)
+
 # TODO: use this function everywhere else is can be to clean up this code.
 def create_message(event_type, identifier, gi, src_ip, dst_ip):
     geo = gi.city(src_ip)
