@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 
 try:
     import aionotify
@@ -29,18 +30,21 @@ class Authenticator(object):
         self.db = {}
 
     async def _watch_until_exception(self):
+        if not os.path.exists(self.path):
+            return
+
         watcher = aionotify.Watcher()
+        watcher.watch(path=os.path.dirname(self.path), flags=aionotify.Flags.MODIFY | aionotify.Flags.MOVED_FROM | aionotify.Flags.MOVED_TO)
+        await watcher.setup(asyncio.get_event_loop())
+
         try:
-            watcher.watch(path=self.path, flags=aionotify.Flags.MODIFY | aionotify.Flags.MOVED_FROM)
-
-            loop = asyncio.get_eventloop()
-            await watcher.setup(loop)
-
             # We do a load here to avoid races where the data changes before the watcher was setup
             self.load()
 
             while True:
                 event = await watcher.get_event()
+                if event.name != os.path.basename(self.path):
+                    continue
                 self.load()
         finally:
             watcher.close()
@@ -48,11 +52,12 @@ class Authenticator(object):
     async def _watch_forever(self):
         while True:
             try:
-                await _watch_until_exception()
+                await self._watch_until_exception()
             except asyncio.CancelledError:
                 raise
             except Exception:
                 logger.exception(f"Error whilst monitoring {self.path!r} for changes")
+                await asyncio.sleep(1)
                 continue
 
     async def start(self):
@@ -61,7 +66,7 @@ class Authenticator(object):
             logger.warning(f"Changes to {self.path!r} will require a broker restart as aionotify is not installed")
             return
 
-        task = asyncio.ensure_future(self._watch_forever)
+        task = asyncio.ensure_future(self._watch_forever())
 
         async def close():
             task.cancel()

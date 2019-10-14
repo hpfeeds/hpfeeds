@@ -34,5 +34,8 @@ setup(
             'prometheus_client',
             'wrapt',
         ],
+        'broker-auth-json': [
+            'aionotify',
+        ]
     },
 )

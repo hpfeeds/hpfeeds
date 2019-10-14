@@ -1,17 +1,17 @@
-FROM alpine:3.7 AS builder
+FROM alpine:3.9 AS builder
 
 RUN apk --no-cache add python3
 RUN python3 -m venv /app
 
 COPY requirements.txt /requirements.txt
-RUN /app/bin/pip install -r requirements.txt
+RUN /app/bin/pip install -r requirements.txt aionotify
 
 COPY setup.py /src/setup.py
 COPY hpfeeds /src/hpfeeds
 RUN /app/bin/pip install /src
 
 
-FROM alpine:3.7
+FROM alpine:3.9
 
 RUN apk --no-cache add sqlite python3
 
