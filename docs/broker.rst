@@ -104,6 +104,39 @@ You can insert users with:
 You don't need to restart the broker.
 
 
+JSON authentication store
+=========================
+
+When starting the broker you can pass with path to a `.json` file. It will then load all the users
+in that file. Fpr example:
+
+```bash
+hpfeeds-broker --bind=0.0.0.0:20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds/users.json
+```
+
+The accounts must be formatted as a mapping where the ident is the key:
+
+```json
+{
+  "my-user-ident": {
+    "owner": "my-owner",
+    "secret": "my-really-strong-passphrase",
+    "subchans": ["chan1"],
+    "pubchans": [],
+  }
+}
+```
+
+If the `aionotify` package is installed and the host os is Linux then the broker will automatically
+reload the JSON file when it opens.
+
+This is handy where you have a small number of user accounts and you already have infrastructure
+orchestration that can easily replicate a password file. For example, when using Kubernetes and
+its secret type updates to the secret object in the Kubernetes API will be automatically synced to
+a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
+restart.
+
+
 Test authentication
 ===================
 
