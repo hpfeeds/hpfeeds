@@ -34,6 +34,9 @@ class Authenticator(object):
                     pubchans TEXT, subchans TEXT)
                 """)
 
+    async def start(self):
+        pass
+
     def close(self):
         self.sql.close()
 

@@ -4,7 +4,7 @@ import ssl
 
 import aiorun
 
-from hpfeeds.broker.auth import env, sqlite
+from hpfeeds.broker.auth import env, sqlite, json
 from hpfeeds.broker.server import Server
 
 
@@ -27,7 +27,9 @@ def main():
         level=logging.DEBUG if args.debug else logging.INFO,
     )
 
-    if args.auth == 'env':
+    if args.auth.endswith('.json'):
+        auth = json.Authenticator(args.auth)
+    elif args.auth == 'env':
         auth = env.Authenticator()
     else:
         auth = sqlite.Authenticator('sqlite.db')

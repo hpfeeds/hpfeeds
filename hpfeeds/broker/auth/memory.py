@@ -17,6 +17,9 @@ class Authenticator(object):
     def __init__(self, creds):
         self.creds = creds
 
+    async def start(self):
+        pass
+
     def close(self):
         pass
 

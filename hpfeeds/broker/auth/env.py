@@ -25,6 +25,9 @@ class Authenticator(object):
     authenticator = Authenticator()
     '''
 
+    async def start(self):
+        pass
+
     def close(self):
         pass
 

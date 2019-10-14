@@ -77,6 +77,8 @@ class Server(object):
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
 
+        auth_finalizer = await self.auth.start()
+
         if self.exporter:
             metrics_server = await start_metrics_server(*self.exporter)
             metrics_server.app.broker = self
@@ -109,3 +111,7 @@ class Server(object):
             if self.exporter:
                 log.debug('Waiting for stats server to wrap up')
                 await metrics_server.cleanup()
+
+            if auth_finalizer:
+                log.debug('Waiting for auth db to close')
+                await auth_finalizer()
