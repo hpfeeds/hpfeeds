@@ -11,7 +11,7 @@ except ImportError:
 
 
 MODIFY_FLAGS = (
-    aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW
+    aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW | aionotify.Flags.IGNORED
 )
 
 logger = logging.getLogger(__name__)
@@ -122,15 +122,22 @@ async def _watch_task(path, callback):
             # Sleep until an event touches one of the paths we care about
             event = await watcher.get_event()
 
-            # We have to rewatch the file that changed because we care about atomic renames
-            # Because we are watching a handle, an atomic rename means handle will now point
-            # somewhere else entirely and we'll not detect future changes
-            logger.debug(f"Detected change in {event.alias!r} - rewatching")
-            watcher.unwatch(event.alias)
-            watcher.watch(
-                path=event.alias,
-                flags=MODIFY_FLAGS
-            )
+            # https://github.com/rbarrois/aionotify/pull/6/files
+            if event.flags & aionotify.Flags.IGNORED:
+                wd = watcher.descriptors[event.alias]
+                del watcher.descriptors[event.alias]
+                del watcher.requests[event.alias]
+                del watcher.aliases[wd]
+
+                # We have to rewatch the file that changed because we care about atomic renames
+                # Because we are watching a handle, an atomic rename means handle will now point
+                # somewhere else entirely and we'll not detect future changes
+                logger.debug(f"Detected {event.alias!r} unwatched - rewatching")
+                watcher.watch(
+                    path=event.alias,
+                    flags=MODIFY_FLAGS
+                )
+                continue
 
     finally:
         watcher.close()
