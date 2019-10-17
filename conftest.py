@@ -10,5 +10,7 @@ if sys.version_info[0] == 2:
         "hpfeeds/tests/test_broker_prometheus.py",
         "hpfeeds/tests/test_client_integration.py",
         "hpfeeds/tests/test_twisted_service.py",
+        "hpfeeds/tests/test_broker_auth_env.py",
+        "hpfeeds/tests/test_broker_auth_sqlite.py",
     ])
 
