@@ -4,7 +4,7 @@ import ssl
 
 import aiorun
 
-from hpfeeds.broker.auth import env, sqlite, json
+from hpfeeds.broker.auth import env, json, sqlite
 from hpfeeds.broker.server import Server
 
 

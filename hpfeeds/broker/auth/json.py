@@ -23,6 +23,62 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def resolve(path, strict=False):
+    sep = os.path.sep
+    seen = {}
+
+    found = [path]
+
+    def _resolve(path, rest):
+        if rest.startswith(sep):
+            path = ''
+
+        for name in rest.split(sep):
+            if not name or name == '.':
+                # current dir
+                continue
+            if name == '..':
+                # parent dir
+                path, _, _ = path.rpartition(sep)
+                continue
+            newpath = path + sep + name
+            if newpath in seen:
+                # Already seen this path
+                path = seen[newpath]
+                if path is not None:
+                    # use cached value
+                    continue
+                # The symlink is not resolved, so we must have a symlink loop.
+                raise RuntimeError("Symlink loop from %r" % newpath)
+
+            found.append(newpath)
+
+            # Resolve the symbolic link
+            try:
+                target = os.readlink(newpath)
+            except OSError as e:
+                from errno import EINVAL
+                if e.errno != EINVAL and strict:
+                    raise
+                # Not a symlink, or non-strict mode. We just leave the path
+                # untouched.
+                path = newpath
+            else:
+                # found.append(newpath)
+                seen[newpath] = None  # not resolved symlink
+                path = _resolve(path, target)
+                seen[newpath] = path  # resolved symlink
+
+        return path
+
+    # NOTE: according to POSIX, getcwd() cannot contain path components
+    # which are symlinks.
+    base = '' if os.path.isabs(path) else os.getcwd()
+    found.append(_resolve(base, str(path)) or sep)
+
+    return found
+
+
 class Authenticator(object):
 
     def __init__(self, path):
@@ -34,18 +90,45 @@ class Authenticator(object):
             return
 
         watcher = aionotify.Watcher()
-        watcher.watch(path=os.path.dirname(self.path), flags=aionotify.Flags.MODIFY | aionotify.Flags.MOVED_FROM | aionotify.Flags.MOVED_TO)
         await watcher.setup(asyncio.get_event_loop())
 
+        paths = set()
         try:
-            # We do a load here to avoid races where the data changes before the watcher was setup
-            self.load()
-
             while True:
-                event = await watcher.get_event()
-                if event.name != os.path.basename(self.path):
-                    continue
+                old_paths = paths
+
+                # Find all paths related to self.path (resolving symlinks as we go)
+                paths = set(resolve(self.path))
+
+                # Unwatch old paths
+                for path in (old_paths - paths):
+                    logger.debug(f"Unwatching {path!r}")
+                    watcher.unwatch(path)
+
+                # Watch new paths
+                for path in (paths - old_paths):
+                    logger.debug(f"Watching {path!r}")
+                    watcher.watch(
+                        path=path,
+                        flags=aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW
+                    )
+
+                # Reload user database
                 self.load()
+
+                # Sleep until an event touches one of the paths we care about
+                event = await watcher.get_event()
+
+                # We have to rewatch the file that changed because we care about atomic renames
+                # Because we are watching a handle, an atomic rename means handle will now point
+                # somewhere else entirely and we'll not detect future changes
+                logger.debug(f"Detected change in {event.alias!r} - rewatching")
+                watcher.unwatch(event.alias)
+                watcher.watch(
+                    path=event.alias,
+                    flags=aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW
+                )
+
         finally:
             watcher.close()
 
@@ -83,7 +166,7 @@ class Authenticator(object):
         try:
             with open(self.path, "r") as fp:
                 db = json.load(fp)
-        except:
+        except Exception:
             logger.exception(f"Error whilst trying to load {self.path!r}")
             return
 
