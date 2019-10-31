@@ -79,7 +79,7 @@ then you should make sure your broker container has a volume to store the db:
        ports:
         - "0.0.0.0:10000:10000"
        volumes:
-        - hpfeeds_data:/app/var
+        - hpfeeds_userdb:/app/var
 
 Unfortunately managing access keys currently involves SQL! You can use
 docker-compose to get an sqlite shell:
@@ -205,7 +205,7 @@ Or if using docker-compose::
        ports:
         - "0.0.0.0:10000:10000"
        volumes:
-        - hpfeeds_data:/app/var
+        - hpfeeds_userdb:/app/var
        command:
         - '/app/bin/hpfeeds-broker'
         - '--bind=0.0.0.0:10000'
@@ -242,7 +242,7 @@ expose the port:
          - "0.0.0.0:10000:10000"
          - "127.0.0.1:9431:9431"
         volumes:
-         - hpfeeds_data:/app/var
+         - hpfeeds_userdb:/app/var
 
 If you are overriding the command line, the setting that controls the port is `--exporter`:
 
