@@ -10,11 +10,9 @@ except ImportError:
     aionotify = None
 
 
-MODIFY_FLAGS = (
-    aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW
-)
-
 logger = logging.getLogger(__name__)
+
+MODIFY_FLAGS = None
 
 if aionotify:
     class Watcher(aionotify.Watcher):
@@ -34,6 +32,10 @@ if aionotify:
                 super().unwatch(alias)
             except IOError:
                 self.forget_alias(alias)
+
+    MODIFY_FLAGS = (
+        aionotify.Flags.MODIFY | aionotify.Flags.ATTRIB | aionotify.Flags.MOVE_SELF | aionotify.Flags.DONT_FOLLOW
+    )
 
 
 def _resolve_paths(path, strict=False):
