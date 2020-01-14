@@ -38,6 +38,8 @@ class Server(object):
         self.connections = set()
         self.subscriptions = collections.defaultdict(list)
 
+        self.cleanups = []
+
         self.when_started = asyncio.Future()
 
     def add_endpoint_test(self, sock, ssl_context=None):
@@ -116,10 +118,35 @@ class Server(object):
             self.subscriptions[chan].remove(source)
         SUBSCRIPTIONS.labels(source.ak, chan).dec()
 
+    def create_ssl_context(self, endpoint):
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+
+        def load():
+            cert = endpoint.get('cert', 'cert.pem')
+            key = endpoint.get('key', 'key.pem')
+            log.info("Loading certificate chain: {} / {}".format(cert, key))
+            ssl_context.load_cert_chain(cert, key)
+
+        cert_watcher = start_watching(endpoint.get('cert', 'cert.pem'), load)
+        if cert_watcher:
+            self.cleanups.append(cert_watcher)
+        else:
+            load()
+            log.warning("Failed to watch certificate: {}".format(endpoint.get('cert', 'cert.pem')))
+            log.warning("You may need to restart hpfeeds-broker to get certificate changes detected")
+
+        key_watcher = start_watching(endpoint.get('key', 'key.pem'), load)
+        if key_watcher:
+            self.cleanups.append(key_watcher)
+        else:
+            load()
+            log.warning("Failed to watch private key: {}".format(endpoint.get('key', 'key.pem')))
+            log.warning("You may need to restart hpfeeds-broker to get private key changes detected")
+
+        return ssl_context
+
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
-
-        cleanup = []
 
         try:
             auth_finalizer = await self.auth.start()
@@ -134,29 +161,7 @@ class Server(object):
                 ssl_context = None
 
                 if endpoint['class'] == 'tls':
-                    ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-
-                    def load():
-                        cert = endpoint.get('cert', 'cert.pem')
-                        key = endpoint.get('key', 'key.pem')
-                        log.info("Loading certificate chain: {} / {}".format(cert, key))
-                        ssl_context.load_cert_chain(cert, key)
-
-                    cert_watcher = start_watching(endpoint.get('cert', 'cert.pem'), load)
-                    if cert_watcher:
-                        cleanup.append(cert_watcher)
-                    else:
-                        load()
-                        log.warning("Failed to watch certificate: {}".format(endpoint.get('cert', 'cert.pem')))
-                        log.warning("You may need to restart hpfeeds-broker to get certificate changes detected")
-
-                    key_watcher = start_watching(endpoint.get('key', 'key.pem'), load)
-                    if key_watcher:
-                        cleanup.append(key_watcher)
-                    else:
-                        load()
-                        log.warning("Failed to watch private key: {}".format(endpoint.get('key', 'key.pem')))
-                        log.warning("You may need to restart hpfeeds-broker to get private key changes detected")
+                    ssl_context = self.create_ssl_context(endpoint)
 
                 if endpoint['class'] == 'test':
                     sock = endpoint['sock']
@@ -195,7 +200,7 @@ class Server(object):
         finally:
             [s.close() for s in servers]
 
-            for cleanup in cleanup:
+            for cleanup in self.cleanups:
                 await cleanup()
 
             # for future in asyncio.as_completed([c.close() for c in list(self.connections)]):
