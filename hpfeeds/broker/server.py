@@ -23,13 +23,9 @@ log = logging.getLogger("hpfeeds.broker")
 
 class Server(object):
 
-    def __init__(self, auth, bind=None, exporter=None, sock=None, ssl=None, name='hpfeeds'):
+    def __init__(self, auth, exporter=None, name='hpfeeds'):
         self.auth = auth
         self.name = name
-
-        self.host, self.port = self._parse_endpoint(bind)
-        self.sock = sock
-        self.ssl = ssl
 
         self.endpoints = []
 
