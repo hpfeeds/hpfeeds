@@ -30,7 +30,8 @@ class TestClientIntegration(unittest.TestCase):
                 }
             })
 
-            self.server = Server(authenticator, sock=self.sock)
+            self.server = Server(authenticator)
+            self.server.add_endpoint_test(self.sock)
 
             self.log.debug('Starting server')
             future = asyncio.ensure_future(self.server.serve_forever())

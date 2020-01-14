@@ -1,6 +1,9 @@
+import asyncio
+import logging
 import unittest
 from unittest import mock
 
+from hpfeeds.asyncio import ClientSession
 from hpfeeds.broker import prometheus
 from hpfeeds.broker.auth.memory import Authenticator
 from hpfeeds.broker.connection import Connection
@@ -40,7 +43,8 @@ class TestBrokerConnection(unittest.TestCase):
             }
         })
 
-        self.server = Server(authenticator, bind='127.0.0.1:20000')
+        self.server = Server(authenticator)
+        self.server.add_endpoint_legacy('127.0.0.1:20000')
 
     def make_connection(self):
         transport = mock.Mock()
@@ -157,3 +161,76 @@ class TestBrokerConnection(unittest.TestCase):
 
         # 1 auth and 2 publish
         assert len(messages) == 3
+
+
+class TestBrokerIntegration(unittest.TestCase):
+
+    log = logging.getLogger('hpfeeds.test_broker_connection')
+
+    def setUp(self):
+        authenticator = Authenticator({
+            'test': {
+                'secret': 'secret',
+                'subchans': ['test-chan'],
+                'pubchans': ['test-chan'],
+                'owner': 'some-owner',
+            }
+        })
+
+        self.server = Server(authenticator)
+        self.server.add_endpoint_str("tls:interface=127.0.0.1:port=0:cert=hpfeeds/tests/testcert.crt:key=hpfeeds/tests/testcert.key")
+
+    def test_subscribe_and_publish(self):
+        prometheus.reset()
+
+        async def inner():
+            self.log.debug('Starting server')
+            server_future = asyncio.ensure_future(self.server.serve_forever())
+            await self.server.when_started
+
+            self.port = self.server.endpoints[0]['port']
+
+            import ssl
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='hpfeeds/tests/testcert.crt')
+            ssl_context.check_hostname = False
+
+            self.log.debug('Creating client service')
+            client = ClientSession('127.0.0.1', self.port, 'test', 'secret', ssl=ssl_context)
+            client.subscribe('test-chan')
+
+            # Wait till client connected
+            await client.when_connected
+
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 1
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_made') == 1
+
+            self.log.debug('Publishing test message')
+            client.publish('test-chan', b'test message')
+
+            self.log.debug('Waiting for read()')
+            assert ('test', 'test-chan', b'test message') == await client.read()
+
+            # We would test this after call to subscribe, but need to wait until sure server has processed command
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 1
+
+            # This will only have incremented when server has processed auth message
+            # Test can only reliably assert this is the case after reading a message
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_ready', {'ident': 'test'}) == 1
+
+            self.log.debug('Stopping client')
+            await client.close()
+
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_send_buffer_fill', {'ident': 'test'}) == 12
+            assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_send_buffer_drain', {'ident': 'test'}) == 32
+
+            self.log.debug('Stopping server')
+            server_future.cancel()
+            await server_future
+
+        asyncio.get_event_loop().run_until_complete(inner())
+        assert len(self.server.connections) == 0, 'Connection left dangling'
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_client_connections') == 0
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_lost', {'ident': 'test'}) == 1
+
+        # Closing should auto unsubscribe
+        assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_subscriptions', {'ident': 'test', 'chan': 'test-chan'}) == 0

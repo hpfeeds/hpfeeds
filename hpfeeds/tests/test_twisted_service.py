@@ -43,6 +43,7 @@ class TestClientIntegrationWithAioBroker(unittest.TestCase):
         })
 
         self.server = Server(authenticator, sock=self.sock)
+        self.server.add_endpoint_test(self.sock)
 
     def test_subscribe_and_publish(self):
         async def inner():

@@ -31,7 +31,8 @@ class TestAsyncioClientIntegration(unittest.TestCase):
             }
         })
 
-        self.server = Server(authenticator, sock=self.sock)
+        self.server = Server(authenticator)
+        self.server.add_endpoint_test(sock)
 
     def test_subscribe_and_publish(self):
         async def inner():
@@ -240,7 +241,8 @@ class TestAsyncioClientIntegrationSSL(unittest.TestCase):
             }
         })
 
-        self.server = Server(authenticator, sock=self.sock, ssl=ssl_context)
+        self.server = Server(authenticator)
+        self.server.add_endpoint_test(sock, ssl_context)
 
     def test_subscribe_and_publish(self):
         async def inner():

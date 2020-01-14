@@ -24,7 +24,8 @@ class TestBrokerPrometheusEndpoint(unittest.TestCase):
             }
         })
 
-        self.server = Server(authenticator, bind='127.0.0.1:20000', exporter='127.0.0.1:20001')
+        self.server = Server(authenticator, exporter='127.0.0.1:20001')
+        self.server.add_endpoint_legacy('127.0.0.1:20000')
 
     def test_metrics_server(self):
         async def inner():
