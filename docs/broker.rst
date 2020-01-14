@@ -56,7 +56,7 @@ You can then run it in the foreground with:
 
 .. code-block:: bash
 
-   $ hpfeeds-broker --bind 0.0.0.0:10000 --name mybroker
+   $ hpfeeds-broker -e tcp:port=10000 --name mybroker
 
 
 Authentication
@@ -111,7 +111,7 @@ When starting the broker you can pass with path to a `.json` file. It will then 
 in that file. Fpr example:
 
 ```bash
-hpfeeds-broker --bind=0.0.0.0:20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds/users.json
+hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds/users.json
 ```
 
 The accounts must be formatted as a mapping where the ident is the key:
@@ -169,7 +169,7 @@ You can set these variables in your `docker-compose.yml`:
          HPFEEDS_TEST_PUBCHANS: 'spam'
        command:
         - '/app/bin/hpfeeds-broker'
-        - '--bind=0.0.0.0:10000'
+        - '--endpoint=tcp:port=10000'
         - '--auth=env'
        ports:
         - "0.0.0.0:10000:10000"
@@ -187,7 +187,7 @@ You can use a self-signed certificate:
 
 You can start the broker using this cert with::
 
-    $  hpfeeds-broker --bind=0.0.0.0:10000 --tlskey=broker.key --tlscert=broker.crt
+    $  hpfeeds-broker --endpoint=tls:port=10000:key=broker.key:cert=broker.crt
 
 Or if using docker-compose::
 
@@ -208,9 +208,7 @@ Or if using docker-compose::
         - hpfeeds_userdb:/app/var
        command:
         - '/app/bin/hpfeeds-broker'
-        - '--bind=0.0.0.0:10000'
-        - '--tlskey=broker.key'
-        - '--tlscert=broker.crt'
+        - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
 
 
 Monitoring
@@ -259,9 +257,41 @@ If you are overriding the command line, the setting that controls the port is `-
          HPFEEDS_TEST_PUBCHANS: 'spam'
        command:
         - '/app/bin/hpfeeds-broker'
-        - '--bind=0.0.0.0:10000'
+        - '--endpoint=tcp:port=10000'
         - '--exporter=0.0.0.0:9431'
         - '--auth=env'
        ports:
         - "0.0.0.0:10000:10000"
         - "127.0.0.1:9431:9431"
+
+
+Multiple interfaces
+===================
+
+You can listen on multiple endpoints at once. This is useful if you have some components locally and some remotely and need to differentiate between them. For example::
+
+    $  hpfeeds-broker --endpoint=tls:port=10000:key=broker.key:cert=broker.crt --endpoint=tcp:port=20000:device=lan0
+
+This will allow TLS connections on any interface, and allow plain text connections only via the `lan0` NIC.
+
+The same config with docker-compose::
+
+.. code-block:: yaml
+
+   version: '2.1'
+
+   volumes:
+     hpfeeds_userdb: {}
+
+   services:
+     hpfeeds:
+       image: hpfeeds/hpfeeds-broker
+       container_name: hpfeeds
+       ports:
+        - "0.0.0.0:10000:10000"
+       volumes:
+        - hpfeeds_userdb:/app/var
+       command:
+        - '/app/bin/hpfeeds-broker'
+        - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
+        - '--endpoint=tcp:port=20000:device=lan0'
