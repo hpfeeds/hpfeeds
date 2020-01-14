@@ -16,6 +16,7 @@ from .prometheus import (
     SUBSCRIPTIONS,
     start_metrics_server,
 )
+from .utils.inotify import start_watching
 
 log = logging.getLogger("hpfeeds.broker")
 
@@ -118,6 +119,8 @@ class Server(object):
     async def serve_forever(self):
         ''' Start handling connections. Await on this to listen forever. '''
 
+        cleanup = []
+
         try:
             auth_finalizer = await self.auth.start()
 
@@ -132,10 +135,28 @@ class Server(object):
 
                 if endpoint['class'] == 'tls':
                     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-                    ssl_context.load_cert_chain(
-                        endpoint.get('cert', 'cert.pem'),
-                        endpoint.get('key', 'key.pem'),
-                    )
+
+                    def load():
+                        cert = endpoint.get('cert', 'cert.pem')
+                        key = endpoint.get('key', 'key.pem')
+                        log.info("Loading certificate chain: {} / {}".format(cert, key))
+                        ssl_context.load_cert_chain(cert, key)
+
+                    cert_watcher = start_watching(endpoint.get('cert', 'cert.pem'), load)
+                    if cert_watcher:
+                        cleanup.append(cert_watcher)
+                    else:
+                        load()
+                        log.warning("Failed to watch certificate: {}".format(endpoint.get('cert', 'cert.pem')))
+                        log.warning("You may need to restart hpfeeds-broker to get certificate changes detected")
+
+                    key_watcher = start_watching(endpoint.get('key', 'key.pem'), load)
+                    if key_watcher:
+                        cleanup.append(key_watcher)
+                    else:
+                        load()
+                        log.warning("Failed to watch private key: {}".format(endpoint.get('key', 'key.pem')))
+                        log.warning("You may need to restart hpfeeds-broker to get private key changes detected")
 
                 if endpoint['class'] == 'test':
                     sock = endpoint['sock']
@@ -173,6 +194,9 @@ class Server(object):
 
         finally:
             [s.close() for s in servers]
+
+            for cleanup in cleanup:
+                await cleanup()
 
             # for future in asyncio.as_completed([c.close() for c in list(self.connections)]):
             #    try:
