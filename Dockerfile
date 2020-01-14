@@ -1,4 +1,4 @@
-FROM alpine:3.9 AS builder
+FROM alpine:3.11 AS builder
 
 RUN apk --no-cache add python3
 RUN python3 -m venv /app
@@ -11,7 +11,7 @@ COPY hpfeeds /src/hpfeeds
 RUN /app/bin/pip install /src
 
 
-FROM alpine:3.9
+FROM alpine:3.11
 
 RUN apk --no-cache add sqlite python3
 
@@ -24,4 +24,4 @@ VOLUME /app/var
 EXPOSE 20000/tcp
 EXPOSE 9431/tcp
 
-CMD ["/app/bin/hpfeeds-broker", "--bind=0.0.0.0:20000", "--exporter=0.0.0.0:9431"]
+CMD ["/app/bin/hpfeeds-broker", "--endpoint=tcp:port=20000", "--exporter=0.0.0.0:9431"]
