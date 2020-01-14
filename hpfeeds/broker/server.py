@@ -144,6 +144,13 @@ class Server(object):
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.bind((endpoint.get('interface', '0.0.0.0'), int(endpoint['port'])))
 
+                # Allow user to use SO_BINDTODEVICE
+                # E.g. you could run 2 endpoints - one with and one without TLS, and bind the LAN side to an internal NIC.
+                # Usage: tls:interface=0.0.0.0:port=20001:device=eth0
+                if 'device' in endpoint:
+                    device = endpoint['device'][:15].encode('utf-8') + b'\0'
+                    sock.setsockopt(socket.SOL_SOCKET, 25, device)
+
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
                 endpoint['port'] = sock.getsockname()[1]
