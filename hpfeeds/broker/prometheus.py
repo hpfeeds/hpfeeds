@@ -135,9 +135,14 @@ async def metrics(request):
     return web.Response(text=data.decode('utf-8'), content_type='text/plain', charset='utf-8')
 
 
+async def healthz(request):
+    return web.Response(text='{}', content_type='application/json', charset='utf-8')
+
+
 async def start_metrics_server(host, port):
     app = web.Application()
     app.router.add_get('/metrics', metrics)
+    app.router.add_get('/healthz', healthz)
 
     runner = web.AppRunner(app, access_log=None)
     await runner.setup()
