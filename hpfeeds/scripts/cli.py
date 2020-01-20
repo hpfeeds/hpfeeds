@@ -20,6 +20,10 @@ def on_message(ident, chan, payload):
 
 
 def _main(opts, action, pubdata=None):
+    tls = opts.tls
+    if opts.certfile:
+        tls = True
+
     try:
         hpc = hpfeeds.new(
             opts.host,
@@ -27,6 +31,7 @@ def _main(opts, action, pubdata=None):
             opts.ident,
             opts.secret,
             certfile=opts.certfile,
+            tls=tls,
         )
     except hpfeeds.FeedException as e:
         log('Error: {0}'.format(e))
@@ -89,6 +94,10 @@ def get_parser():
         action="store", dest='output', nargs=1, type='string',
         help="publish log filename")
     parser.add_option(
+        "--tls",
+        action="store_true", dest='tls',
+        help="Use TLS for the connection", default=False)
+    parser.add_option(
         "--tlscert",
         action="store", dest='certfile', nargs=1, type='string',
         help="certfile for ssl verification (CA)", default=None)
@@ -110,7 +119,10 @@ def opts():
     if args[0] not in ['subscribe', 'publish', 'sendfile']:
         parser.error('You need to give "subscribe" or "publish" as <action>.')
 
-    logging.basicConfig(level=logging.DEBUG if options.debug else logging.CRITICAL)
+    logging.basicConfig(
+        format="[%(asctime)s] [%(levelname)s] %(message)s",
+        level=logging.DEBUG if options.debug else logging.INFO
+    )
 
     action = args[0]
     data = None
