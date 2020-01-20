@@ -118,9 +118,10 @@ class Client(object):
                 self.s = self.makesocket(addr_family)
                 self.s.settimeout(self.timeout)
                 self.s.connect((addr, self.port))
-            except ssl.SSLCertVerificationError as e:
-                logger.error("Error validating certificate: {e}".format(e=e))
-                continue
+            except ssl.SSLError as e:
+                if e.reason == 'CERTIFICATE_VERIFY_FAILED':
+                    logger.error("Error validating certificate: {e}".format(e=e))
+                    continue
             except Exception:
                 logger.exception('Could not connect to broker {}[{}]'.format(
                     self.host,
@@ -138,6 +139,14 @@ class Client(object):
 
         self.unpacker.reset()
 
+        self.do_auth()
+
+        self.s.settimeout(None)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        if sys.platform.startswith('linux'):
+            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)
+
+    def do_auth(self):
         try:
             d = self.s.recv(BUFSIZ)
         except socket.timeout:
@@ -158,11 +167,6 @@ class Client(object):
                 raise FeedException('Expected OP_INFO but got another opcode.')
         else:
             raise FeedException('Expected OP_INFO but cannot assemble complete message')
-
-        self.s.settimeout(None)
-        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        if sys.platform.startswith('linux'):
-            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 10)
 
     def run(self, message_callback, error_callback):
         while not self.stopped:
