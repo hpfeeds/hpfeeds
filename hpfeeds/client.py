@@ -286,7 +286,7 @@ class SslClient(Client):
         return wrapped_sock
 
 
-def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20, certfile=None, tls=False):
+def new(host=None, port=10000, ident=None, secret=None, timeout=3, reconnect=True, sleepwait=20, certfile=None, tls=False, **kwargs):
     if certfile or tls:
-        return SslClient(host, port, ident, secret, timeout, reconnect, certfile=certfile)
-    return Client(host, port, ident, secret, timeout, reconnect)
+        return SslClient(host, port, ident, secret, timeout, reconnect, certfile=certfile, **kwargs)
+    return Client(host, port, ident, secret, timeout, reconnect, **kwargs)
