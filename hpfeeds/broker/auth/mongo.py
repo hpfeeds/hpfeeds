@@ -11,10 +11,13 @@ from pymongo import MongoClient
 class Authenticator(object):
 
     def __init__(self, connection_string):
-        dbstring, dbname = connection_string.rsplit('/', 1)
-        self.client = MongoClient(dbstring)
-        self.db = self.client[dbname]
-        self.collection = self.db['auth_key']
+        try:
+            dbstring, dbname = connection_string.rsplit('/', 1)
+            self.client = MongoClient(dbstring)
+            self.db = self.client[dbname]
+            self.collection = self.db['auth_key']
+        except Exception as err:
+            pritn("Error connecting to mongo database: {0}".format(err))
 
     async def start(self):
         pass
