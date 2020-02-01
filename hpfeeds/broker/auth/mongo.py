@@ -32,6 +32,7 @@ class Authenticator(object):
             return None
 
         return dict(
+            owner=auth_key['identifier'],
             secret=auth_key['secret'],
             ident=auth_key['identifier'],
             pubchans=auth_key['publish'],
