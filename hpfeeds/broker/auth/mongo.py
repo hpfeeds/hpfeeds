@@ -16,8 +16,6 @@ class Authenticator(object):
         self.db = self.client[dbname]
         self.collection = self.db['auth_key']
 
-
-
     async def start(self):
         pass
 
@@ -25,7 +23,7 @@ class Authenticator(object):
         self.client.close()
 
     def get_authkey(self, ident):
-        auth_key = self.collection.find_one({"identifier", ident})
+        auth_key = self.collection.find_one({"identifier": ident})
 
         if not auth_key:
             return None
