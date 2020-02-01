@@ -5,14 +5,18 @@ from pymongo import MongoClient
 # inserting a user:
 # mongo
 # db.auth_key.insert({"identifier": "testin", "secret": "secretkey", "publish": ["chan1", "chan2"], subscribe: ["chan2"]})
-
 # Connection string example mongodb://username:password@mongohost:27017/dbname
 
 
 class Authenticator(object):
 
     def __init__(self, connection_string):
-        self.client = MongoClient(connection_string)
+        dbstring, dbname = connection_string.rsplit('/', 1)
+        self.client = MongoClient(dbstring)
+        self.db = self.client[dbname]
+        self.collection = self.db['auth_key']
+
+
 
     async def start(self):
         pass
@@ -21,10 +25,7 @@ class Authenticator(object):
         self.client.close()
 
     def get_authkey(self, ident):
-
-        auth_collection = self.client['auth_key']
-
-        auth_key = auth_collection.find_one({"identifier", ident})
+        auth_key = self.collection.find_one({"identifier", ident})
 
         if not auth_key:
             return None
