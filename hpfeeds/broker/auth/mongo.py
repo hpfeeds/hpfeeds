@@ -17,7 +17,7 @@ class Authenticator(object):
             self.db = self.client[dbname]
             self.collection = self.db['auth_key']
         except Exception as err:
-            pritn("Error connecting to mongo database: {0}".format(err))
+            print("Error connecting to mongo database: {0}".format(err))
 
     async def start(self):
         pass
