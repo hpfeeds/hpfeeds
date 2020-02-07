@@ -1,4 +1,5 @@
-from pymongo import MongoClient
+import logging
+import motor.motor_asyncio
 
 # inserting a user:
 # mongo
@@ -9,21 +10,26 @@ from pymongo import MongoClient
 class Authenticator(object):
 
     def __init__(self, connection_string):
+        self.logger = logging.getLogger('broker.auth.mongo.Authenticator')
+        self.logger.info('Creating Authenticator Class')
         try:
             dbstring, dbname = connection_string.rsplit('/', 1)
-            self.client = MongoClient(dbstring)
+            self.client = motor.motor_asyncio.AsyncIOMotorClient(dbstring)
             self.db = self.client[dbname]
             self.collection = self.db['auth_key']
         except Exception as err:
-            print("Error connecting to mongo database: {0}".format(err))
+            ServerException (hpfeeds.broker.server.ServerException)
+            self.logger.error("Error connecting to mongo database: {0}".format(err))
 
     async def start(self):
         pass
 
-    def close(self):
+    async def close(self):
+        self.logger.debug("Closing Mongo Connection")
         self.client.close()
 
-    def get_authkey(self, ident):
+    async def get_authkey(self, ident):
+        self.logger.debug("Auth key for {0} requested".format(ident))
         auth_key = self.collection.find_one({"identifier": ident})
 
         if not auth_key:
