@@ -5,7 +5,7 @@ import unittest
 
 from hpfeeds.asyncio import ClientSession
 from hpfeeds.broker import prometheus
-from hpfeeds.broker.auth.memory import Authenticator, AsyncAuthenticator
+from hpfeeds.broker.auth.memory import AsyncAuthenticator, Authenticator
 from hpfeeds.broker.server import Server
 
 
@@ -218,7 +218,7 @@ class TestAsyncioClientIntegration(unittest.TestCase):
         assert len(self.server.connections) == 0, 'Connection left dangling'
 
 
-class TestAsyncioClientIntegration(unittest.TestCase):
+class TestAsyncioClientIntegrationAsync(unittest.TestCase):
 
     def make_authenticator(self):
         return AsyncAuthenticator({

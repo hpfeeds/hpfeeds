@@ -1,6 +1,8 @@
 import json
 import logging
+import os
 
+from hpfeeds.broker.server import ServerException
 from hpfeeds.broker.utils.inotify import start_watching
 
 # An authenticator where the data is backed by JSON:
@@ -22,6 +24,9 @@ class Authenticator(object):
     def __init__(self, path):
         self.path = path
         self.db = {}
+
+        if not os.path.exists(path):
+            raise ServerException(f"Cannot find {path!r}")
 
     async def start(self):
         close = start_watching(self.path, self.load)

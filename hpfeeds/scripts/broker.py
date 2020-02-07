@@ -1,10 +1,19 @@
 import argparse
 import logging
+import sys
 
 import aiorun
 
 from hpfeeds.broker.auth import env, json, sqlite
-from hpfeeds.broker.server import Server
+from hpfeeds.broker.server import Server, ServerException
+
+
+def get_authenticator(auth):
+    if auth.endswith('.json'):
+        return json.Authenticator(auth)
+    elif auth == 'env':
+        return env.Authenticator()
+    return sqlite.Authenticator('sqlite.db')
 
 
 def main():
@@ -27,12 +36,11 @@ def main():
         level=logging.DEBUG if args.debug else logging.INFO,
     )
 
-    if args.auth.endswith('.json'):
-        auth = json.Authenticator(args.auth)
-    elif args.auth == 'env':
-        auth = env.Authenticator()
-    else:
-        auth = sqlite.Authenticator('sqlite.db')
+    try:
+        auth = get_authenticator(args.auth)
+    except ServerException as e:
+        print(str(e))
+        sys.exit(1)
 
     broker = Server(
         auth=auth,

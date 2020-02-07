@@ -21,6 +21,10 @@ from .utils.inotify import start_watching
 log = logging.getLogger("hpfeeds.broker")
 
 
+class ServerException(Exception):
+    pass
+
+
 class Server(object):
 
     def __init__(self, auth, exporter=None, name='hpfeeds'):
