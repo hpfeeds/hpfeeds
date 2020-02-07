@@ -31,3 +31,9 @@ class Authenticator(object):
         authkey = dict(authkey)
         authkey['ident'] = ident
         return authkey
+
+
+class AsyncAuthenticator(Authenticator):
+
+    async def get_authkey(self, ident):
+        return super().get_authkey(ident)

@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 
 import asyncio
+import inspect
 import logging
 import os
 import socket
@@ -56,6 +57,7 @@ class Connection(BaseProtocol):
     def __init__(self, server):
         self.server = server
 
+        self.verified = False
         self.uid = None
         self.ak = None
         self.pubchans = []
@@ -142,6 +144,28 @@ class Connection(BaseProtocol):
 
     def on_auth(self, ident, secret):
         akrow = self.server.get_authkey(ident)
+
+        if inspect.isawaitable(akrow):
+            task = asyncio.ensure_future(akrow)
+            task.add_done_callback(lambda task: self.on_auth_result(task, ident, secret))
+            self.transport.pause_reading()
+            return True
+
+        self.authenticate(ident, secret, akrow)
+
+    def on_auth_result(self, task, ident, secret):
+        try:
+            akrow = task.result()
+        except Exception as e:
+            log.exception("Unhandled exception checking ident")
+            CONNECTION_ERROR.labels(ident, 'error-checking-ident').inc()
+            self.error(f"Authentication failed for {ident}")
+            self.transport.close()
+            return
+
+        self.authenticate(ident, secret, akrow)
+
+    def authenticate(self, ident, secret, akrow):
         if not akrow:
             CONNECTION_ERROR.labels(ident, 'invalid-ident').inc()
             self.error(f"Authentication failed for {ident}")
@@ -169,6 +193,9 @@ class Connection(BaseProtocol):
         self.transport.set_write_buffer_limits(high=high)
 
         CONNECTION_READY.labels(ident).inc()
+
+        self.process_pending()
+        self.transport.resume_reading()
 
     def on_publish(self, ident, chan, payload):
         if not ident == self.ak:

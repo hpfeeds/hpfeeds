@@ -5,7 +5,7 @@ import unittest
 
 from hpfeeds.asyncio import ClientSession
 from hpfeeds.broker import prometheus
-from hpfeeds.broker.auth.memory import Authenticator
+from hpfeeds.broker.auth.memory import Authenticator, AsyncAuthenticator
 from hpfeeds.broker.server import Server
 
 
@@ -22,7 +22,13 @@ class TestAsyncioClientIntegration(unittest.TestCase):
         sock.bind(('127.0.0.1', 0))
         self.port = sock.getsockname()[1]
 
-        authenticator = Authenticator({
+        authenticator = self.make_authenticator()
+
+        self.server = Server(authenticator)
+        self.server.add_endpoint_test(sock)
+
+    def make_authenticator(self):
+        return Authenticator({
             'test': {
                 'secret': 'secret',
                 'subchans': ['test-chan'],
@@ -30,9 +36,6 @@ class TestAsyncioClientIntegration(unittest.TestCase):
                 'owner': 'some-owner',
             }
         })
-
-        self.server = Server(authenticator)
-        self.server.add_endpoint_test(sock)
 
     def test_subscribe_and_publish(self):
         async def inner():
@@ -213,6 +216,19 @@ class TestAsyncioClientIntegration(unittest.TestCase):
 
         asyncio.get_event_loop().run_until_complete(inner())
         assert len(self.server.connections) == 0, 'Connection left dangling'
+
+
+class TestAsyncioClientIntegration(unittest.TestCase):
+
+    def make_authenticator(self):
+        return AsyncAuthenticator({
+            'test': {
+                'secret': 'secret',
+                'subchans': ['test-chan'],
+                'pubchans': ['test-chan'],
+                'owner': 'some-owner',
+            }
+        })
 
 
 class TestAsyncioClientIntegrationSSL(unittest.TestCase):

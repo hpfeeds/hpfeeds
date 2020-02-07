@@ -89,15 +89,20 @@ class BaseProtocol(asyncio.Protocol):
         # Can't recover from an unknown opcode, so drop connection
         self.protocol_error('Unknown message opcode: {!r}'.format(opcode))
         self.transport.close()
+        return True
 
     def connection_made(self, transport):
         self.transport = transport
 
     def data_received(self, data):
         self.unpacker.feed(data)
+        self.process_pending()
+
+    def process_pending(self):
         try:
             for opcode, data in self.unpacker:
-                self.message_received(opcode, data)
+                if self.message_received(opcode, data):
+                    break
         except ProtocolException as e:
             # Can't recover from a protocol decoding error, so drop connection
             self.protocol_error(str(e))
