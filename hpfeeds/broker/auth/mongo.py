@@ -1,5 +1,8 @@
+import asyncio
 import logging
 import motor.motor_asyncio
+
+from hpfeeds.broker.server import ServerException
 
 # inserting a user:
 # mongo
@@ -10,16 +13,19 @@ import motor.motor_asyncio
 class Authenticator(object):
 
     def __init__(self, connection_string):
-        self.logger = logging.getLogger('broker.auth.mongo.Authenticator')
+
+        # we need to wait for the loop
+        loop = asyncio.get_event_loop()
+
+        self.logger = logging.getLogger('hpfeeds.broker.auth.mongo.Authenticator')
         self.logger.info('Creating Authenticator Class')
         try:
             dbstring, dbname = connection_string.rsplit('/', 1)
-            self.client = motor.motor_asyncio.AsyncIOMotorClient(dbstring)
+            self.client = motor.motor_asyncio.AsyncIOMotorClient(dbstring, io_loop=loop)
             self.db = self.client[dbname]
             self.collection = self.db['auth_key']
         except Exception as err:
-            ServerException (hpfeeds.broker.server.ServerException)
-            self.logger.error("Error connecting to mongo database: {0}".format(err))
+            ServerException ("Unable to connect to mongo database: {0}".format(err))
 
     async def start(self):
         pass
@@ -30,7 +36,7 @@ class Authenticator(object):
 
     async def get_authkey(self, ident):
         self.logger.debug("Auth key for {0} requested".format(ident))
-        auth_key = self.collection.find_one({"identifier": ident})
+        auth_key = await self.collection.find_one({"identifier": ident})
 
         if not auth_key:
             return None
