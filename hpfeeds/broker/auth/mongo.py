@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 import motor.motor_asyncio
-
 from hpfeeds.broker.server import ServerException
 
 # inserting a user:
