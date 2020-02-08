@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 import motor.motor_asyncio
 
 from hpfeeds.broker.server import ServerException
@@ -25,7 +26,7 @@ class Authenticator(object):
             self.db = self.client[dbname]
             self.collection = self.db['auth_key']
         except Exception as err:
-            ServerException ("Unable to connect to mongo database: {0}".format(err))
+            ServerException("Unable to connect to mongo database: {0}".format(err))
 
     async def start(self):
         pass
