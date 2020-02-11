@@ -18,7 +18,7 @@ class Authenticator(object):
         try:
             self.dbstring, self.dbname = connection_string.rsplit('/', 1)
         except Exception as err:
-            ServerException("Unable to create connection string: {0}".format(err))
+            raise ServerException("Unable to create connection string: {0}".format(err))
 
     async def db_connect(self):
         try:
@@ -29,7 +29,7 @@ class Authenticator(object):
             self.collection = self.db['auth_key']
         except Exception as err:
             self.connection = False
-            ServerException("Unable to connect to mongo database: {0}".format(err))
+            raise ServerException("Unable to connect to mongo database: {0}".format(err))
 
     async def start(self):
         pass
@@ -47,7 +47,10 @@ class Authenticator(object):
             await self.db_connect()
             self.connection = True
 
-        auth_key = await self.collection.find_one({"identifier": ident})
+        try:
+            auth_key = await self.collection.find_one({"identifier": ident})
+        except Exception as err:
+            raise ServerException("Unable to query mongo database: {0}".format(err))
 
         if not auth_key:
             return None
