@@ -127,6 +127,16 @@ The accounts must be formatted as a mapping where the ident is the key:
 }
 ```
 
+If the `aionotify` package is installed and the host os is Linux then the broker will automatically
+reload the JSON file when it opens.
+
+This is handy where you have a small number of user accounts and you already have infrastructure
+orchestration that can easily replicate a password file. For example, when using Kubernetes and
+its secret type updates to the secret object in the Kubernetes API will be automatically synced to
+a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
+restart.
+
+
 Mongo authentication store
 =========================
 
@@ -176,16 +186,6 @@ switched to db hpfeeds
 WriteResult({ "nInserted" : 1 })
 > 
 ```
-
-
-If the `aionotify` package is installed and the host os is Linux then the broker will automatically
-reload the JSON file when it opens.
-
-This is handy where you have a small number of user accounts and you already have infrastructure
-orchestration that can easily replicate a password file. For example, when using Kubernetes and
-its secret type updates to the secret object in the Kubernetes API will be automatically synced to
-a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
-restart.
 
 
 Test authentication
