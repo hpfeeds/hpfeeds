@@ -49,8 +49,10 @@ class Authenticator(object):
 
         try:
             auth_key = await self.collection.find_one({"identifier": ident})
-        except Exception as err:
-            raise ServerException("Unable to query mongo database: {0}".format(err))
+        except Exception:
+            self.connection = False
+            self.logger.exception(f"Unhandled exception whilst trying to retrieve user {ident!r}")
+            return None
 
         if not auth_key:
             return None
