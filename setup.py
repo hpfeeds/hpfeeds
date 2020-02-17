@@ -36,6 +36,9 @@ setup(
         ],
         'broker-auth-json': [
             'aionotify',
+        ],
+        'broker-auth-mongo': [
+            'motor',
         ]
     },
 )
