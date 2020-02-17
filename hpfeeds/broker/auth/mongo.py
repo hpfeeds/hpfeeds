@@ -1,8 +1,12 @@
 import asyncio
 import logging
 
-import motor.motor_asyncio
 from hpfeeds.broker.server import ServerException
+
+try:
+    from motor import motor_asyncio
+except ImportError:
+    motor_asyncio = None
 
 # inserting a user:
 # mongo
@@ -15,6 +19,10 @@ class Authenticator(object):
     def __init__(self, connection_string):
         self.logger = logging.getLogger('hpfeeds.broker.auth.mongo.Authenticator')
         self.connection = False
+
+        if not motor_asyncio:
+            raise ServerException("The module 'motor.motor_asyncio' is not available - is the motor package installed?")
+
         try:
             self.dbstring, self.dbname = connection_string.rsplit('/', 1)
         except Exception as err:
@@ -24,7 +32,7 @@ class Authenticator(object):
         try:
             self.logger.debug("Connecting to Mongo DB")
             loop = asyncio.get_event_loop()
-            self.client = motor.motor_asyncio.AsyncIOMotorClient(self.dbstring, io_loop=loop)
+            self.client = motor_asyncio.AsyncIOMotorClient(self.dbstring, io_loop=loop)
             self.db = self.client[self.dbname]
             self.collection = self.db['auth_key']
         except Exception as err:
