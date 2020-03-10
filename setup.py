@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='hpfeeds',
-    version='3.0.0.dev0',
+    version='3.0.0',
     description='Python implementation of the hpfeeds client and broker',
     url='https://github.com/hpfeeds/hpfeeds',
     license='GPL',
