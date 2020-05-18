@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import socket
+from .utils import get_inet_version
 
 try:
     import queue
@@ -24,10 +25,10 @@ class Queue(queue.Queue, object):
         if os.name == 'posix':
             self._putsocket, self._getsocket = socket.socketpair()
         else:
-            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server.bind(('127.0.0.1', 0))
+            server = socket.socket(get_inet_version('localhost'), socket.SOCK_STREAM)
+            server.bind(('localhost', 0))
             server.listen(1)
-            self._putsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._putsocket = socket.socket(get_inet_version(server.getsockname()[0]), socket.SOCK_STREAM)
             self._putsocket.connect(server.getsockname())
             self._getsocket, _ = server.accept()
             server.close()
