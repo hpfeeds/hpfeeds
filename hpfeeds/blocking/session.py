@@ -9,7 +9,7 @@ from hpfeeds.protocol import msgpublish, msgsubscribe, msgunsubscribe
 from .protocol import ClientProtocol
 from .queue import Queue
 from .reactor import ThreadReactor
-
+from .utils import get_inet_version
 
 class Protocol(ClientProtocol):
 
@@ -45,7 +45,7 @@ class ClientSession(object):
 
     def _connect(self):
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock = socket.socket(get_inet_version(self.host), socket.SOCK_STREAM)
             sock.connect((self.host, self.port))
         except Exception as e:
             logging.exception(e)
