@@ -132,6 +132,8 @@ You can insert users with:
 
     INSERT INTO authkeys (owner, ident, secret, pubchans, subchans)
         VALUES ('owner', 'ident', 'secret', '["chan1"]', '["chan1"]');
+        
+pubchans and subchans are JSON encoded lists.
 
 You don't need to restart the broker.
 
