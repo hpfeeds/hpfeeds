@@ -245,22 +245,22 @@ Or if using docker-compose::
 
 .. code-block:: yaml
 
-   version: '2.1'
+    version: '2.1'
 
-   volumes:
-     hpfeeds_userdb: {}
+    volumes:
+        hpfeeds_userdb: {}
 
-   services:
-     hpfeeds:
-       image: hpfeeds/hpfeeds-broker
-       container_name: hpfeeds
-       ports:
-        - "0.0.0.0:10000:10000"
-       volumes:
-        - hpfeeds_userdb:/app/var
-       command:
-        - '/app/bin/hpfeeds-broker'
-        - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
+    services:
+       hpfeeds:
+         image: hpfeeds/hpfeeds-broker
+         container_name: hpfeeds
+         ports:
+          - "0.0.0.0:10000:10000"
+         volumes:
+          - hpfeeds_userdb:/app/var
+         command:
+          - '/app/bin/hpfeeds-broker'
+          - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
 
 
 Monitoring
