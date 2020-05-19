@@ -6,8 +6,8 @@ remotely and published to a channel on the broker. All subscribers to that
 channel then receive a copy.
 
 
-Starting a broker with test authentication
-==========================================
+Super-easy throwaway test broker
+================================
 
 When you are adding hpfeeds to a project you often want a test broker. You
 want to test authentication, but you don't care about being able to add/remove
@@ -46,8 +46,47 @@ You can set these variables in your `docker-compose.yml`:
 And start a broker with `docker-compose up`.
 
 
-SQLite Authentication
-=====================
+Authentication
+==============
+
+For a more long lived broker you want to use more than environment variables for your authentication. There are a couple of options.
+
+JSON authentication store
+-------------------------
+
+When starting the broker you can pass with path to a `.json` file. It will then load all the users
+in that file. For example:
+
+```bash
+hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds/users.json
+```
+
+The accounts must be formatted as a mapping where the ident is the key:
+
+.. code-block:: json
+
+    {
+      "my-user-ident": {
+        "owner": "my-owner",
+        "secret": "my-really-strong-passphrase",
+        "subchans": ["chan1"],
+        "pubchans": [],
+      }
+    }
+
+
+If the `aionotify` package is installed and the host os is Linux then the broker will automatically
+reload the JSON file whenever it changes.
+
+This is handy where you have a small number of user accounts and you already have infrastructure
+orchestration that can easily replicate a password file. For example, when using Kubernetes and
+its secret type updates to the secret object in the Kubernetes API will be automatically synced to
+a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
+restart.
+
+
+SQLite authentication store
+---------------------------
 
 The default authentication backend is sqlite. If you are using this backend
 then you should make sure your broker container has a volume to store the db:
@@ -91,42 +130,8 @@ You can insert users with:
 You don't need to restart the broker.
 
 
-JSON authentication store
-=========================
-
-When starting the broker you can pass with path to a `.json` file. It will then load all the users
-in that file. For example:
-
-```bash
-hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds/users.json
-```
-
-The accounts must be formatted as a mapping where the ident is the key:
-
-.. code-block:: json
-
-    {
-      "my-user-ident": {
-        "owner": "my-owner",
-        "secret": "my-really-strong-passphrase",
-        "subchans": ["chan1"],
-        "pubchans": [],
-      }
-    }
-
-
-If the `aionotify` package is installed and the host os is Linux then the broker will automatically
-reload the JSON file when it opens.
-
-This is handy where you have a small number of user accounts and you already have infrastructure
-orchestration that can easily replicate a password file. For example, when using Kubernetes and
-its secret type updates to the secret object in the Kubernetes API will be automatically synced to
-a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
-restart.
-
-
 Mongo authentication store
-==========================
+--------------------------
 
 When starting the broker you can pass a mongo connection string. Auth requests are then checked against
 the selected Database in a collection named auth_keys. Any authentication can be included within the connection string
@@ -176,8 +181,8 @@ To add a new user
     > 
 
 
-TLS Authentication
-==================
+TLS
+===
 
 You can use a self-signed certificate:
 
@@ -210,6 +215,9 @@ Or if using docker-compose:
          command:
           - '/app/bin/hpfeeds-broker'
           - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
+          
+If you use letsencrypt to issue this certificate and have `aionotify` installed on a Linux machine then the certificate will be automatically rolled over without having to restart the broker.
+
 
 Monitoring
 ==========
@@ -295,6 +303,8 @@ The same config with docker-compose:
         - '/app/bin/hpfeeds-broker'
         - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
         - '--endpoint=tcp:port=20000:device=lan0'
+
+The intention is that you could have a pull only side and a push only side, but this is not yet implemented.
 
 
 Without Docker
