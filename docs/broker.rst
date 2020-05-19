@@ -7,6 +7,9 @@ channel then receive a copy.
 
 If you are running the broker outside of Docker please not that Windows is not supported and you must be using Python 3.6 or later.
 
+The examples below assume support for docker-compose 2.1 files or later. hpfeeds should still work if you have an older environment, but you will need to write your own docker-compose configuration for your older docker-compose installation.
+
+
 Super-easy throwaway test broker
 ================================
 
