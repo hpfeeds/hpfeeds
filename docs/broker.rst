@@ -116,16 +116,17 @@ hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth=/var/lib/hpfeeds
 
 The accounts must be formatted as a mapping where the ident is the key:
 
-```json
-{
-  "my-user-ident": {
-    "owner": "my-owner",
-    "secret": "my-really-strong-passphrase",
-    "subchans": ["chan1"],
-    "pubchans": [],
-  }
-}
-```
+.. code-block:: json
+
+    {
+      "my-user-ident": {
+        "owner": "my-owner",
+        "secret": "my-really-strong-passphrase",
+        "subchans": ["chan1"],
+        "pubchans": [],
+      }
+    }
+
 
 If the `aionotify` package is installed and the host os is Linux then the broker will automatically
 reload the JSON file when it opens.
@@ -144,48 +145,48 @@ When starting the broker you can pass a mongo connection string. Auth requests a
 the selected Database in a collection named auth_keys. Any authentication can be included within the connection string
 For example:
 
-```bash
-hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="mongodb://127.0.0.1:27017/hpfeeds"
-```
+.. code-block:: bash
 
-```bash
-hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="mongodb://admin:admin@127.0.0.1:27017/hpfeeds"
-```
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="mongodb://127.0.0.1:27017/hpfeeds"
+
+.. code-block:: bash
+
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="mongodb://admin:admin@127.0.0.1:27017/hpfeeds"
 
 An example Mongo Document:
 
-```json
-{
-  "identifier": "testing",
-  "secret": "secretkey",
-  "publish": [ "chan1","chan2"],
-  "subscribe": ["chan2"]
-}
-```
+.. code-block:: json
+
+    {
+      "identifier": "testing",
+      "secret": "secretkey",
+      "publish": [ "chan1","chan2"],
+      "subscribe": ["chan2"]
+    }
 
 To Find all users
 
-```bash
-mongo
-> use hpfeeds
-switched to db hpfeeds
-> show collections
-auth_key
-> db.auth_key.find()
-{ "_id" : ObjectId("5e35e5f09ba2a06adeef5be0"), "identifier" : "49be3430-4535-11ea-90b0-0242ac140004", "secret" : "q8JeUC043OYs7Mmz", "publish" : [ ], "subscribe" : [ ] }
-> 
-```
+.. code-block:: bash
+
+    mongo
+    > use hpfeeds
+    switched to db hpfeeds
+    > show collections
+    auth_key
+    > db.auth_key.find()
+    { "_id" : ObjectId("5e35e5f09ba2a06adeef5be0"), "identifier" : "49be3430-4535-11ea-90b0-0242ac140004", "secret" :     "q8JeUC043OYs7Mmz", "publish" : [ ], "subscribe" : [ ] }
+    > 
 
 To add a new user
 
-```bash
-mongo -u admin -padmid
-> use hpfeeds
-switched to db hpfeeds
-> db.auth_key.insert({"identifier": "testing", "secret": "secretkey", "publish": ["chan1", "chan2"], subscribe: ["chan2"]})
-WriteResult({ "nInserted" : 1 })
-> 
-```
+.. code-block:: bash
+
+    mongo -u admin -padmid
+    > use hpfeeds
+    switched to db hpfeeds
+    > db.auth_key.insert({"identifier": "testing", "secret": "secretkey", "publish": ["chan1", "chan2"], subscribe: ["chan2"]})
+    WriteResult({ "nInserted" : 1 })
+    > 
 
 
 Test authentication
