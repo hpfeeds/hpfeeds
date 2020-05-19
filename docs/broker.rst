@@ -5,6 +5,7 @@ The core service in any hpfeeds based service is its broker. Data is collected
 remotely and published to a channel on the broker. All subscribers to that
 channel then receive a copy.
 
+If you are running the broker outside of Docker please not that Windows is not supported and you must be using Python 3.6 or later.
 
 Super-easy throwaway test broker
 ================================
