@@ -6,22 +6,24 @@ remotely and published to a channel on the broker. All subscribers to that
 channel then receive a copy.
 
 
-Getting started
-===============
+Starting a broker with test authentication
+==========================================
 
-The easiest way to get started with the broker is with Docker. You can run one
-as easily as:
+When you are adding hpfeeds to a project you often want a test broker. You
+want to test authentication, but you don't care about being able to add/remove
+users at runtime.
+
+The broker ships with an `env` auth backend that reads from the environment.
+
+If you wanted to add an `ident` of `james` and a `secret` of `password` that can
+subscribe to `test-chan` then you would set the following environment variables:
 
 .. code-block:: bash
 
-   $ docker run \
-       -p "0.0.0.0:10000:10000" \
-       hpfeeds/hpfeeds-broker:latest
+    export HPFEEDS_JAMES_SECRET=secret
+    export HPFEEDS_JAMES_SUBCHANS=test-chan
 
-This will start a broker that is listening for publishers and subscribers on
-port 10000.
-
-It is much more maintainable to use a `docker-compose.yml`:
+You can set these variables in your `docker-compose.yml`:
 
 .. code-block:: yaml
 
@@ -30,33 +32,18 @@ It is much more maintainable to use a `docker-compose.yml`:
    services:
      hpfeeds:
        image: hpfeeds/hpfeeds-broker
-       container_name: hpfeeds
+       environment:
+         HPFEEDS_TEST_SECRET: 'test'
+         HPFEEDS_TEST_SUBCHANS: 'spam'
+         HPFEEDS_TEST_PUBCHANS: 'spam'
+       command:
+        - '/app/bin/hpfeeds-broker'
+        - '--endpoint=tcp:port=10000'
+        - '--auth=env'
        ports:
         - "0.0.0.0:10000:10000"
 
-You can start this with:
-
-.. code-block:: bash
-
-   $ docker-compose up -d
-
-And stop it with
-
-.. code-block:: bash
-
-   $ docker-compose down
-
-You can also install the python package directly:
-
-.. code-block:: bash
-
-   $ pip install hpfeeds[broker]
-
-You can then run it in the foreground with:
-
-.. code-block:: bash
-
-   $ hpfeeds-broker -e tcp:port=10000 --name mybroker
+And start a broker with `docker-compose up`.
 
 
 Authentication
@@ -187,44 +174,6 @@ To add a new user
     > db.auth_key.insert({"identifier": "testing", "secret": "secretkey", "publish": ["chan1", "chan2"], subscribe: ["chan2"]})
     WriteResult({ "nInserted" : 1 })
     > 
-
-
-Test authentication
-===================
-
-When you are adding hpfeeds to a project you often want a test broker. You
-want to test authentication, but you don't care about being able to add/remove
-users at runtime.
-
-The broker ships with an `env` auth backend that reads from the environment.
-
-If you wanted to add an `ident` of `james` and a `secret` of `password` that can
-subscribe to `test-chan` then you would set the following environment variables:
-
-.. code-block:: bash
-
-    export HPFEEDS_JAMES_SECRET=secret
-    export HPFEEDS_JAMES_SUBCHANS=test-chan
-
-You can set these variables in your `docker-compose.yml`:
-
-.. code-block:: yaml
-
-   version: '2.1'
-
-   services:
-     hpfeeds:
-       image: hpfeeds/hpfeeds-broker
-       environment:
-         HPFEEDS_TEST_SECRET: 'test'
-         HPFEEDS_TEST_SUBCHANS: 'spam'
-         HPFEEDS_TEST_PUBCHANS: 'spam'
-       command:
-        - '/app/bin/hpfeeds-broker'
-        - '--endpoint=tcp:port=10000'
-        - '--auth=env'
-       ports:
-        - "0.0.0.0:10000:10000"
 
 
 TLS Authentication
