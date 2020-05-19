@@ -110,9 +110,11 @@ then you should make sure your broker container has a volume to store the db:
         - "0.0.0.0:10000:10000"
        volumes:
         - hpfeeds_userdb:/app/var
+        
+When you start this example with `docker-compose up` it will automatically create an empty sqlite database in `/app/var` for you.
 
 Unfortunately managing access keys currently involves SQL! You can use
-docker-compose to get an sqlite shell:
+docker-compose to get an sqlite shell with:
 
 .. code-block:: bash
 
