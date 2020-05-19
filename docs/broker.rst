@@ -46,8 +46,8 @@ You can set these variables in your `docker-compose.yml`:
 And start a broker with `docker-compose up`.
 
 
-Authentication
-==============
+SQLite Authentication
+=====================
 
 The default authentication backend is sqlite. If you are using this backend
 then you should make sure your broker container has a volume to store the db:
@@ -126,7 +126,7 @@ restart.
 
 
 Mongo authentication store
-=========================
+==========================
 
 When starting the broker you can pass a mongo connection string. Auth requests are then checked against
 the selected Database in a collection named auth_keys. Any authentication can be included within the connection string
@@ -295,3 +295,21 @@ The same config with docker-compose:
         - '/app/bin/hpfeeds-broker'
         - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
         - '--endpoint=tcp:port=20000:device=lan0'
+
+
+Without Docker
+==============
+
+You can also install the python package directly:
+
+.. code-block:: bash
+
+   $ pip install hpfeeds[broker]
+
+You can then run it in the foreground with:
+
+.. code-block:: bash
+
+    $ hpfeeds-broker -e tcp:port=10000 --name mybroker
+
+This will run in the foreground - use systemd to run this as a production server.
