@@ -241,7 +241,7 @@ You can start the broker using this cert with::
 
     $  hpfeeds-broker --endpoint=tls:port=10000:key=broker.key:cert=broker.crt
 
-Or if using docker-compose::
+Or if using docker-compose:
 
 .. code-block:: yaml
 
@@ -261,7 +261,6 @@ Or if using docker-compose::
          command:
           - '/app/bin/hpfeeds-broker'
           - '--endpoint=tls:port=10000:key=broker.key:cert=broker.crt'
-
 
 Monitoring
 ==========
@@ -326,7 +325,7 @@ You can listen on multiple endpoints at once. This is useful if you have some co
 
 This will allow TLS connections on any interface, and allow plain text connections only via the `lan0` NIC.
 
-The same config with docker-compose::
+The same config with docker-compose:
 
 .. code-block:: yaml
 
