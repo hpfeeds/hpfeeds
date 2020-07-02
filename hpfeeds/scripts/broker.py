@@ -4,7 +4,7 @@ import sys
 
 import aiorun
 
-from hpfeeds.broker.auth import env, json, mongo, sqlite
+from hpfeeds.broker.auth import env, json, mongo, multi, sqlite
 from hpfeeds.broker.server import Server, ServerException
 
 
@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--exporter', default='', action='store')
     parser.add_argument('--name', default='hpfeeds', action='store')
     parser.add_argument('--debug', default=False, action='store_true')
-    parser.add_argument('--auth', default='sqlite', action='store')
+    parser.add_argument('--auth', default=['sqlite'], action='append')
     parser.add_argument('--tlscert', default=None, action='store')
     parser.add_argument('--tlskey', default=None, action='store')
     parser.add_argument('-e', '--endpoint', default=None, action='append')
@@ -38,11 +38,14 @@ def main():
         level=logging.DEBUG if args.debug else logging.INFO,
     )
 
-    try:
-        auth = get_authenticator(args.auth)
-    except ServerException as e:
-        print(str(e))
-        sys.exit(1)
+    auth = multi.Authenticator()
+
+    for a in args.auth:
+        try:
+            auth.add(get_authenticator(a))
+        except ServerException as e:
+            print(str(e))
+            sys.exit(1)
 
     broker = Server(
         auth=auth,
