@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--exporter', default='', action='store')
     parser.add_argument('--name', default='hpfeeds', action='store')
     parser.add_argument('--debug', default=False, action='store_true')
-    parser.add_argument('--auth', default=['sqlite'], action='append')
+    parser.add_argument('--auth', default=None, action='append')
     parser.add_argument('--tlscert', default=None, action='store')
     parser.add_argument('--tlskey', default=None, action='store')
     parser.add_argument('-e', '--endpoint', default=None, action='append')
@@ -39,8 +39,8 @@ def main():
     )
 
     auth = multi.Authenticator()
-
-    for a in args.auth:
+    auths = args.auth if args.auth else ['sqlite']
+    for a in auths:
         try:
             auth.add(get_authenticator(a))
         except ServerException as e:
