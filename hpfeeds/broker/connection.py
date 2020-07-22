@@ -139,7 +139,7 @@ class Connection(BaseProtocol):
         return super().data_received(data)
 
     def message_received(self, opcode, message):
-        if not self.uid and opcode != OP_AUTH:
+        if self.ak is None and opcode != OP_AUTH:
             CONNECTION_ERROR.labels('', 'invalid-first-message').inc()
             self.error("First message was not AUTH")
             self.transport.close()
