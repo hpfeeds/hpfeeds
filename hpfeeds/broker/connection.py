@@ -114,6 +114,9 @@ class Connection(BaseProtocol):
         log.debug(f'{self}: Sent auth challenge')
 
     def connection_lost(self, reason):
+        if self not in self.server.connections:
+            return
+
         CLIENT_CONNECTIONS.dec()
         CONNECTION_LOST.labels(self.ak).inc()
 

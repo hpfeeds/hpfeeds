@@ -96,11 +96,19 @@ class Server(object):
         RECEIVE_PUBLISH_COUNT.labels(source.ak, chan).inc()
         RECEIVE_PUBLISH_SIZE.labels(source.ak, chan).observe(len(data))
 
-        for dest in self.subscriptions[chan]:
+        for dest in set(self.subscriptions[chan]):
             CLIENT_SEND_BUFFER_FILL.labels(dest.ak).inc(len(data))
 
-            if not dest.is_closing():
+            if dest.is_closing():
+                log.warning("Tried to publish to subscriber that had gone away, and python didn't clean up after it. Forcing connnection_lost")
+                dest.connection_lost(None)
+                continue
+
+            try:
                 dest.publish(source.ak, chan, data)
+            except Exception as e:
+                log.exception("Error publishing event from %s to %s", source.ak, dest.ak)
+                dest.transport.close()
 
     def subscribe(self, source, chan):
         '''
