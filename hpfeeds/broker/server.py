@@ -170,6 +170,7 @@ class Server(object):
                     ssl_context = endpoint['ssl_context']
                 else:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     sock.bind((endpoint.get('interface', '0.0.0.0'), int(endpoint['port'])))
 
                 # Allow user to use SO_BINDTODEVICE
@@ -178,8 +179,6 @@ class Server(object):
                 if 'device' in endpoint:
                     device = endpoint['device'][:15].encode('utf-8') + b'\0'
                     sock.setsockopt(socket.SOL_SOCKET, 25, device)
-
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
                 endpoint['port'] = sock.getsockname()[1]
 
