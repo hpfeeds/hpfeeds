@@ -98,7 +98,9 @@ class Server(object):
 
         for dest in self.subscriptions[chan]:
             CLIENT_SEND_BUFFER_FILL.labels(dest.ak).inc(len(data))
-            dest.publish(source.ak, chan, data)
+
+            if not dest.is_closing():
+                dest.publish(source.ak, chan, data)
 
     def subscribe(self, source, chan):
         '''

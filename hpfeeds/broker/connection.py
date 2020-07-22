@@ -71,6 +71,11 @@ class Connection(BaseProtocol):
 
         super().__init__()
 
+    def is_closing(self):
+        if self.transport.is_closing():
+            return True
+        return False
+
     def pause_writing(self):
         async def deadline_timer():
             await asyncio.sleep(60)
