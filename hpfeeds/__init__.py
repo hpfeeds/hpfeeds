@@ -1,6 +1,5 @@
 from .client import new
-from .exceptions import FeedException, BadClient, Disconnect
-
+from .exceptions import BadClient, Disconnect, FeedException
 
 __all__ = [
     'new',

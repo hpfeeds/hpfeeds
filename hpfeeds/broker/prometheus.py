@@ -8,7 +8,6 @@ from prometheus_client import (
 )
 from prometheus_client.core import GaugeMetricFamily
 
-
 CLIENT_CONNECTIONS = Gauge(
     'hpfeeds_broker_client_connections',
     'Number of clients connected to broker',

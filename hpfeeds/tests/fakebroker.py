@@ -5,7 +5,6 @@ In has no authentication and no channels.
 
 It is meant to support py 2 and py 3.
 '''
-
 import socket
 import sys
 
@@ -74,6 +73,7 @@ def setup_default_reactor(test):
 
 def setup_asyncio_reactor(test):
     import asyncio
+
     from twisted.internet import asyncioreactor
 
     _old_loop = asyncio.get_event_loop()

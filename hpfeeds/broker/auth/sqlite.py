@@ -1,6 +1,7 @@
 import json
 import sqlite3
 
+
 # inserting a user:
 # sqlite3 db.sqlite3
 # > insert into authkeys (owner, ident, secret, pubchans, subchans)
