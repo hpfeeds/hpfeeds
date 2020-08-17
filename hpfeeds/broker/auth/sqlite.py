@@ -35,7 +35,7 @@ class Authenticator(object):
                 """)
 
     async def start(self):
-        return self.close
+        return self._close
 
     def _close(self):
         self.sql.close()

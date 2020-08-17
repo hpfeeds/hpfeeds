@@ -88,7 +88,7 @@ class ClientSession(object):
                     ssl=self.ssl,
                 )
                 return client
-            except OSError as e:
+            except OSError:
                 pass
 
             await asyncio.sleep(1)

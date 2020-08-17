@@ -6,6 +6,8 @@ from prometheus_client import (
     Histogram,
     generate_latest,
 )
+from prometheus_client.core import GaugeMetricFamily
+
 
 CLIENT_CONNECTIONS = Gauge(
     'hpfeeds_broker_client_connections',
@@ -129,6 +131,24 @@ def collect_metrics(broker):
         CLIENT_RECEIVE_BUFFER_SIZE.labels(ak).set(receive_buffer_size[ak])
 
 
+class CustomCollector:
+
+    def __init__(self, server):
+        self._server = server
+
+    def collect(self):
+        g = GaugeMetricFamily('hpfeeds_client_authenticated_connections', 'Authenticated connections', labels=['ident', 'owner'])
+        metrics = {}
+        for conn in self._server.connections:
+            if not conn.ak:
+                continue
+            key = (conn.ak, conn.uid)
+            metrics[key] = metrics.get(key, 0) + 1
+        for (ident, owner), count in metrics.items():
+            g.add_metric([ident, owner or ''], count)
+        yield g
+
+
 async def metrics(request):
     collect_metrics(request.app.broker)
     data = generate_latest(REGISTRY)
@@ -139,8 +159,13 @@ async def healthz(request):
     return web.Response(text='{}', content_type='application/json', charset='utf-8')
 
 
-async def start_metrics_server(host, port):
+async def start_metrics_server(server, host, port):
+    collector = CustomCollector(server)
+    REGISTRY.register(collector)
+
     app = web.Application()
+    app.broker = server
+
     app.router.add_get('/metrics', metrics)
     app.router.add_get('/healthz', healthz)
 
@@ -151,4 +176,10 @@ async def start_metrics_server(host, port):
 
     await site.start()
 
-    return runner
+    async def close():
+        try:
+            await runner.cleanup()
+        finally:
+            REGISTRY.unregister(collector)
+
+    return close

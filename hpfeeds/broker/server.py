@@ -106,7 +106,7 @@ class Server(object):
 
             try:
                 dest.publish(source.ak, chan, data)
-            except Exception as e:
+            except Exception:
                 log.exception("Error publishing event from %s to %s", source.ak, dest.ak)
                 dest.transport.close()
 
@@ -162,8 +162,7 @@ class Server(object):
             auth_finalizer = await self.auth.start()
 
             if self.exporter:
-                metrics_server = await start_metrics_server(*self.exporter)
-                metrics_server.app.broker = self
+                metrics_finalizer = await start_metrics_server(self, *self.exporter)
 
             servers = []
 
@@ -224,7 +223,7 @@ class Server(object):
 
             if self.exporter:
                 log.debug('Waiting for stats server to wrap up')
-                await metrics_server.cleanup()
+                await metrics_finalizer()
 
             if auth_finalizer:
                 log.debug('Waiting for auth db to close')

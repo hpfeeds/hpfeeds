@@ -25,7 +25,7 @@ from .prometheus import (
     CONNECTION_READY,
 )
 
-log = logging.getLogger('hpfeeds.broker.connection')
+log = logging.getLogger(__name__)
 
 
 class MeteredSocket(wrapt.ObjectProxy):
@@ -164,7 +164,7 @@ class Connection(BaseProtocol):
     def on_auth_result(self, task, ident, secret):
         try:
             akrow = task.result()
-        except Exception as e:
+        except Exception:
             log.exception("Unhandled exception checking ident")
             CONNECTION_ERROR.labels(ident, 'error-checking-ident').inc()
             self.error(f"Authentication failed for {ident}")

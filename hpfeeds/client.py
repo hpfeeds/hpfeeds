@@ -88,7 +88,7 @@ class Client(object):
                     return self.connect()
                 except FeedException as e:
                     logger.error('{}'.format(e))
-                except Disconnect as e:
+                except Disconnect:
                     logger.warn('Disconnect while connecting.')
                 except socket.error as e:
                     logger.warn(
