@@ -242,7 +242,7 @@ class TestAsyncioClientIntegrationSSL(unittest.TestCase):
 
         import ssl
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        ssl_context.load_cert_chain('hpfeeds/tests/testcert.crt', 'hpfeeds/tests/testcert.key')
+        ssl_context.load_cert_chain('tests/testcert.crt', 'tests/testcert.key')
 
         self.sock = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('127.0.0.1', 0))
@@ -269,7 +269,7 @@ class TestAsyncioClientIntegrationSSL(unittest.TestCase):
             assert prometheus.REGISTRY.get_sample_value('hpfeeds_broker_connection_send_buffer_drain', {'ident': 'test'}) is None
 
             import ssl
-            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='hpfeeds/tests/testcert.crt')
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='tests/testcert.crt')
             ssl_context.check_hostname = False
 
             self.log.debug('Creating client service')

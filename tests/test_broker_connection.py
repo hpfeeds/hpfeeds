@@ -179,7 +179,7 @@ class TestBrokerIntegration(unittest.TestCase):
         })
 
         self.server = Server(authenticator)
-        self.server.add_endpoint_str("tls:interface=127.0.0.1:port=0:cert=hpfeeds/tests/testcert.crt:key=hpfeeds/tests/testcert.key")
+        self.server.add_endpoint_str("tls:interface=127.0.0.1:port=0:cert=tests/testcert.crt:key=tests/testcert.key")
 
     def test_subscribe_and_publish(self):
         prometheus.reset()
@@ -192,7 +192,7 @@ class TestBrokerIntegration(unittest.TestCase):
             self.port = self.server.endpoints[0]['port']
 
             import ssl
-            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='hpfeeds/tests/testcert.crt')
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='tests/testcert.crt')
             ssl_context.check_hostname = False
 
             self.log.debug('Creating client service')
