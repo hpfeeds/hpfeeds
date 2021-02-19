@@ -1,4 +1,4 @@
-FROM alpine:3.11 AS builder
+FROM alpine:3.13 AS builder
 
 RUN apk --no-cache add python3
 RUN python3 -m venv /app
@@ -11,7 +11,7 @@ COPY hpfeeds /src/hpfeeds
 RUN /app/bin/pip install /src
 
 
-FROM alpine:3.11
+FROM alpine:3.13
 
 RUN apk --no-cache add sqlite python3
 
