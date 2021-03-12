@@ -14,7 +14,7 @@ class Authenticator(object):
 
     def __init__(self, connection_string):
         self.logger = logging.getLogger('hpfeeds.broker.auth.databases.Authenticator')
-        self.connection_string = connection_string.lstrip("database+")
+        self.connection_string = connection_string.replace("database+", "")
         self.database = Database(self.connection_string)
 
         if not lib_databases:
