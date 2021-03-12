@@ -1,7 +1,6 @@
 import json
 import logging
 
-
 from hpfeeds.broker.server import ServerException
 
 try:
@@ -9,8 +8,6 @@ try:
     lib_databases = True
 except ImportError:
     lib_databases = False
-
-
 
 
 class Authenticator(object):
@@ -22,7 +19,7 @@ class Authenticator(object):
 
         if not lib_databases:
             raise ServerException("The module 'databases.Database' is not available - is the databases package installed?")
-    
+
     async def db_connect(self):
 
         try:
