@@ -91,6 +91,10 @@ restart.
 Database authentication store
 --------------------------
 
+Please note that this authentication provider is only supported when running with `Python >= 3.5`
+If you need to use an SQLite auth provider and you are not able to install the database dependancies as listed below
+you will need to use the default SQLite provider. 
+
 When starting the broker you can pass a database connection string. Auth requests are then checked against
 the selected Database in a table named auth_keys. 
 
@@ -109,7 +113,6 @@ found at https://pypi.org/project/databases/
   $ pip install databases[mysql]
   $ pip install databases[sqlite]
 
-The broker provides a default SQLite authentication store that requires no additional dependancies.
 
 Using SQLite with this auth mechanism requires JSON support that can be found in SQLite version > 3.3 and Python3
 Previous versions of SQLite may be supported with the JSON1 SQLite extension. 
