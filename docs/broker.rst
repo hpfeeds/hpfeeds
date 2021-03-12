@@ -109,15 +109,18 @@ found at https://pypi.org/project/databases/
   $ pip install databases[mysql]
   $ pip install databases[sqlite]
 
+The broker provides a default SQLite authentication store that requires no additional dependancies.
+
 Using SQLite with this auth mechanism requires JSON support that can be found in SQLite version > 3.3 and Python3
-Previous versions of SQLite may be supported with the JSON1 SQLite extension.
+Previous versions of SQLite may be supported with the JSON1 SQLite extension. 
+
 
 Any authentication can be included within the connection string
 For example:
 
 .. code-block:: bash
 
-    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+mysql://honeyswarm:honeyswarm@127.0.0.1/honeyswarm"
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+mysql://username:password@127.0.0.1/example"
 
 
 .. code-block:: bash
@@ -127,6 +130,34 @@ For example:
 .. code-block:: bash
 
     hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+sqlite:///auth_keys.db"
+
+To create the tables under mysql or sqlite
+
+.. code-block:: sql
+
+    CREATE TABLE `auth_keys` (
+      `id` int AUTO_INCREMENT NOT NULL ,
+      `identifier` varchar(36) DEFAULT NULL,
+      `secret` varchar(36) DEFAULT NULL,
+      `publish` json DEFAULT NULL,
+      `subscribe` json DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    )
+
+To create the tables for a PostgreSQL Database
+
+.. code-block:: sql
+
+    CREATE SEQUENCE auth_keys_seq;
+
+    CREATE TABLE auth_keys (
+      id int NOT NULL DEFAULT NEXTVAL ('auth_keys_seq'),
+      identifier varchar(36) DEFAULT NULL,
+      secret varchar(36) DEFAULT NULL,
+      publish json DEFAULT NULL,
+      subscribe json DEFAULT NULL,
+      PRIMARY KEY (id)
+    )
 
 To add a new user
 
