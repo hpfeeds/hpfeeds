@@ -15,7 +15,7 @@ class Authenticator(object):
     def __init__(self, connection_string):
         self.logger = logging.getLogger('hpfeeds.broker.auth.databases.Authenticator')
         self.connection_string = connection_string.lstrip("database+")
-        self.connected = False
+        self.database = Database(self.connection_string)
 
         if not lib_databases:
             raise ServerException("The module 'databases.Database' is not available - is the databases package installed?")
@@ -24,11 +24,9 @@ class Authenticator(object):
 
         try:
             self.logger.debug("Connecting to database")
-            self.database = Database(self.connection_string)
             await self.database.connect()
-            self.connected = True
         except Exception as err:
-            raise ServerException(f"Unable to connect to database: {err}")
+            raise Exception(f"Unable to connect to database: {err}")
 
     async def start(self):
         pass
@@ -39,7 +37,7 @@ class Authenticator(object):
     async def get_authkey(self, ident):
         self.logger.debug(f"Auth key for {ident} requested")
 
-        if not self.connected:
+        if not self.database.is_connected:
             await self.db_connect()
 
         query = "SELECT * from auth_keys WHERE identifier = :ident LIMIT 1"
@@ -57,6 +55,6 @@ class Authenticator(object):
                 subchans=json.loads(result[4]),
             )
         except Exception as err:
-            raise ServerException(f"Unable to parse auth row from database query: {err}")
+            raise Exception(f"Unable to parse auth row from database query: {err}")
 
         return auth_key
