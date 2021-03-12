@@ -20,4 +20,4 @@ urllib3==1.22
 Automat==0.8.0
 Twisted==18.4.0
 
-databases[sqlite] python_version > '3.5'
+databases[sqlite]; python_version > '3.5'
