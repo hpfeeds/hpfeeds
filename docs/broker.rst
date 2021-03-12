@@ -98,8 +98,10 @@ Supported Database drivers are:
   - postrgesql
   - mysql
   - mysql compatable e.g. mariadb, aurora
+  - sqlite
 
-You may need to install the specific database driver for your selected database, more information can be found at https://pypi.org/project/databases/
+You may need to install the specific database driver for your selected database, more information can be 
+found at https://pypi.org/project/databases/
 
 .. code-block: bash
 
@@ -108,7 +110,7 @@ You may need to install the specific database driver for your selected database,
   $ pip install databases[sqlite]
 
 Using SQLite with this auth mechanism requires JSON support that can be found in SQLite version > 3.3 and Python3
-Previsous versions of SQLite may be supported with the JSON1 SQLite extension.
+Previous versions of SQLite may be supported with the JSON1 SQLite extension.
 
 Any authentication can be included within the connection string
 For example:
