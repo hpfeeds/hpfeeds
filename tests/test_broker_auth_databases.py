@@ -1,5 +1,5 @@
-import os
 import asyncio
+import os
 import unittest
 
 from hpfeeds.broker.auth.database import Authenticator
@@ -46,7 +46,9 @@ class TestAuthenticator(unittest.TestCase):
             await a.database.execute(query=create_query)
 
             # Add a user
-            write_query = """INSERT INTO auth_keys (id, identifier, secret, publish, subscribe) VALUES (1, 'aaa', 'bbb', '["a", "b", "c"]', '["d", "e", "f"]')"""
+            write_query = """INSERT INTO auth_keys (id, identifier, secret, publish, subscribe)
+                             VALUES (1, 'aaa', 'bbb', '["a", "b", "c"]', '["d", "e", "f"]')"""
+
             await a.database.execute(query=write_query)
 
         # Fetch a row
