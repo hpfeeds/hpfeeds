@@ -4,7 +4,7 @@ import sys
 
 import aiorun
 
-from hpfeeds.broker.auth import env, json, mongo, multi, sqlite
+from hpfeeds.broker.auth import database, env, json, mongo, multi, sqlite
 from hpfeeds.broker.server import Server, ServerException
 
 
@@ -15,6 +15,8 @@ def get_authenticator(auth):
         return env.Authenticator()
     elif auth.startswith("mongo"):
         return mongo.Authenticator(auth)
+    elif auth.startswith("database+"):
+        return database.Authenticator(auth)
     return sqlite.Authenticator('sqlite.db')
 
 

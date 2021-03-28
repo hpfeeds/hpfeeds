@@ -12,5 +12,6 @@ if sys.version_info[0] == 2:
         "tests/test_twisted_service.py",
         "tests/test_broker_auth_env.py",
         "tests/test_broker_auth_sqlite.py",
+        "tests/test_broker_auth_databases.py",
     ])
 

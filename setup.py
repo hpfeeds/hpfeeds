@@ -39,6 +39,9 @@ setup(
         ],
         'broker-auth-mongo': [
             'motor',
+        ],
+        'broker-auth-database': [
+            'databases',
         ]
     },
 )

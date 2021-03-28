@@ -88,6 +88,107 @@ its secret type updates to the secret object in the Kubernetes API will be autom
 a Pod's filesystem. Hpfeeds will spot those updates and process them immediately without needing a
 restart.
 
+Database authentication store
+--------------------------
+
+Please note that this authentication provider is only supported when running with `Python >= 3.5`
+If you need to use an SQLite auth provider and you are not able to install the database dependancies as listed below
+you will need to use the default SQLite provider. 
+
+When starting the broker you can pass a database connection string. Auth requests are then checked against
+the selected Database in a table named auth_keys. 
+
+Supported Database drivers are:
+  - postrgesql
+  - mysql
+  - mysql compatable e.g. mariadb, aurora
+  - sqlite
+
+You may need to install the specific database driver for your selected database, more information can be 
+found at https://pypi.org/project/databases/
+
+.. code-block: bash
+
+  $ pip install databases[postgresql]
+  $ pip install databases[mysql]
+  $ pip install databases[sqlite]
+
+
+Using SQLite with this auth mechanism requires JSON support that can be found in SQLite version > 3.3 and Python3
+Previous versions of SQLite may be supported with the JSON1 SQLite extension. 
+
+
+Any authentication can be included within the connection string
+For example:
+
+.. code-block:: bash
+
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+mysql://username:password@127.0.0.1/example"
+
+
+.. code-block:: bash
+
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+postgresql://localhost/example"
+
+.. code-block:: bash
+
+    hpfeeds-broker -e tcp:port=20000 --exporter=0.0.0.0:9431 --auth="database+sqlite:///auth_keys.db"
+
+To create the tables under mysql or sqlite
+
+.. code-block:: sql
+
+    CREATE TABLE `auth_keys` (
+      `id` int AUTO_INCREMENT NOT NULL ,
+      `identifier` varchar(36) DEFAULT NULL,
+      `secret` varchar(36) DEFAULT NULL,
+      `publish` json DEFAULT NULL,
+      `subscribe` json DEFAULT NULL,
+      PRIMARY KEY (`id`)
+    )
+
+To create the tables for a PostgreSQL Database
+
+.. code-block:: sql
+
+    CREATE SEQUENCE auth_keys_seq;
+
+    CREATE TABLE auth_keys (
+      id int NOT NULL DEFAULT NEXTVAL ('auth_keys_seq'),
+      identifier varchar(36) DEFAULT NULL,
+      secret varchar(36) DEFAULT NULL,
+      publish json DEFAULT NULL,
+      subscribe json DEFAULT NULL,
+      PRIMARY KEY (id)
+    )
+
+To add a new user
+
+.. code-block:: bash
+
+    mysql -u admin -p <password>
+    use database_name;
+    
+    mysql> INSERT INTO auth_keys (identifier, secret, publish, subscribe) VALUES ('testing', 'secretkey', '["channel1", "channel2"]', '["channel2"]');
+    Query OK, 1 row affected (0.00 sec)
+
+
+To Find all users
+
+.. code-block:: bash
+
+    mysql -u admin -p <password>
+    use database_name;
+
+    mysql> select * from auth_keys;
+    +----+------------+-----------+--------------------------+--------------+
+    | id | identifier | secret    | publish                  | subscribe    |
+    +----+------------+-----------+--------------------------+--------------+
+    |  1 | testing    | secretkey | ["channel1", "channel2"] | ["channel2"] |
+    +----+------------+-----------+--------------------------+--------------+
+    1 row in set (0.00 sec)
+
+
 
 SQLite authentication store
 ---------------------------
