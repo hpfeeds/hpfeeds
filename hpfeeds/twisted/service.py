@@ -119,30 +119,3 @@ class ClientSessionService(MultiService):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    if sys.version_info[0] > 2:
-        import asyncio
-
-        @asyncio.coroutine
-        @defer.inlineCallbacks
-        def __aenter__(self):
-            self.startService()
-            yield self.whenConnected
-            defer.returnValue(self)
-
-        @asyncio.coroutine
-        @defer.inlineCallbacks
-        def __aexit__(self, exc_type, exc_val, exc_tb):
-            yield self.stopService()
-
-        @asyncio.coroutine
-        @defer.inlineCallbacks
-        def __aiter__(self):
-            defer.returnValue(self)
-
-        @asyncio.coroutine
-        @defer.inlineCallbacks
-        def __anext__(self):
-            if not self.running:
-                raise StopAsyncIteration()
-            message = yield self.read()
-            defer.returnValue(message)
