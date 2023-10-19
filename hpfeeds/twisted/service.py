@@ -112,10 +112,3 @@ class ClientSessionService(MultiService):
         fire immediately.
         '''
         return self.read_queue.get()
-
-    def __enter__(self):
-        raise TypeError("Use async with instead")
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
