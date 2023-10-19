@@ -7,7 +7,7 @@ setup(
     description='Python implementation of the hpfeeds client and broker',
     url='https://github.com/hpfeeds/hpfeeds',
     license='GPL',
-    packages=find_packages(exclude=['ez_setup']),
+    packages=find_packages(exclude=['ez_setup', "tests*"]),
     include_package_data=True,
     zip_safe=False,
     entry_points='''
